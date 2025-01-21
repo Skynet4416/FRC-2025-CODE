@@ -24,9 +24,8 @@ public class ElevatorMoveSlowlyUpWhileHeld extends Command {
   // Called every time the scheduler runs while the command is scheduled.
   @Override
   public void execute() {
-    while (true){
-      elevatorSubsystem.setElevetorsDistancenInMeters(elevatorSubsystem.getElevetorsDistanceInMeter() + UP_ADJUSMENT_MOVEMENT_IN_METERS) //add constant
-    }
+    elevatorSubsystem.setElevetorsDistancenInMeters(elevatorSubsystem.getElevetorsDistanceInMeter() + UP_ADJUSMENT_MOVEMENT_IN_METERS)
+    
   }
 
   // Called once the command ends or is interrupted.

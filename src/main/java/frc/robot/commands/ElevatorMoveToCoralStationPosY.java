@@ -21,12 +21,13 @@ public class ElevatorMoveToCoralStationPosY extends Command { //this moves the e
   public void initialize() 
   {
     elevatorSubsystem.StopMotors(); //assuming won't fall - can be removed
+    elevatorSubsystem.setElevetorsDistancenInMeters(CORAL_STATION_POS); //add constant -- calibrated
+
   }
 
   @Override
   public void execute() 
   {
-    elevatorSubsystem.setElevetorsDistancenInMeters(CORAL_STATION_POS); //add constant -- calibrated
   }
 
 

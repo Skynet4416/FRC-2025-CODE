@@ -22,17 +22,17 @@ public class ElevatorSubsystem extends SubsystemBase {
     private SparkClosedLoopController masterClosedLoopController;
 
     private public ElevatorSubsystem() {
-        motorLeader = new SparkMax(1, MotorType.kBrushless); // add constant for deviceID
-        motorSlave = new SparkMax(2, MotorType.kBrushless); // add constant for deviceID
+        motorLeader = new SparkMax(MOTOR_LEADER_DEVICEID, MotorType.kBrushless); 
+        motorSlave = new SparkMax(MOTOR_MASTER_DEVICEID, MotorType.kBrushless); /
 
         SparkMaxConfig leaderConfig = new SparkMaxConfig();
 
-        leaderConfig.encoder.positionConversionFactor(WHEEL_RADIUS * 2 * Math.PI / GEAR_RATIO); // meter
-        leaderConfig.encoder.velocityConversionFactor(WHEEL_RADIUS * 2 * Math.PI / (GEAR_RATIO * 60)); // mps
+        leaderConfig.encoder.positionConversionFactor(WHEEL_RADIUS * 2 * Math.PI / GEAR_RATIO);
+        leaderConfig.encoder.velocityConversionFactor(WHEEL_RADIUS * 2 * Math.PI / (GEAR_RATIO * 60)); 
         // move math to constants
 
 
-        leaderConfig.closedLoop.pid(1.0, 0.0, 0.0).maxMotion.maxVelocity(0).maxAcceleration(0); // add constants
+        leaderConfig.closedLoop.pid(PID_KP, PID_KI,PID_KD.maxMotion.maxVelocity(0).maxAcceleration(0); 
 
         motorLeader.configure(leaderConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
 
@@ -47,7 +47,7 @@ public class ElevatorSubsystem extends SubsystemBase {
 
     public void setElevetorsDistancenInMeters(double targetDistanceInMeters)  
     {
-        double clampedDistanceInMeters = MathUtil.clamp(clampedDistanceInMeters, 0, MAX_ELEVATOR_DISTANCE); //add constant
+        double clampedDistanceInMeters = MathUtil.clamp(clampedDistanceInMeters, 0, MAX_ELEVATOR_DISTANCE); 
 
         masterClosedLoopController.setReference(clampedDistanceInMeters,
                 ControlType.kMAXMotionPositionControl);

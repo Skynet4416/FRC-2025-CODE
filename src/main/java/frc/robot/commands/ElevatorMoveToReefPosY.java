@@ -21,12 +21,12 @@ public class ElevatorMoveToReefPosY extends Command { //this moves the elevator 
   public void initialize() 
   {
     elevatorSubsystem.StopMotors(); //assuming won't fall - can be removed
+    elevatorSubsystem.setElevetorsDistancenInMeters(REEF_POS);
   }
 
   @Override
   public void execute() 
   {
-    elevatorSubsystem.setElevetorsDistancenInMeters(REEF_POS); //add constant -- calibrated 
   }
 
   // Called once the command ends or is interrupted.
