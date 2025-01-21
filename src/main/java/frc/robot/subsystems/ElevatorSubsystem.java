@@ -62,7 +62,7 @@ public class ElevatorSubsystem extends SubsystemBase {
     }
     @Override
     public void periodic() {
-        SmartDashboard.putNumber("Current elevator position - meters", masterEncoder.getPosition());
+        SmartDashboard.putNumber("Current elevator position meters", masterEncoder.getPosition());
         SmartDashboard.putNumber("Current elevator Velocity mps",masterEncoder.getVelocity());
     }
 
