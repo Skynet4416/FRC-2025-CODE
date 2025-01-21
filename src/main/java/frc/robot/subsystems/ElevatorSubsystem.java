@@ -57,13 +57,13 @@ public class ElevatorSubsystem extends SubsystemBase {
         return this.masterEncoder.getPosition();
     }
     
-    public void StopMotors(){ //This is assuming the elevator won't fall when stopped 
+    public void StopMotors(){ 
         motorLeader.set(0);
     }
     @Override
     public void periodic() {
-        SmartDashboard.putNumber("Current elevator position - meters :", masterEncoder.getPosition());
-        SmartDashboard.putNumber("Current elevator Velocity mps:",masterEncoder.getVelocity());
+        SmartDashboard.putNumber("Current elevator position - meters", masterEncoder.getPosition());
+        SmartDashboard.putNumber("Current elevator Velocity mps",masterEncoder.getVelocity());
     }
 
 }

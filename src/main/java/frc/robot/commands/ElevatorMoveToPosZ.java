@@ -9,10 +9,12 @@ import java.time.chrono.ThaiBuddhistDate;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.subsystems.ElevatorSubsystem;
 
-public class ElevatorMoveToReefPosY extends Command { //this moves the elevator to a spesfic Y position for REEF 
+public class ElevatorMoveToPosZ extends Command { //this moves the elevator to a spesfic Z position - clamps values 
   private final ElevatorSubsystem elevatorSubsystem;
-  public ElevatorMoveToReefPosY(ElevatorSubsystem elevatorSubsystem) {
+  private final double heightInMeters;
+  public ElevatorMoveToPosZ(ElevatorSubsystem elevatorSubsystem,double heightInMeters) {
     this.elevatorSubsystem = elevatorSubsystem;
+    this.heightInMeters = heightInMeters;
     addRequirements(elevatorSubsystem);
   }
 
@@ -20,8 +22,7 @@ public class ElevatorMoveToReefPosY extends Command { //this moves the elevator 
   @Override
   public void initialize() 
   {
-    elevatorSubsystem.StopMotors(); //assuming won't fall - can be removed
-    elevatorSubsystem.setElevetorsDistancenInMeters(REEF_POS);
+    elevatorSubsystem.setElevetorsDistancenInMeters(heightInMeters);
   }
 
   @Override
@@ -29,15 +30,13 @@ public class ElevatorMoveToReefPosY extends Command { //this moves the elevator 
   {
   }
 
-  // Called once the command ends or is interrupted.
-  @Override
-  public void end(boolean interrupted) {
-    
-  }
 
   // Returns true when the command should end.
   @Override
   public boolean isFinished() {
+    if (elevatorSubsystem.getElevetorsDistanceInMeter() < HEIGHT_THRESHOLD){
+      return true;
+    }
     return false;
   }
 }
