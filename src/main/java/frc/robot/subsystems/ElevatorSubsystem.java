@@ -27,15 +27,15 @@ public class ElevatorSubsystem extends SubsystemBase {
 
         SparkMaxConfig leaderConfig = new SparkMaxConfig();
 
-        leaderConfig.encoder.positionConversionFactor(WHELL_RADIUS * 2 * Math.PI / GEAR_RATIO); // meter
-        leaderConfig.encoder.velocityConversionFactor(WHELL_RADIUS * 2 * Math.PI / (GEAR_RATIO * 60)); // mps
-        leaderConfig.closedLoop.pid(1.0, 0.0, 0.0).maxMotion.maxVelocity(0).maxAcceleration(0); // add constants
+        leaderConfig.encoder.positionConversionFactor(WHEEL_RADIUS * 2 * Math.PI / GEAR_RATIO); // meter
+        leaderConfig.encoder.velocityConversionFactor(WHEEL_RADIUS * 2 * Math.PI / (GEAR_RATIO * 60)); // mps
+        // move math to constants
 
-        // move to constants
+
+        leaderConfig.closedLoop.pid(1.0, 0.0, 0.0).maxMotion.maxVelocity(0).maxAcceleration(0); // add constants
 
         motorLeader.configure(leaderConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
 
-        motorSlave = new SparkMax(2, MotorType.kBrushless);
         SparkMaxConfig slaveConfig = new SparkMaxConfig();
 
         slaveConfig.follow(motorLeader);
@@ -45,8 +45,9 @@ public class ElevatorSubsystem extends SubsystemBase {
 
     }
 
-    public void setElevetorsDistancenInMeters(double targetDistanceInMeters) {
-        double clampedDistanceInMeters = MathUtil.clamp(clampedDistanceInMeters, 0, MAX_ELEVATOR_DISTANCE); //add constant or die
+    public void setElevetorsDistancenInMeters(double targetDistanceInMeters)  
+    {
+        double clampedDistanceInMeters = MathUtil.clamp(clampedDistanceInMeters, 0, MAX_ELEVATOR_DISTANCE); //add constant
 
         masterClosedLoopController.setReference(clampedDistanceInMeters,
                 ControlType.kMAXMotionPositionControl);
@@ -55,10 +56,14 @@ public class ElevatorSubsystem extends SubsystemBase {
     public double getElevetorsDistanceInMeter() {
         return this.masterEncoder.getPosition();
     }
-
+    
+    public void StopMotors(){ //This is assuming the elevator won't fall when stopped 
+        motorLeader.set(0);
+    }
     @Override
     public void periodic() {
         SmartDashboard.putNumber("Current elevator position - meters :", masterEncoder.getPosition());
+        SmartDashboard.putNumber("Current elevator Velocity mps:",masterEncoder.getVelocity());
     }
 
 }
