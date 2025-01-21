@@ -9,14 +9,13 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants.Subsystems.Intake;
 public class IntakeSubsystem extends SubsystemBase {
-    // add constants
 
     private SparkFlex sparkFlex;
 
     private RelativeEncoder encoder;
 
     public IntakeSubsystem() {
-        sparkFlex = new SparkFlex(Intake.Motors.SPARK_FLEX_ID, MotorType.kBrushless);// add motor id
+        sparkFlex = new SparkFlex(Intake.Motors.SPARK_FLEX_ID, MotorType.kBrushless);
         this.encoder = sparkFlex.getEncoder();
     }
 
