@@ -49,6 +49,16 @@ public final class Constants {
                 public final static double KD = 0;
             }
         }
+
+        public static class Intake {
+            public static class Motors {
+                public final static int SPARK_FLEX_ID = 1;
+            }
+
+            public static class Physical {
+                public final static double INTAKE_PERCENTAGE = 0.3;
+            }
+        }
     }
 
     public static class OperatorConstants {
