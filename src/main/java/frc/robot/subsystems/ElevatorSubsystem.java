@@ -64,7 +64,7 @@ public class ElevatorSubsystem extends SubsystemBase {
         motorLeader.set(percentage);
     }
 
-    public double getElevetorsDistanceInMeter() {
+    public double getElevatorDistanceInMeter() {
         return this.masterEncoder.getPosition();
     }
 

@@ -26,6 +26,6 @@ public class ElevatorMoveToPosZ extends Command {
 
     @Override
     public boolean isFinished() {
-        return Math.abs(elevatorSubsystem.getElevetorsDistanceInMeter() - this.elevatorSetPointInMeters) < Elevator.Controls.HEIGHT_THRESHOLD_IN_METERS;
+        return Math.abs(elevatorSubsystem.getElevatorDistanceInMeter() - this.elevatorSetPointInMeters) < Elevator.Controls.HEIGHT_THRESHOLD_IN_METERS;
     }
 }

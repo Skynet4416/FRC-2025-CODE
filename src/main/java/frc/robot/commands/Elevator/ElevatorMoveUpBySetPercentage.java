@@ -23,6 +23,6 @@ public class ElevatorMoveUpBySetPercentage extends Command {
 
     @Override
     public void end(boolean interrupted) {
-        elevatorSubsystem.setElevatorDistanceInMeters(elevatorSubsystem.getElevetorsDistanceInMeter());
+        elevatorSubsystem.setElevatorDistanceInMeters(elevatorSubsystem.getElevatorDistanceInMeter());
     }
 }
