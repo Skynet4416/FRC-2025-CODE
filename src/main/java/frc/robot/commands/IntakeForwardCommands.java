@@ -19,7 +19,7 @@ public class IntakeForwardCommands extends Command{
         intakeSubsystem.moveMotor(Intake.Physical.INTAKE_PERCENTAGE);
     }
     @Override
-    public void end(boolean inturrupted){
+    public void end(boolean interrupted){
         intakeSubsystem.stopMotor();
     }
 }
