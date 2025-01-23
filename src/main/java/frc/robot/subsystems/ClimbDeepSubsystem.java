@@ -10,20 +10,21 @@ import frc.robot.Constants.Subsystems.DeepCage;
 
 public class ClimbDeepSubsystem extends SubsystemBase {
 
-    private SparkMax DeepClimbSparkMax;
-    private DigitalInput ClimbLegLimitSwitch = new DigitalInput(0);
+    private final SparkMax DeepClimbSparkMax;
+    private final DigitalInput climbLegLimitSwitch;
 
 
     public ClimbDeepSubsystem() {
         DeepClimbSparkMax = new SparkMax(DeepCage.Motors.DEEP_CAGE_MAX_MOTOR_ID, MotorType.kBrushless);
+        climbLegLimitSwitch = new DigitalInput(DeepCage.Sensors.LEG_LIMIT_SWITCH_CHANNEL);
     }
-    
-    public boolean limitSwitchChecker(){
-        return this.ClimbLegLimitSwitch.get();
+
+    public boolean limitSwitchChecker() {
+        return this.climbLegLimitSwitch.get();
     }
 
     public void moveMotor(double percentage) {
-        this.DeepClimbSparkMax.set(percentage); 
+        this.DeepClimbSparkMax.set(percentage);
     }
 
     public void stopMotor() {
