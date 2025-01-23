@@ -59,7 +59,16 @@ public final class Constants {
                 public final static double INTAKE_PERCENTAGE = 0.3;
             }
         }
+        public static class DeepCage{
+            public static class Motors{
+                public final static int DEEP_CAGE_MAX_MOTOR_ID = 5;
+            }
+        
+        public static class Physical{
+            public final static double percentage=0.3;
+        }
     }
+}
 
     public static class OperatorConstants {
 

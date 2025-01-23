@@ -15,11 +15,11 @@ public class ClimbDeepSubsystem extends SubsystemBase {
 
 
     public ClimbDeepSubsystem() {
-        DeepClimbSparkMax = new SparkMax(DeepCage.Motors.SPARK_MAX_ID, MotorType.kBrushless);
+        DeepClimbSparkMax = new SparkMax(DeepCage.Motors.DEEP_CAGE_MAX_MOTOR_ID, MotorType.kBrushless);
     }
     
-    public void limitSwitchChecker(){
-        this.ClimbLegLimitSwitch.get();
+    public boolean limitSwitchChecker(){
+        return this.ClimbLegLimitSwitch.get();
     }
 
     public void moveMotor(double percentage) {
