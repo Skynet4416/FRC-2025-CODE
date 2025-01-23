@@ -12,27 +12,31 @@ import com.revrobotics.spark.config.SparkMaxConfig;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-
-import com.revrobotics.spark.config.SparkBaseConfig;// for following
+import frc.robot.Constants.Subsystems.Elevator;
 
 public class ElevatorSubsystem extends SubsystemBase {
-    private SparkMax motorLeader;
-    private SparkMax motorSlave;
-    private RelativeEncoder masterEncoder;
-    private SparkClosedLoopController masterClosedLoopController;
 
-    private public ElevatorSubsystem() {
-        motorLeader = new SparkMax(MOTOR_LEADER_DEVICEID, MotorType.kBrushless); 
-        motorSlave = new SparkMax(MOTOR_MASTER_DEVICEID, MotorType.kBrushless); /
+    private final SparkMax motorLeader;
+    private final SparkMax motorSlave1;
+    private final SparkMax motorSlave2;
+    private final SparkMax motorSlave3;
+
+    private final RelativeEncoder masterEncoder;
+    private final SparkClosedLoopController masterClosedLoopController;
+
+    public ElevatorSubsystem() {
+        motorLeader = new SparkMax(Elevator.Motors.MASTER_CAN_ID, MotorType.kBrushless);
+        motorSlave1 = new SparkMax(Elevator.Motors.SLAVE_1_CAN_ID, MotorType.kBrushless);
+        motorSlave2 = new SparkMax(Elevator.Motors.SLAVE_2_CAN_ID, MotorType.kBrushless);
+        motorSlave3 = new SparkMax(Elevator.Motors.SLAVE_3_CAN_ID, MotorType.kBrushless);
 
         SparkMaxConfig leaderConfig = new SparkMaxConfig();
 
-        leaderConfig.encoder.positionConversionFactor(WHEEL_RADIUS * 2 * Math.PI / GEAR_RATIO);
-        leaderConfig.encoder.velocityConversionFactor(WHEEL_RADIUS * 2 * Math.PI / (GEAR_RATIO * 60)); 
+        leaderConfig.encoder.positionConversionFactor(Elevator.Physical.WHEEL_RADIUS_IN_METERS * 2 * Math.PI / Elevator.Physical.GEAR_RATIO);
+        leaderConfig.encoder.velocityConversionFactor(Elevator.Physical.WHEEL_RADIUS_IN_METERS * 2 * Math.PI / (Elevator.Physical.GEAR_RATIO * 60));
         // move math to constants
 
-
-        leaderConfig.closedLoop.pid(PID_KP, PID_KI,PID_KD.maxMotion.maxVelocity(0).maxAcceleration(0); 
+        leaderConfig.closedLoop.pid(Elevator.PID.KP, Elevator.PID.KI, Elevator.PID.KD).maxMotion.maxVelocity(Elevator.Physical.MAX_VELOCITY_IN_MPS).maxAcceleration(Elevator.Physical.MAX_ACCELERATION_IN_MPS_SQUARED);
 
         motorLeader.configure(leaderConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
 
@@ -40,30 +44,38 @@ public class ElevatorSubsystem extends SubsystemBase {
 
         slaveConfig.follow(motorLeader);
 
+        motorSlave1.configure(slaveConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
+        motorSlave2.configure(slaveConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
+        motorSlave3.configure(slaveConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
+
         this.masterEncoder = this.motorLeader.getEncoder();
         this.masterClosedLoopController = this.motorLeader.getClosedLoopController();
 
     }
 
-    public void setElevetorsDistancenInMeters(double targetDistanceInMeters)  
-    {
-        double clampedDistanceInMeters = MathUtil.clamp(clampedDistanceInMeters, 0, MAX_ELEVATOR_DISTANCE); 
+    public void setElevatorDistanceInMeters(double targetDistanceInMeters) {
+        double clampedDistanceInMeters = MathUtil.clamp(targetDistanceInMeters, 0, Elevator.Physical.MAX_HEIGHT_IN_METERS);
 
         masterClosedLoopController.setReference(clampedDistanceInMeters,
                 ControlType.kMAXMotionPositionControl);
     }
 
+    public void setPercentage(double percentage) {
+        motorLeader.set(percentage);
+    }
+
     public double getElevetorsDistanceInMeter() {
         return this.masterEncoder.getPosition();
     }
-    
-    public void StopMotors(){ 
+
+    public void StopMotors() {
         motorLeader.set(0);
     }
+
     @Override
     public void periodic() {
         SmartDashboard.putNumber("Current elevator position meters", masterEncoder.getPosition());
-        SmartDashboard.putNumber("Current elevator Velocity mps",masterEncoder.getVelocity());
+        SmartDashboard.putNumber("Current elevator Velocity mps", masterEncoder.getVelocity());
     }
 
 }
