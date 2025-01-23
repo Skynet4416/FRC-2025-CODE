@@ -52,7 +52,9 @@ public final class Constants {
 
         public static class Intake {
             public static class Motors {
-                public final static int SPARK_FLEX_ID = 1;
+                public final static int UPPER_MASTER_SPARK_FLEX_ID = 1;
+                public final static int LOWER_SLAVE_SPARK_FLEX_ID = 1;
+
             }
 
             public static class Physical {
