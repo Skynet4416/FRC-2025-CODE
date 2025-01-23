@@ -8,10 +8,10 @@ import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.subsystems.ElevatorSubsystem;
 
 //
-public class ElevatorMoveSlowlyUpWhileHeld extends Command {
+public class ElevatorMoveUpBySetPercentage extends Command {
     private final ElevatorSubsystem elevatorSubsystem;
 
-  public ElevatorMoveSlowlyUpWhileHeld(ElevatorSubsystem elevatorSubsystem) { //Move up slowly for user control adjusment 
+  public ElevatorMoveUpBySetPercentage(ElevatorSubsystem elevatorSubsystem) { //Move up slowly for user control adjusment 
     this.elevatorSubsystem = elevatorSubsystem;
     addRequirements(elevatorSubsystem);
   }
@@ -19,18 +19,20 @@ public class ElevatorMoveSlowlyUpWhileHeld extends Command {
   // Called when the command is initially scheduled.
   @Override
   public void initialize() {
+    elevatorSubsystem.setElevetorsDistancenInMeters(elevatorSubsystem.getElevetorsDistanceInMeter() * UP_ADJUSMENT_MOVEMENT_IN_PERCENTAGE); 
   }
 
   // Called every time the scheduler runs while the command is scheduled.
   @Override
   public void execute() {
-    elevatorSubsystem.setElevetorsDistancenInMeters(elevatorSubsystem.getElevetorsDistanceInMeter() + UP_ADJUSMENT_MOVEMENT_IN_METERS)
     
   }
 
   // Called once the command ends or is interrupted.
   @Override
-  public void end(boolean interrupted) {}
+  public void end(boolean interrupted) {
+    elevatorSubsystem.setElevetorsDistancenInMeters(elevator.getElevetorsDistanceInMeter());
+  }
 
   // Returns true when the command should end.
   @Override
