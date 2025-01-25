@@ -5,22 +5,21 @@ import com.ctre.phoenix6.configs.Slot0Configs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.hardware.CANcoder;
 import com.ctre.phoenix6.hardware.TalonFX;
-import com.ctre.phoenix6.mechanisms.swerve.LegacySwerveModuleConstants.SteerFeedbackType;
 import com.ctre.phoenix6.swerve.SwerveDrivetrain;
 import com.ctre.phoenix6.swerve.SwerveDrivetrainConstants;
-import com.ctre.phoenix6.swerve.SwerveModule;
 import com.ctre.phoenix6.swerve.SwerveModuleConstants;
 import com.ctre.phoenix6.swerve.SwerveModuleConstantsFactory;
+import com.ctre.phoenix6.swerve.SwerveRequest;
+import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 import com.ctre.phoenix6.swerve.SwerveModule.ModuleRequest;
+import com.ctre.phoenix6.swerve.SwerveModule.SteerRequestType;
 import com.ctre.phoenix6.swerve.SwerveModuleConstants.DriveMotorArrangement;
 import com.ctre.phoenix6.swerve.SwerveModuleConstants.SteerMotorArrangement;
 
 import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.wpilibj2.command.Subsystem;
 import frc.robot.Constants.DriveConstants;
-import frc.robot.Constants.DriveConstants.PID.Drive;
 
 public class DriveSubsystem implements Subsystem {
     private final SwerveModuleConstants frontLeft;
@@ -38,6 +37,7 @@ public class DriveSubsystem implements Subsystem {
     private static Slot0Configs steerGains;
     private static Slot0Configs driveGains;
 
+    private final SwerveRequest.FieldCentric driveRequest;
     
     @SuppressWarnings({ "rawtypes", "static-access", "unchecked" })
     public DriveSubsystem() {
@@ -114,7 +114,11 @@ public class DriveSubsystem implements Subsystem {
             false, 
             false
         );
-
+        this.driveRequest = new SwerveRequest.FieldCentric()
+            .withDeadband(DriveConstants.Safety.kMaxSpeedMetersPerSecond * 0.1).withRotationalDeadband(DriveConstants.Safety.kMaxAngularVelocityRadiansPerSecond * 0.1) //CHECK
+            .withDriveRequestType(DriveRequestType.OpenLoopVoltage)
+            .withSteerRequestType(SteerRequestType.Position);
+     
         this.modules = new SwerveModuleConstants[] {frontLeft, frontRight, backLeft, backRight};
 
         
@@ -128,79 +132,17 @@ public class DriveSubsystem implements Subsystem {
         );
 
 
-    
     }
 
-    public double getHeading() {
-        return drivetrain.getPigeon2().getYaw().getValueAsDouble();
-    }
-
-    /**
-     * Returns the field oriented corrected velocity for a target velocity
-    * 
-    * @param targetVelocityX
-    *                        The target X velocity (Meters Per Second)
-    * @param targetVelocityY
-    *                        The target Y velocity (Meters Per Second)
-    */
-    public double getVelocityFieldOriented_X(double targetVelocityX, double targetVelocityY) {
-        double offsetAngle = Rotation2d.fromDegrees(-getHeading()).getDegrees() - DriveConstants.Dimensions.fieldHeadingOffset;
-        double corrected_velocity = targetVelocityX * Math.cos(Math.toRadians(offsetAngle))
-                    - targetVelocityY * Math.sin(Math.toRadians(offsetAngle));
-        return corrected_velocity;
-    }
-
-    /**
-    * Returns the field oriented corrected velocity for a target velocity
-    * 
-    * @param targetVelocityX
-    *                        The target X velocity (Meters Per Second)
-    * @param targetVelocityY
-    *                        The target Y velocity (Meters Per Second)
-    */
-    public double getVelocityFieldOriented_Y(double targetVelocityX, double targetVelocityY) {
-        double offsetAngle = Rotation2d.fromDegrees(-getHeading()).getDegrees() - DriveConstants.Dimensions.fieldHeadingOffset;
-        double corrected_velocity = targetVelocityX * Math.sin(Math.toRadians(offsetAngle))
-                    + targetVelocityY * Math.cos(Math.toRadians(offsetAngle));
-        return corrected_velocity;
-    }
-
-
-     public void setModules(double xVelocityMps, double yVelocityMps, double rotationVelocityRps, double speedMode) {
-        final double slowFactor = 8;
-        double speedDivisor = 1 * (1-speedMode) + slowFactor * speedMode;
-                
-        xVelocityMps /= speedDivisor;
-        yVelocityMps /= speedDivisor;
-        rotationVelocityRps /= speedDivisor;
-
-        double xVelocityMpsFieldOriented = getVelocityFieldOriented_X(xVelocityMps, yVelocityMps);
-        double yVelocityMpsFieldOriented = getVelocityFieldOriented_Y(xVelocityMps, yVelocityMps);
-
-        boolean correctAngle = true;
-        if(Math.abs(xVelocityMps) > 0 || Math.abs(yVelocityMps) > 0 || Math.abs(rotationVelocityRps) > 0){
-            if (correctAngle) {
-                //replace with drivetrain.
-                m_targetAngle += Units.radiansToDegrees(rotationVelocityRps)*1.5;
-                this.m_swerveSpeeds = new ChassisSpeeds(xVelocityMpsFieldOriented, yVelocityMpsFieldOriented,
-                            Math.abs(this.getGyroAngleInRotation2d().getDegrees() - m_targetAngle) > Drive.PID.kThreshold ? -m_pidController.calculate(this.getGyroAngleInRotation2d().getDegrees()) : 0);
-                m_pidController.setSetpoint(m_targetAngle-90);
-            } else {
-                this.m_swerveSpeeds = new ChassisSpeeds(xVelocityMpsFieldOriented, yVelocityMpsFieldOriented,
-                            -rotationVelocityRps * 1.2);
-            }
-        } else {
-            this.m_swerveSpeeds = new ChassisSpeeds(0, 0, 0);
-        }
-        // m_targetAngle = getGyroAngleInRotation2d().getDegrees();
-
-        SwerveModuleState[] target_states = DriveConstants.Dimensions.kinematics.toSwerveModuleStates(this.m_swerveSpeeds);
-        for (int i = 0; i < target_states.length; i++) {
-            this.drivetrain.getModule(i).apply(new ModuleRequest().withState(target_states[i]));;
+    public void setModulesStates(SwerveModuleState[] states) {
+        for (int i = 0; i < states.length; i++) {
+            this.drivetrain.getModule(i).apply(new ModuleRequest().withState(states[i]));;
         }
     }
 
-    public SwerveDrivetrain getDrivetrain() { return this.drivetrain; }
+    public SwerveRequest.FieldCentric getDriveRequest() { return this.driveRequest; }
+
+    public SwerveDrivetrain<TalonFX, TalonFX, CANcoder> getDrivetrain() { return this.drivetrain; }
 
 
 }
