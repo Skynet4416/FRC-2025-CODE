@@ -48,6 +48,11 @@ public final class Constants {
                   public static final double kDeadbandValue = 0.1;
               }
 		public static class Dimensions {
+                  public static final double kFrontLeftEncoderOffset = 0;
+                  public static final double kFrontRightEncoderOffset = 0;
+                  public static final double kBackLeftEncoderOffset = 0;
+                  public static final double kBackRightEncoderOffset = 0;
+
                   public static final double fieldHeadingOffset = 0;
                   /**
                    * Distance between the center of the right wheels to the center of the left
@@ -66,7 +71,7 @@ public final class Constants {
                    * The ratio between the Motor and the center wheel of the Swerve module (which
                    * the CANcoder lies on)
                    */
-                  public static final double kRotorToSensorRatioDrive = 8.14;
+                  public static final double kRotorToSensorRatioDrive = 7.13;
                   public static final double kRotorToSensorRatioSteer = 150 / 7;
                   public static final SwerveDriveKinematics kinematics = new SwerveDriveKinematics(
                         new Translation2d(kTrackWidthMeters / 2.0, kWheelbaseMeters / 2.0), // ++
@@ -94,7 +99,7 @@ public final class Constants {
 			public static final int kBackRightSteerMotor = 7;
 			public static final int kBackRightEncoder = 3;
 
-			public static final int kNavX = 0;
+			public static final int kPigeon = 0;
 		}
 		public static class PID {
 			public static class Drive {
@@ -158,4 +163,7 @@ public final class Constants {
 		}
 
 	}
+      public static class OIConstants {
+            public static final double kXboxControllerDrift = 0.3;
+      }
 }
