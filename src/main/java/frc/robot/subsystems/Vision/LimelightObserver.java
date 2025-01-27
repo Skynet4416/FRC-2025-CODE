@@ -5,5 +5,5 @@
 package frc.robot.subsystems.Vision;
 
 public interface LimelightObserver {
-  void onLimelightDataUpdate(boolean targetVisible, double[] botpose_targetspace);
+  void onLimelightDataUpdate(double[] botpose);
 }

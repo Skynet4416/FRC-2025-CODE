@@ -21,14 +21,14 @@ public class LimelightSubsystem extends SubsystemBase {
   public void periodic() {
     boolean targetVisible = table.getEntry("tv").getDouble(0) == 1;
     if (targetVisible){
-      updateLimelightData(targetVisible);
+      updateLimelightData();
     }
   }
 
-  public void updateLimelightData(boolean targetVisible) {
-    double[] botPose = table.getEntry("botpose").getDoubleArray(new double[6]);
+  public void updateLimelightData() {
+    double[] botpose = table.getEntry("botpose").getDoubleArray(new double[6]);
     for (LimelightObserver observer : observers) {
-        observer.onLimelightDataUpdate(targetVisible, botPose);
+        observer.onLimelightDataUpdate(botpose);
     }
   }
 }
