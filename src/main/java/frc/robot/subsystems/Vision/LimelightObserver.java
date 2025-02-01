@@ -4,6 +4,8 @@
 
 package frc.robot.subsystems.Vision;
 
+import edu.wpi.first.math.geometry.Pose2d;
+
 public interface LimelightObserver {
-  void onLimelightDataUpdate(double[] botpose);
+  void onLimelightDataUpdate(Pose2d botpose, double timestamp);
 }
