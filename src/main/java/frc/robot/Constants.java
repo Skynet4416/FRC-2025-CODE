@@ -3,9 +3,6 @@
 // the WPILib BSD license file in the root directory of this project.
 package frc.robot;
 
-import edu.wpi.first.math.geometry.Translation2d;
-import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
-
 /**
  * The Constants class provides a convenient place for teams to hold robot-wide
  * numerical or boolean constants. This class should not be used for any other
@@ -17,146 +14,6 @@ import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
  * wherever the constants are needed, to reduce verbosity.
  */
 public final class Constants {
-<<<<<<< HEAD
-	public static class DriveConstants {
-            public static class Safety {
-                  //CHECK ALL STATS, THEY WERE TAKEN FROM EACH COMPANIES RESPECTIVE WEBSITES
-                  public static final double kWheelDiameterMeters = 0.1016; 
-                  public static final double kDriveGearRatio = 6.75; 
-                  public static final double kSafetyFactor = 0.8; 
-                  
-                  public static final double kKrakenMaxRPM = 6000.0;
-                  public static final double kKrakenMaxPowerWatts = 413.0; // 40A
-                  public static final double kKrakenEfficiency = 0.87;
-                  
-                  public static final double kFalconMaxRPM = 6380.0;
-                  public static final double kFalconMaxPowerWatts = 400.0;
-                  public static final double kFalconEfficiency = 0.87;
-                  
-                  public static final double kMaxSpeedMetersPerSecond = 
-                      (kKrakenMaxRPM / kDriveGearRatio) * 
-                      (Math.PI * kWheelDiameterMeters) /
-                      60.0 * 
-                      kSafetyFactor;
-                      
-                  public static final double kMaxAngularVelocityRadiansPerSecond = kMaxSpeedMetersPerSecond /
-                        Math.hypot(DriveConstants.Dimensions.kTrackWidthMeters / 2.0, 
-                              DriveConstants.Dimensions.kWheelbaseMeters / 2.0);
-
-                  public static final double kDeadbandValue = 0.1;
-              }
-		public static class Dimensions {
-                  public static final double fieldHeadingOffset = 0;
-                  /**
-                   * Distance between the center of the right wheels to the center of the left
-                   * wheels (Meters)
-                   */
-                  public static final double kTrackWidthMeters = 85.5;
-
-                  /**
-                   * +
-                   * Distance between the center of the back wheels to the center of the front
-                   * wheels (Meters)
-                   */
-                  public static final double kWheelbaseMeters = 85.5;
-
-                  /**
-                   * The ratio between the Motor and the center wheel of the Swerve module (which
-                   * the CANcoder lies on)
-                   */
-                  public static final double kRotorToSensorRatioDrive = 8.14;
-                  public static final double kRotorToSensorRatioSteer = 150 / 7;
-                  public static final SwerveDriveKinematics kinematics = new SwerveDriveKinematics(
-                        new Translation2d(kTrackWidthMeters / 2.0, kWheelbaseMeters / 2.0), // ++
-                        new Translation2d(kTrackWidthMeters / 2.0, -kWheelbaseMeters / 2.0), // +-
-                        new Translation2d(-kTrackWidthMeters / 2.0, kWheelbaseMeters / 2.0), // -+
-                        new Translation2d(-kTrackWidthMeters / 2.0, -kWheelbaseMeters / 2.0) // --
-                  );
-
-		}
-		public static class ID {
-			// ! ------ DO NOT USE THESE VALUES IN PRODUCTION :( ------
-			public static final int kFrontLeftDriveMotor = 0;
-			public static final int kFrontLeftSteerMotor = 1;
-			public static final int kFrontLeftEncoder = 0;
-
-			public static final int kFrontRightDriveMotor = 2;
-			public static final int kFrontRightSteerMotor = 3;
-			public static final int kFrontRightEncoder = 1;
-
-			public static final int kBackLeftDriveMotor = 4;
-			public static final int kBackLeftSteerMotor = 5;
-			public static final int kBackLeftEncoder = 2;
-
-			public static final int kBackRightDriveMotor = 6;
-			public static final int kBackRightSteerMotor = 7;
-			public static final int kBackRightEncoder = 3;
-
-			public static final int kNavX = 0;
-		}
-		public static class PID {
-			public static class Drive {
-				/**
-                         * Static Friction Offset (to overcome the friction of the system)
-                         */
-                        public static final double kS = 0.0;
-                        /**
-                         * Velocity Feedforward (to continue the current speed)
-                         */
-                        public static final double kV = 0.0;
-                        /**
-                         * the voltage needed to reach a certain acceleration (i have no idea what
-                         * number to put)
-                         */
-                        public static final double kA = 0.0;
-
-                        /**
-                         * Proportional tuning - error
-                         * Lower the kP
-                         */
-                        public static final double kP = 0.00035;
-                        /**
-                         * 
-                         * Integral tuning - learning
-                         */
-                        public static final double kI = 0.000002;
-                        /**
-                         * Derivative tuning - overshoot
-                         */
-                        public static final double kD = 0.0;
-                  }
-			public static class Steer {
-				/**
-                         * Static Friction Offset (to overcome the friction of the system)
-                         */
-                        public static final double kS = 0.0;
-                        /**
-                         * Velocity Feedforward (to continue the current speed)
-                         */
-                        public static final double kV = 0.0;
-                        /**
-                         * the voltage needed to reach a certain acceleration (i have no idea what
-                         * number to put)
-                         */
-                        public static final double kA = 0.0;
-
-                        /**
-                         * Proportional tuning - error
-                         */
-                        public static final double kP = 10.0;
-                        /**
-                         * Integral tuning - learning
-                         */
-                        public static final double kI = 1.0;
-                        /**
-                         * Derivative tuning - overshoot
-                         */
-                        public static final double kD = 0.0;
-                  }
-		}
-
-	}
-=======
 
     public static class Subsystems {
 
@@ -224,5 +81,4 @@ public final class Constants {
 
         public static final int kDriverControllerPort = 0;
     }
->>>>>>> origin/dev
 }
