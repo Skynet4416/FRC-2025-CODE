@@ -12,16 +12,16 @@ import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableInstance;
+import edu.wpi.first.util.sendable.Sendable;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 public class LimelightSubsystem extends SubsystemBase {
 
     private LimelightObserver[] observers;
-    private final NetworkTable table;
 
     public LimelightSubsystem(LimelightObserver[] observers) {
         this.observers = observers;
-        this.table = NetworkTableInstance.getDefault().getTable("limelight");
     }
 
     @Override
@@ -52,6 +52,10 @@ public class LimelightSubsystem extends SubsystemBase {
                 observer.onLimelightDataUpdate(poseEstimate, stdDiviation);
             }
         }
+
+        SmartDashboard.putNumberArray("LL pose", new Double[]{
+                poseEstimate.pose.getX(), poseEstimate.pose.getY(), poseEstimate.pose.getRotation().getDegrees()
+        });
     }
 
 }
