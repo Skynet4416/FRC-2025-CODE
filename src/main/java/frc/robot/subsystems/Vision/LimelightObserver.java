@@ -4,8 +4,10 @@
 
 package frc.robot.subsystems.Vision;
 
+import edu.wpi.first.math.Vector;
 import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.numbers.N3;
 
 public interface LimelightObserver {
-  void onLimelightDataUpdate(Pose2d botpose, double timestamp);
+    void onLimelightDataUpdate(LimelightHelpers.PoseEstimate pose, Vector<N3> stdDiviation);
 }
