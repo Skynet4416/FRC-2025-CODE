@@ -44,6 +44,10 @@ public class LimelightSubsystem extends SubsystemBase {
             for (LimelightObserver observer : observers) {
                 observer.onLimelightDataUpdate(poseEstimate, stdDiviation);
             }
+            SmartDashboard.putBoolean("VISION REJECTED", false);
+
+        } else {
+            SmartDashboard.putBoolean("VISION REJECTED", true);
         }
 
         SmartDashboard.putNumberArray("LL pose", new Double[]{
