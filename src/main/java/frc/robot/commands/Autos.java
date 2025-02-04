@@ -1,13 +1,24 @@
-// Copyright (c) FIRST and other WPILib contributors.
-// Open Source Software; you can modify and/or share it under the terms of
-// the WPILib BSD license file in the root directory of this project.
-
 package frc.robot.commands;
 
-public final class Autos {
-  /** Example static factory for an autonomous command. */
+import choreo.auto.AutoFactory;
+import choreo.auto.AutoRoutine;
+import choreo.auto.AutoTrajectory;
 
-  private Autos() {
-    throw new UnsupportedOperationException("This is a utility class!");
-  }
+public class Autos {
+    private final AutoFactory m_factory;
+
+    public Autos(AutoFactory factory) {
+        m_factory = factory;
+    }
+
+    public AutoRoutine getAutoRoutine(String routineName) {
+        final AutoRoutine routine = m_factory.newRoutine(routineName);
+        final AutoTrajectory simplePath = routine.trajectory(routineName);
+
+        routine.active().onTrue(
+                simplePath.resetOdometry()
+                        .andThen(simplePath.cmd())
+        );
+        return routine;
+    }
 }
