@@ -6,8 +6,11 @@ package frc.robot;
 
 import static edu.wpi.first.units.Units.*;
 
+import javax.print.DocFlavor.READER;
+
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 import com.ctre.phoenix6.swerve.SwerveRequest;
+import com.ctre.phoenix6.swerve.SwerveDrivetrain;
 
 import choreo.auto.AutoChooser;
 import choreo.auto.AutoFactory;
@@ -36,7 +39,7 @@ public class RobotContainer {
 
     private final Telemetry logger = new Telemetry(MaxSpeed);
 
-    private final CommandXboxController joystick = new CommandXboxController(0);
+    private final CommandXboxController driverController = new CommandXboxController(0);
 
     public final CommandSwerveDrivetrain drivetrain = TunerConstants.createDrivetrain();
 
@@ -44,12 +47,21 @@ public class RobotContainer {
     private final AutoFactory autoFactory;
     private final AutoRoutines autoRoutines;
     private final AutoChooser autoChooser = new AutoChooser();
+    private final AutoChooser reefRightChooser = new AutoChooser();
+    private final AutoChooser reefLeftChooser = new AutoChooser();
+
+    private boolean onFieldRight;
 
     public RobotContainer() {
         autoFactory = drivetrain.createAutoFactory();
         autoRoutines = new AutoRoutines(autoFactory);
 
         autoChooser.addRoutine("SimplePath", autoRoutines::simplePathAuto);
+        reefRightChooser.addRoutine("RCSPath", autoRoutines::teleopRCS);
+        reefLeftChooser.addRoutine("LCSPath", autoRoutines::teleopLCS);
+        
+        SmartDashboard.putData("ReefRight Chooser", reefRightChooser);
+        SmartDashboard.putData("ReefLeft Chooser", reefLeftChooser);
         SmartDashboard.putData("Auto Chooser", autoChooser);
 
         configureBindings();
@@ -61,37 +73,51 @@ public class RobotContainer {
         drivetrain.setDefaultCommand(
             // Drivetrain will execute this command periodically
             drivetrain.applyRequest(() ->
-                drive.withVelocityX(-joystick.getLeftY() * MaxSpeed) // Drive forward with negative Y (forward)
-                    .withVelocityY(-joystick.getLeftX() * MaxSpeed) // Drive left with negative X (left)
-                    .withRotationalRate(-joystick.getRightX() * MaxAngularRate) // Drive counterclockwise with negative X (left)
+                drive.withVelocityX(-driverController.getLeftY() * MaxSpeed) // Drive forward with negative Y (forward)
+                    .withVelocityY(-driverController.getLeftX() * MaxSpeed) // Drive left with negative X (left)
+                    .withRotationalRate(-driverController.getRightX() * MaxAngularRate) // Drive counterclockwise with negative X (left)
             )
         );
 
-        joystick.a().whileTrue(drivetrain.applyRequest(() -> brake));
-        joystick.b().whileTrue(drivetrain.applyRequest(() ->
-            point.withModuleDirection(new Rotation2d(-joystick.getLeftY(), -joystick.getLeftX()))
+        driverController.a().whileTrue(drivetrain.applyRequest(() -> brake));
+        driverController.b().whileTrue(drivetrain.applyRequest(() ->
+            point.withModuleDirection(new Rotation2d(-driverController.getLeftY(), -driverController.getLeftX()))
         ));
 
-        joystick.pov(0).whileTrue(drivetrain.applyRequest(() ->
+        driverController.pov(0).whileTrue(drivetrain.applyRequest(() ->
             forwardStraight.withVelocityX(0.5).withVelocityY(0))
         );
-        joystick.pov(180).whileTrue(drivetrain.applyRequest(() ->
+        driverController.pov(180).whileTrue(drivetrain.applyRequest(() ->
             forwardStraight.withVelocityX(-0.5).withVelocityY(0))
         );
 
         // Run SysId routines when holding back/start and X/Y.
         // Note that each routine should be run exactly once in a single log.
-        joystick.back().and(joystick.y()).whileTrue(drivetrain.sysIdDynamic(Direction.kForward));
-        joystick.back().and(joystick.x()).whileTrue(drivetrain.sysIdDynamic(Direction.kReverse));
-        joystick.start().and(joystick.y()).whileTrue(drivetrain.sysIdQuasistatic(Direction.kForward));
-        joystick.start().and(joystick.x()).whileTrue(drivetrain.sysIdQuasistatic(Direction.kReverse));
+        driverController.back().and(driverController.y()).whileTrue(drivetrain.sysIdDynamic(Direction.kForward));
+        driverController.back().and(driverController.x()).whileTrue(drivetrain.sysIdDynamic(Direction.kReverse));
+        driverController.start().and(driverController.y()).whileTrue(drivetrain.sysIdQuasistatic(Direction.kForward));
+        driverController.start().and(driverController.x()).whileTrue(drivetrain.sysIdQuasistatic(Direction.kReverse));
 
         // reset the field-centric heading on left bumper press
-        joystick.leftBumper().onTrue(drivetrain.runOnce(() -> drivetrain.seedFieldCentric()));
+        driverController.leftBumper().onTrue(drivetrain.runOnce(() -> drivetrain.seedFieldCentric()));
 
         drivetrain.registerTelemetry(logger::telemeterize);
-    }
 
+        onFieldRight = drivetrain.getDrivetrainState().Pose.getY() < 4;
+
+        driverController.y().onTrue(getYCommand(onFieldRight));
+    }
+    public Command getYCommand(boolean onFieldRight) {
+        System.out.println("onFieldRight: " + onFieldRight); // Debugging output
+        if (onFieldRight) {
+            System.out.println("Selecting Reef Right Auto Routine"); // Debugging output
+            return reefRightChooser.selectedCommandScheduler();
+        } else {
+            System.out.println("Selecting Reef Left Auto Routine"); // Debugging output
+            return reefLeftChooser.selectedCommandScheduler();
+        }
+    }
+    
     public Command getAutonomousCommand() {
         /* Run the routine selected from the auto chooser */
         return autoChooser.selectedCommand();
