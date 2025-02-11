@@ -12,9 +12,12 @@ import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.commands.Autos;
+import frc.robot.subsystems.ClimbDeepSubsystem;
 import frc.robot.subsystems.Drive.CommandSwerveDrivetrain;
 import frc.robot.subsystems.Drive.Telemetry;
 import frc.robot.subsystems.Drive.TunerConstants;
+import frc.robot.subsystems.ElevatorSubsystem;
+import frc.robot.subsystems.IntakeSubsystem;
 
 import static edu.wpi.first.units.Units.RadiansPerSecond;
 import static edu.wpi.first.units.Units.RotationsPerSecond;
@@ -28,6 +31,9 @@ import static edu.wpi.first.units.Units.RotationsPerSecond;
  */
 public class RobotContainer {
     private RobotState state = RobotState.NONE;
+    private final IntakeSubsystem intakeSubsystem;
+    private final ElevatorSubsystem elevatorSubsystem;
+    private final ClimbDeepSubsystem climbDeepSubsystem;
     private double MAX_SPEED = TunerConstants.kSpeedAt12Volts.in(Units.MetersPerSecond); // kSpeedAt12Volts desired top speed
     private double MAX_ANGULAR_RATE = RotationsPerSecond.of(0.75).in(RadiansPerSecond); // 3/4 of a rotation per second max angular velocity
 
@@ -45,6 +51,9 @@ public class RobotContainer {
         drivetrain = TunerConstants.createDrivetrain();
         autoFactory = drivetrain.createAutoFactory();
         autoRoutines = new Autos(autoFactory);
+        climbDeepSubsystem = new ClimbDeepSubsystem();
+        intakeSubsystem = new IntakeSubsystem();
+        elevatorSubsystem = new ElevatorSubsystem();
 
         autoChooser.addRoutine("SimplePath", () -> autoRoutines.getAutoRoutine("SimplePath"));
         SmartDashboard.putData("Auto Chooser", autoChooser);
@@ -58,16 +67,17 @@ public class RobotContainer {
      * {@link Trigger#Trigger(java.util.function.BooleanSupplier)} constructor
      * with an arbitrary predicate, or via the named factories in {@link
      * edu.wpi.first.wpilibj2.command.button.CommandGenericHID}'s subclasses for      {@link
-   * CommandXboxController
+     * CommandXboxController
      * Xbox}/{@link edu.wpi.first.wpilibj2.command.button.CommandPS4Controller
      * PS4} controllers or      {@link edu.wpi.first.wpilibj2.command.button.CommandJoystick Flight
-   * joysticks}.
+     * joysticks}.
      */
     private void configureBindings() {
         drivetrain.registerTelemetry(logger::telemeterize);
-        IO.mechanismController.a().onTrue(new InstantCommand(()->state=RobotState.INTAKE));
-        IO.mechanismController.b().onTrue(new InstantCommand(()->state=RobotState.SCORE));
-        IO.mechanismController.y().onTrue(new InstantCommand(()->state=RobotState.CLIMB));
+        IO.mechanismController.a().onTrue(new InstantCommand(() -> state = RobotState.INTAKE));
+        IO.mechanismController.b().onTrue(new InstantCommand(() -> state = RobotState.SCORE));
+        IO.mechanismController.y().onTrue(new InstantCommand(() -> state = RobotState.CLIMB));
+
     }
 
     /**

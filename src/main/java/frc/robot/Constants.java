@@ -91,4 +91,10 @@ public final class Constants {
         public static final int DRIVER_XBOX_PORT = 0;
         public static final int MECHANISM_XBOX_PORT = 1;
     }
+
+    public static class States {
+        public static class Intake {
+            public static double radiusInMeters = 0;
+        }
+    }
 }
