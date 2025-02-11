@@ -27,7 +27,7 @@ import static edu.wpi.first.units.Units.RotationsPerSecond;
  * commands, and trigger mappings) should be declared here.
  */
 public class RobotContainer {
-
+    private RobotState state = RobotState.NONE;
     private double MAX_SPEED = TunerConstants.kSpeedAt12Volts.in(Units.MetersPerSecond); // kSpeedAt12Volts desired top speed
     private double MAX_ANGULAR_RATE = RotationsPerSecond.of(0.75).in(RadiansPerSecond); // 3/4 of a rotation per second max angular velocity
 
@@ -75,5 +75,9 @@ public class RobotContainer {
      */
     public Command getAutonomousCommand() {
         return autoChooser.selectedCommand();
+    }
+
+    public RobotState getState() {
+        return this.state;
     }
 }
