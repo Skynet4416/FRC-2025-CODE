@@ -87,8 +87,8 @@ public final class Constants {
         }
     }
 
-    public static class OperatorConstants {
-
-        public static final int kDriverControllerPort = 0;
+    public static class IO {
+        public static final int DRIVER_XBOX_PORT = 0;
+        public static final int MECHANISM_XBOX_PORT = 1;
     }
 }

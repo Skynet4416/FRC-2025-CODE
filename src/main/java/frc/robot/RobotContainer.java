@@ -65,7 +65,9 @@ public class RobotContainer {
      */
     private void configureBindings() {
         drivetrain.registerTelemetry(logger::telemeterize);
-
+        IO.mechanismController.a().onTrue(new InstantCommand(()->state=RobotState.INTAKE));
+        IO.mechanismController.b().onTrue(new InstantCommand(()->state=RobotState.SCORE));
+        IO.mechanismController.y().onTrue(new InstantCommand(()->state=RobotState.CLIMB));
     }
 
     /**
