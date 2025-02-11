@@ -1,11 +1,11 @@
 package frc.robot.subsystems;
 
+import com.revrobotics.RelativeEncoder;
 import com.revrobotics.spark.SparkBase.ControlType;
 import com.revrobotics.spark.SparkBase.PersistMode;
 import com.revrobotics.spark.SparkBase.ResetMode;
-import com.revrobotics.spark.SparkLowLevel.MotorType;
-import com.revrobotics.RelativeEncoder;
 import com.revrobotics.spark.SparkClosedLoopController;
+import com.revrobotics.spark.SparkLowLevel.MotorType;
 import com.revrobotics.spark.SparkMax;
 import com.revrobotics.spark.config.SparkMaxConfig;
 
@@ -17,36 +17,39 @@ import frc.robot.Constants.Subsystems.Elevator;
 public class ElevatorSubsystem extends SubsystemBase {
 
     private final SparkMax motorLeader;
-    private final SparkMax motorSlave1;
-    private final SparkMax motorSlave2;
-    private final SparkMax motorSlave3;
+    private final SparkMax motorRightSlave;
+    private final SparkMax motorLeftSlave1;
+    private final SparkMax motorleftSlave2;
 
     private final RelativeEncoder masterEncoder;
     private final SparkClosedLoopController masterClosedLoopController;
 
     public ElevatorSubsystem() {
         motorLeader = new SparkMax(Elevator.Motors.MASTER_CAN_ID, MotorType.kBrushless);
-        motorSlave1 = new SparkMax(Elevator.Motors.SLAVE_1_CAN_ID, MotorType.kBrushless);
-        motorSlave2 = new SparkMax(Elevator.Motors.SLAVE_2_CAN_ID, MotorType.kBrushless);
-        motorSlave3 = new SparkMax(Elevator.Motors.SLAVE_3_CAN_ID, MotorType.kBrushless);
+        motorRightSlave = new SparkMax(Elevator.Motors.RIGHT_SLAVE_CAN_ID, MotorType.kBrushless);
+        motorLeftSlave1 = new SparkMax(Elevator.Motors.LEFT_SLAVE_1_CAN_ID, MotorType.kBrushless);
+        motorleftSlave2 = new SparkMax(Elevator.Motors.LEFT_SLAVE_2_CAN_ID, MotorType.kBrushless);
 
         SparkMaxConfig leaderConfig = new SparkMaxConfig();
 
-        leaderConfig.encoder.positionConversionFactor(Elevator.Physical.WHEEL_RADIUS_IN_METERS * 2 * Math.PI / Elevator.Physical.GEAR_RATIO);
-        leaderConfig.encoder.velocityConversionFactor(Elevator.Physical.WHEEL_RADIUS_IN_METERS * 2 * Math.PI / (Elevator.Physical.GEAR_RATIO * 60));
-        // move math to constants
+        leaderConfig.encoder.positionConversionFactor(Elevator.Physical.POSITION_CONVERSION_FACTOR);
+        leaderConfig.encoder.velocityConversionFactor(Elevator.Physical.VELOCITY_CONVERSION_FACTOR);
 
-        leaderConfig.closedLoop.pid(Elevator.PID.KP, Elevator.PID.KI, Elevator.PID.KD).maxMotion.maxVelocity(Elevator.Physical.MAX_VELOCITY_IN_MPS).maxAcceleration(Elevator.Physical.MAX_ACCELERATION_IN_MPS_SQUARED);
+        leaderConfig.closedLoop.pid(Elevator.PID.KP, Elevator.PID.KI, Elevator.PID.KD).maxMotion.maxVelocity(Elevator.Physical.MAX_VELOCITY_IN_MPS).maxAcceleration(Elevator.Physical.MAX_ACCELERATION_IN_MPS_SQUARED).allowedClosedLoopError(Elevator.Controls.HEIGHT_THRESHOLD_IN_METERS);
 
         motorLeader.configure(leaderConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
 
-        SparkMaxConfig slaveConfig = new SparkMaxConfig();
+        SparkMaxConfig rightSlaveConfig = new SparkMaxConfig();
 
-        slaveConfig.follow(motorLeader);
+        rightSlaveConfig.follow(motorLeader);
 
-        motorSlave1.configure(slaveConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
-        motorSlave2.configure(slaveConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
-        motorSlave3.configure(slaveConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
+        SparkMaxConfig leftSlaveConfig = new SparkMaxConfig();
+
+        rightSlaveConfig.follow(motorLeader, true);
+
+        motorRightSlave.configure(rightSlaveConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
+        motorLeftSlave1.configure(leftSlaveConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
+        motorleftSlave2.configure(leftSlaveConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
 
         this.masterEncoder = this.motorLeader.getEncoder();
         this.masterClosedLoopController = this.motorLeader.getClosedLoopController();

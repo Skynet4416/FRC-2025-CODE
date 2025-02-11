@@ -22,9 +22,9 @@ public final class Constants {
             public static class Motors {
 
                 public final static int MASTER_CAN_ID = 0;
-                public final static int SLAVE_1_CAN_ID = 0;
-                public final static int SLAVE_2_CAN_ID = 0;
-                public final static int SLAVE_3_CAN_ID = 0;
+                public final static int RIGHT_SLAVE_CAN_ID = 0;
+                public final static int LEFT_SLAVE_1_CAN_ID = 0;
+                public final static int LEFT_SLAVE_2_CAN_ID = 0;
             }
 
             public static class Physical {
@@ -34,10 +34,13 @@ public final class Constants {
                 public final static double MAX_VELOCITY_IN_MPS = 0;
                 public final static double MAX_ACCELERATION_IN_MPS_SQUARED = 0;
                 public final static double MAX_HEIGHT_IN_METERS = 0;
+                public final static double POSITION_CONVERSION_FACTOR = WHEEL_RADIUS_IN_METERS * 2 * Math.PI / GEAR_RATIO;
+                public final static double VELOCITY_CONVERSION_FACTOR = POSITION_CONVERSION_FACTOR / 60.0;
 
             }
 
             public static class Controls {
+
                 public static final double HEIGHT_THRESHOLD_IN_METERS = 0;
                 public static final double ELEVATOR_PERCENTAGE = 0;
             }
@@ -51,27 +54,34 @@ public final class Constants {
         }
 
         public static class Intake {
+
             public static class Motors {
+
                 public final static int UPPER_MASTER_SPARK_FLEX_ID = 1;
                 public final static int LOWER_SLAVE_SPARK_FLEX_ID = 1;
 
             }
 
             public static class Physical {
+
                 public final static double INTAKE_PERCENTAGE = 0.3;
             }
         }
 
         public static class DeepCage {
+
             public static class Motors {
+
                 public final static int DEEP_CAGE_MAX_MOTOR_ID = 5;
             }
 
             public static class Sensors {
+
                 public final static int LEG_LIMIT_SWITCH_CHANNEL = 0;
             }
 
             public static class Physical {
+
                 public final static double percentage = 0.3;
             }
         }

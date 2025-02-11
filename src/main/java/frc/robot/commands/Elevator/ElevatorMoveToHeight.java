@@ -5,14 +5,14 @@
 package frc.robot.commands.Elevator;
 
 import edu.wpi.first.wpilibj2.command.Command;
-import frc.robot.subsystems.ElevatorSubsystem;
 import frc.robot.Constants.Subsystems.Elevator;
+import frc.robot.subsystems.ElevatorSubsystem;
 
-public class ElevatorMoveToPosZ extends Command {
+public class ElevatorMoveToHeight extends Command {
     private final ElevatorSubsystem elevatorSubsystem;
     private final double elevatorSetPointInMeters;
 
-    public ElevatorMoveToPosZ(ElevatorSubsystem elevatorSubsystem, double heightInMeters) {
+    public ElevatorMoveToHeight(ElevatorSubsystem elevatorSubsystem, double heightInMeters) {
         this.elevatorSubsystem = elevatorSubsystem;
         this.elevatorSetPointInMeters = heightInMeters;
         addRequirements(elevatorSubsystem);
