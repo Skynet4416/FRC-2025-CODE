@@ -45,6 +45,8 @@ public class RobotContainer {
   public RobotContainer() {
     drivetrain = TunerConstants.createDrivetrain();
     autos = new Autos(drivetrain.createAutoFactory());
+    autos.addCommandToAutos("IntakeOutwards",IntakeOutwardCommands());
+    NamedCommands.registerCommand("ShakNet",IntakeOutwardCommands());
 
     SmartDashboard.putData("Auto Chooser", autos.getAutoChooser());
     // Configure the trigger bindings

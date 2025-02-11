@@ -9,6 +9,7 @@ import com.ctre.phoenix6.Utils;
 import com.ctre.phoenix6.swerve.SwerveDrivetrainConstants;
 import com.ctre.phoenix6.swerve.SwerveModuleConstants;
 import com.ctre.phoenix6.swerve.SwerveRequest;
+import com.pathplanner.lib.auto.AutoBuilder;
 
 import choreo.Choreo.TrajectoryLogger;
 import choreo.auto.AutoFactory;
@@ -151,7 +152,8 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
      *
      * @param drivetrainConstants     Drivetrain-wide constants for the swerve drive
      * @param odometryUpdateFrequency The frequency to run the odometry loop. If
-     *                                unspecified or set to 0 Hz, this is 250 Hz on CAN FD, and 100 Hz on CAN
+     *                                unspecified or set to 0 Hz, this is 250 Hz on
+     *                                CAN FD, and 100 Hz on CAN
      *                                2.0.
      * @param modules                 Constants for each specific module
      */
@@ -172,14 +174,18 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
      * construct the devices themselves. If they need the devices, they can
      * access them through getters in the classes.
      *
-     * @param drivetrainConstants       Drivetrain-wide constants for the swerve drive
+     * @param drivetrainConstants       Drivetrain-wide constants for the swerve
+     *                                  drive
      * @param odometryUpdateFrequency   The frequency to run the odometry loop. If
-     *                                  unspecified or set to 0 Hz, this is 250 Hz on CAN FD, and 100 Hz on CAN
+     *                                  unspecified or set to 0 Hz, this is 250 Hz
+     *                                  on CAN FD, and 100 Hz on CAN
      *                                  2.0.
      * @param odometryStandardDeviation The standard deviation for odometry
-     *                                  calculation in the form [x, y, theta]ᵀ, with units in meters and radians
+     *                                  calculation in the form [x, y, theta]ᵀ, with
+     *                                  units in meters and radians
      * @param visionStandardDeviation   The standard deviation for vision
-     *                                  calculation in the form [x, y, theta]ᵀ, with units in meters and radians
+     *                                  calculation in the form [x, y, theta]ᵀ, with
+     *                                  units in meters and radians
      * @param modules                   Constants for each specific module
      */
     public CommandSwerveDrivetrain(
@@ -213,7 +219,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
      * @return AutoFactory for this drivetrain
      */
     public AutoFactory createAutoFactory(TrajectoryLogger<SwerveSample> trajLogger) {
-        return new AutoFactory(
+        return AutoBuilder.configure(
                 () -> getState().Pose,
                 this::resetPose,
                 this::followPath,
@@ -347,7 +353,8 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
      * @param timestampSeconds         The timestamp of the vision measurement in
      *                                 seconds.
      * @param visionMeasurementStdDevs Standard deviations of the vision pose
-     *                                 measurement in the form [x, y, theta]ᵀ, with units in meters and radians.
+     *                                 measurement in the form [x, y, theta]ᵀ, with
+     *                                 units in meters and radians.
      */
     @Override
     public void addVisionMeasurement(

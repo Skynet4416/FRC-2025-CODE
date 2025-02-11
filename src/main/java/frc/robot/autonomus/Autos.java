@@ -2,10 +2,8 @@ package frc.robot.autonomus;
 
 import java.io.File;
 
-import choreo.auto.AutoChooser;
-import choreo.auto.AutoFactory;
-import choreo.auto.AutoRoutine;
-import choreo.auto.AutoTrajectory;
+import com.pathplanner.lib.auto.NamedCommands;
+
 import edu.wpi.first.wpilibj.Filesystem;
 import edu.wpi.first.wpilibj2.command.Command;
 
@@ -37,7 +35,7 @@ public class Autos {
         return autoChooser;
     }
 
-    public void addCommandToAutos(String key, Command command){
-        this.autoChooser.
+    public void addCommandToAutos(String key, Command command) {
+        NamedCommands.registerCommand(key, command);
     }
 }
