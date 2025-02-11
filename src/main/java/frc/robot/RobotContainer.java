@@ -12,6 +12,8 @@ import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.commands.Autos;
+import frc.robot.commands.Intake.IntakeBasedOnStateCommand;
+import frc.robot.commands.Intake.IntakeShootCommand;
 import frc.robot.subsystems.ClimbDeepSubsystem;
 import frc.robot.subsystems.Drive.CommandSwerveDrivetrain;
 import frc.robot.subsystems.Drive.Telemetry;
@@ -78,6 +80,8 @@ public class RobotContainer {
         IO.mechanismController.b().onTrue(new InstantCommand(() -> state = RobotState.SCORE));
         IO.mechanismController.y().onTrue(new InstantCommand(() -> state = RobotState.CLIMB));
 
+        intakeSubsystem.setDefaultCommand(new IntakeBasedOnStateCommand(intakeSubsystem, this::getState, () -> this.drivetrain.getState().Pose));
+        IO.mechanismController.leftBumper().whileTrue(new IntakeShootCommand(intakeSubsystem, this::getState, () -> this.drivetrain.getState().Pose));
     }
 
     /**

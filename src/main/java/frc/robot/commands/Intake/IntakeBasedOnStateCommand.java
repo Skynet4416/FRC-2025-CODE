@@ -13,9 +13,9 @@ import java.util.function.Supplier;
 import static frc.robot.meth.Distance.isPointNearLineSegment;
 
 public class IntakeBasedOnStateCommand extends Command {
-    private IntakeSubsystem intakeSubsystem;
-    private Supplier<RobotState> stateSupplier;
-    private Supplier<Pose2d> positionalSupplier;
+    private final IntakeSubsystem intakeSubsystem;
+    private final Supplier<RobotState> stateSupplier;
+    private final Supplier<Pose2d> positionalSupplier;
 
     public IntakeBasedOnStateCommand(IntakeSubsystem intakeSubsystem, Supplier<RobotState> stateSupplier, Supplier<Pose2d> positionSupplier) {
         this.intakeSubsystem = intakeSubsystem;
