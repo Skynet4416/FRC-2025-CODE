@@ -14,11 +14,11 @@ import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.commands.Autos;
 import frc.robot.commands.Intake.IntakeBasedOnStateCommand;
 import frc.robot.commands.Intake.IntakeShootCommand;
-import frc.robot.subsystems.ClimbDeepSubsystem;
+import frc.robot.subsystems.Leg.ClimbDeepSubsystem;
 import frc.robot.subsystems.Drive.CommandSwerveDrivetrain;
 import frc.robot.subsystems.Drive.Telemetry;
 import frc.robot.subsystems.Drive.TunerConstants;
-import frc.robot.subsystems.ElevatorSubsystem;
+import frc.robot.subsystems.Elevator.ElevatorSubsystem;
 import frc.robot.subsystems.Intake.IntakeSubsystem;
 
 import static edu.wpi.first.units.Units.RadiansPerSecond;

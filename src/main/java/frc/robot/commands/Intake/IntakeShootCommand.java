@@ -5,6 +5,7 @@ import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.Constants;
 import frc.robot.FieldConstants;
 import frc.robot.RobotState;
+import frc.robot.meth.Distance;
 import frc.robot.subsystems.Intake.IntakeState;
 import frc.robot.subsystems.Intake.IntakeSubsystem;
 
@@ -13,9 +14,9 @@ import java.util.function.Supplier;
 import static frc.robot.meth.Distance.isPointNearLineSegment;
 
 public class IntakeShootCommand extends Command {
-    private IntakeSubsystem intakeSubsystem;
-    private Supplier<RobotState> stateSupplier;
-    private Supplier<Pose2d> positionalSupplier;
+    private final IntakeSubsystem intakeSubsystem;
+    private final Supplier<RobotState> stateSupplier;
+    private final Supplier<Pose2d> positionalSupplier;
 
     public IntakeShootCommand(IntakeSubsystem intakeSubsystem, Supplier<RobotState> stateSupplier, Supplier<Pose2d> positionSupplier) {
         this.intakeSubsystem = intakeSubsystem;
@@ -28,7 +29,8 @@ public class IntakeShootCommand extends Command {
     @Override
     public void initialize() {
         if (stateSupplier.get() == RobotState.SCORE) {
-            if (isPointNearLineSegment(positionalSupplier.get().getTranslation(), FieldConstants.CoralStation.leftCenterFace, FieldConstants.CoralStation.stationLength, Constants.States.Intake.radiusInMeters) || isPointNearLineSegment(positionalSupplier.get().getTranslation(), FieldConstants.CoralStation.rightCenterFace, FieldConstants.CoralStation.stationLength, Constants.States.Intake.radiusInMeters))
+            if (Distance.isPointNearLinesSegment(positionalSupplier.get().getTranslation(),
+                    FieldConstants.Reef.centerFaces, FieldConstants.Reef.faceLength, Constants.States.Intake.radiusInMeters) != null)
                 intakeSubsystem.moveMotor(Constants.Subsystems.Intake.Physical.INTAKE_PERCENTAGE);
         }
     }

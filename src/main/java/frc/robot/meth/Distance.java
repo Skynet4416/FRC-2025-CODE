@@ -18,6 +18,11 @@ public class Distance {
      * @return true if the point is within maxDistance from the line segment
      */
     public static boolean isPointNearLineSegment(Translation2d point, Pose2d center, double lineLength, double maxDistance) {
+
+        return distanceOfPointNearLineSegment(point, center, lineLength) <= maxDistance;
+    }
+
+    public static double distanceOfPointNearLineSegment(Translation2d point, Pose2d center, double lineLength) {
         Translation2d[] translation2ds = generateLinePoints(center, lineLength);
         Translation2d lineStart = translation2ds[0];
         Translation2d lineEnd = translation2ds[1];
@@ -30,7 +35,7 @@ public class Distance {
 
         // If line segment has zero length, just check distance to start point
         if (lineLengthSquared == 0) {
-            return point.getDistance(lineStart) <= maxDistance;
+            return point.getDistance(lineStart);
         }
 
         // Calculate projection factor
@@ -45,7 +50,7 @@ public class Distance {
         );
 
         // Check if distance to closest point is within maxDistance
-        return point.getDistance(projection) <= maxDistance;
+        return point.getDistance(projection);
     }
 
     /**
@@ -77,5 +82,19 @@ public class Distance {
 
 
         return new Translation2d[]{startPoint, endPoint};
+    }
+
+    public static Pose2d isPointNearLinesSegment(Translation2d point, Pose2d[] centers, double lineLength, double maxDistance) {
+        double minDistance = distanceOfPointNearLineSegment(point, centers[0], lineLength);
+        Pose2d minDistancePoint = centers[0];
+        for (Pose2d center : centers) {
+            double distance = distanceOfPointNearLineSegment(point, center, lineLength);
+
+            if (minDistance > distance) {
+                minDistance = distance;
+                minDistancePoint = center;
+            }
+        }
+        return minDistance < maxDistance ? minDistancePoint : null;
     }
 }

@@ -4,7 +4,7 @@
 package frc.robot.commands.Elevator;
 
 import edu.wpi.first.wpilibj2.command.Command;
-import frc.robot.subsystems.ElevatorSubsystem;
+import frc.robot.subsystems.Elevator.ElevatorSubsystem;
 import frc.robot.Constants.Subsystems.Elevator;
 
 public class ElevatorMoveDownBySetPercentage extends Command {

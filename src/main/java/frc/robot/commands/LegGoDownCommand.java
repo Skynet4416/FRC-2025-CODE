@@ -1,7 +1,7 @@
 package frc.robot.commands;
 
 import frc.robot.Constants.Subsystems.DeepCage;
-import frc.robot.subsystems.ClimbDeepSubsystem;
+import frc.robot.subsystems.Leg.ClimbDeepSubsystem;
 
 import edu.wpi.first.wpilibj2.command.Command;
 
