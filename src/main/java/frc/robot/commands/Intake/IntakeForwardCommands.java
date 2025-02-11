@@ -1,9 +1,7 @@
-package frc.robot.commands;
+package frc.robot.commands.Intake;
 
 import frc.robot.Constants.Subsystems.Intake;
-import frc.robot.subsystems.IntakeSubsystem;
-
-import com.revrobotics.spark.SparkFlex;
+import frc.robot.subsystems.Intake.IntakeSubsystem;
 
 import edu.wpi.first.wpilibj2.command.Command;
 public class IntakeForwardCommands extends Command{

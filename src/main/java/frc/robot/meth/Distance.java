@@ -12,8 +12,8 @@ public class Distance {
      * Checks if a point is within a specified distance from a line segment
      *
      * @param point       The point to check
-     * @param lineStart   Start point of the line segment
-     * @param lineEnd     End point of the line segment
+     * @param center      Start middle point of the line segment
+     * @param lineLength  the length of the line
      * @param maxDistance The maximum allowed distance from the line segment
      * @return true if the point is within maxDistance from the line segment
      */

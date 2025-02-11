@@ -1,4 +1,4 @@
-package frc.robot.subsystems;
+package frc.robot.subsystems.Intake;
 
 import com.revrobotics.RelativeEncoder;
 import com.revrobotics.spark.SparkBase;
@@ -16,6 +16,9 @@ public class IntakeSubsystem extends SubsystemBase {
     private final SparkFlex lowerIntakeSparkFlex;
 
     private final RelativeEncoder upperMasterIntakeFlexEncoder;
+    private IntakeState intakeState;
+    private IntakeState intendedState;
+    private double prevVelocity = 0;
 
     public IntakeSubsystem() {
         upperIntakeSparkFlex = new SparkFlex(Intake.Motors.UPPER_MASTER_SPARK_FLEX_ID, MotorType.kBrushless);
@@ -32,6 +35,7 @@ public class IntakeSubsystem extends SubsystemBase {
 
     public void moveMotor(double percentage) {
         this.upperIntakeSparkFlex.set(percentage);
+        intendedState = percentage > 0 ? IntakeState.FULL : IntakeState.EMPTY;
     }
 
     public void stopMotor() {
@@ -42,6 +46,22 @@ public class IntakeSubsystem extends SubsystemBase {
     public void periodic() {
         SmartDashboard.putNumber("current percentage", upperIntakeSparkFlex.get());
         SmartDashboard.putNumber("current velocity RPM", upperMasterIntakeFlexEncoder.getVelocity());
+        SmartDashboard.putNumber("current deceleration", upperMasterIntakeFlexEncoder.getVelocity() - prevVelocity);
+
+        if (intendedState != intakeState) {
+            switch (intendedState) {
+                case FULL ->
+                        intakeState = upperMasterIntakeFlexEncoder.getVelocity() - prevVelocity > Intake.Physical.DECELERATION_THRESHOLD ? IntakeState.FULL : intakeState;
+                case EMPTY ->
+                        intakeState = upperMasterIntakeFlexEncoder.getVelocity() - prevVelocity > -Intake.Physical.DECELERATION_THRESHOLD ? IntakeState.EMPTY : intakeState;
+            }
+        }
+
+        prevVelocity = upperMasterIntakeFlexEncoder.getVelocity();
+    }
+
+    public IntakeState getState() {
+        return intakeState;
     }
 
 }

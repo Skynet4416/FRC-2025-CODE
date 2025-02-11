@@ -65,6 +65,7 @@ public final class Constants {
             public static class Physical {
 
                 public final static double INTAKE_PERCENTAGE = 0.3;
+                public static final double DECELERATION_THRESHOLD = -50; // how many rpm declerates in one iteration
             }
         }
 
