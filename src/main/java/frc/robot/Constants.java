@@ -93,6 +93,11 @@ public final class Constants {
     }
 
     public static class States {
+
+        public static final class Climb{
+            public static double ELEVATOR_HEIGHT=0.27;
+            public static double ELEVATOR_DOWN=0.27;
+        }
         public static class Intake {
             public static double RADIUS_IN_METERS = 0;
             public static double ELEVATOR_HEIGHT = 0.27;

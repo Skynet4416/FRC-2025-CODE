@@ -6,6 +6,7 @@ import frc.robot.Constants;
 import frc.robot.FieldConstants;
 import frc.robot.RobotState;
 import frc.robot.meth.Distance;
+import frc.robot.subsystems.Elevator.ElevatorState;
 import frc.robot.subsystems.Elevator.ElevatorSubsystem;
 
 import java.util.function.Supplier;
@@ -17,6 +18,7 @@ public class ElevatorBasedOnStateCommand extends Command {
     private final ElevatorSubsystem elevatorSubsystem;
     private final Supplier<RobotState> robotStateSupplier;
     private final Supplier<Pose2d> positionSupplier;
+    private RobotState intendedState;
 
     public ElevatorBasedOnStateCommand(ElevatorSubsystem elevatorSubsystem, Supplier<RobotState> robotStateSupplier, Supplier<Pose2d> positionSupplier) {
         this.elevatorSubsystem = elevatorSubsystem;
@@ -41,8 +43,15 @@ public class ElevatorBasedOnStateCommand extends Command {
                         FieldConstants.Reef.centerFaces, FieldConstants.Reef.faceLength, Constants.States.Intake.RADIUS_IN_METERS) != null))
                     elevatorSubsystem.setElevatorDistanceInMeters(Constants.States.Score.ELEVATOR_HEIGHT);
                 break;
+            case CLIMB:
+                if (elevatorSubsystem.getState() == ElevatorState.DOWN) {
+                    elevatorSubsystem.setElevatorDistanceInMeters(Constants.States.Climb.ELEVATOR_HEIGHT);
+                    elevatorSubsystem.setState(ElevatorState.UP);
+                }
+                break;
             default:
                 elevatorSubsystem.setElevatorDistanceInMeters(Constants.States.None.ELEVATOR_HEIGHT);
+                break;
         }
     }
 }

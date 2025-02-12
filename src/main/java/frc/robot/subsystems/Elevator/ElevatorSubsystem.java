@@ -23,18 +23,19 @@ public class ElevatorSubsystem extends SubsystemBase {
 
     private final RelativeEncoder masterEncoder;
     private final SparkClosedLoopController masterClosedLoopController;
+    private ElevatorState state;
 
     public ElevatorSubsystem() {
         motorLeader = new SparkMax(Elevator.Motors.MASTER_CAN_ID, MotorType.kBrushless);
         motorRightSlave = new SparkMax(Elevator.Motors.RIGHT_SLAVE_CAN_ID, MotorType.kBrushless);
         motorLeftSlave1 = new SparkMax(Elevator.Motors.LEFT_SLAVE_1_CAN_ID, MotorType.kBrushless);
         motorleftSlave2 = new SparkMax(Elevator.Motors.LEFT_SLAVE_2_CAN_ID, MotorType.kBrushless);
-
+        state = ElevatorState.DOWN;
         SparkMaxConfig leaderConfig = new SparkMaxConfig();
 
         leaderConfig.encoder.positionConversionFactor(Elevator.Physical.POSITION_CONVERSION_FACTOR);
         leaderConfig.encoder.velocityConversionFactor(Elevator.Physical.VELOCITY_CONVERSION_FACTOR);
-
+        leaderConfig.smartCurrentLimit(40).voltageCompensation(12);
         leaderConfig.closedLoop.pid(Elevator.PID.KP, Elevator.PID.KI, Elevator.PID.KD).maxMotion.maxVelocity(Elevator.Physical.MAX_VELOCITY_IN_MPS).maxAcceleration(Elevator.Physical.MAX_ACCELERATION_IN_MPS_SQUARED).allowedClosedLoopError(Elevator.Controls.HEIGHT_THRESHOLD_IN_METERS);
 
         motorLeader.configure(leaderConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
@@ -79,6 +80,14 @@ public class ElevatorSubsystem extends SubsystemBase {
     public void periodic() {
         SmartDashboard.putNumber("Current elevator position meters", masterEncoder.getPosition());
         SmartDashboard.putNumber("Current elevator Velocity mps", masterEncoder.getVelocity());
+    }
+
+    public void setState(ElevatorState state) {
+        this.state = state;
+    }
+
+    public ElevatorState getState() {
+        return this.state;
     }
 
 }
