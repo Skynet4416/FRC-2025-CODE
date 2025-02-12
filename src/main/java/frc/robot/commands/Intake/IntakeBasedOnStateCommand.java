@@ -28,7 +28,7 @@ public class IntakeBasedOnStateCommand extends Command {
     @Override
     public void execute() {
         if (stateSupplier.get() == RobotState.INTAKE && intakeSubsystem.getState() == IntakeState.EMPTY) {
-            if (isPointNearLineSegment(positionalSupplier.get().getTranslation(), FieldConstants.CoralStation.leftCenterFace, FieldConstants.CoralStation.stationLength, Constants.States.Intake.radiusInMeters) || isPointNearLineSegment(positionalSupplier.get().getTranslation(), FieldConstants.CoralStation.rightCenterFace, FieldConstants.CoralStation.stationLength, Constants.States.Intake.radiusInMeters))
+            if (isPointNearLineSegment(positionalSupplier.get().getTranslation(), FieldConstants.CoralStation.leftCenterFace, FieldConstants.CoralStation.stationLength, Constants.States.Intake.RADIUS_IN_METERS) || isPointNearLineSegment(positionalSupplier.get().getTranslation(), FieldConstants.CoralStation.rightCenterFace, FieldConstants.CoralStation.stationLength, Constants.States.Intake.RADIUS_IN_METERS))
                 intakeSubsystem.moveMotor(Constants.Subsystems.Intake.Physical.INTAKE_PERCENTAGE);
         } else {
             intakeSubsystem.stopMotor();

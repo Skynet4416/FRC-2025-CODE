@@ -12,6 +12,7 @@ import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.commands.Autos;
+import frc.robot.commands.Elevator.ElevatorBasedOnStateCommand;
 import frc.robot.commands.Intake.IntakeBasedOnStateCommand;
 import frc.robot.commands.Intake.IntakeShootCommand;
 import frc.robot.subsystems.Leg.ClimbDeepSubsystem;
@@ -82,6 +83,9 @@ public class RobotContainer {
 
         intakeSubsystem.setDefaultCommand(new IntakeBasedOnStateCommand(intakeSubsystem, this::getState, () -> this.drivetrain.getState().Pose));
         IO.mechanismController.leftBumper().whileTrue(new IntakeShootCommand(intakeSubsystem, this::getState, () -> this.drivetrain.getState().Pose));
+
+        elevatorSubsystem.setDefaultCommand(new ElevatorBasedOnStateCommand(elevatorSubsystem, this::getState, () -> this.drivetrain.getState().Pose));
+        //need to add elevator up when climbing.
     }
 
     /**

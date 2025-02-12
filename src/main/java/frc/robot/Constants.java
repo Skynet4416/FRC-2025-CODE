@@ -29,14 +29,13 @@ public final class Constants {
 
             public static class Physical {
 
-                public final static double WHEEL_RADIUS_IN_METERS = 0.03;
-                public final static double GEAR_RATIO = 40;
-                public final static double MAX_VELOCITY_IN_MPS = 4.71238898;
+                public final static double WHEEL_RADIUS_IN_METERS = 0.0214;
+                public final static double GEAR_RATIO = 38.7072;
                 public final static double MAX_ACCELERATION_IN_MPS_SQUARED = 5.7;
                 public final static double MAX_HEIGHT_IN_METERS = 0.27;
                 public final static double POSITION_CONVERSION_FACTOR = WHEEL_RADIUS_IN_METERS * 2 * Math.PI / GEAR_RATIO;
                 public final static double VELOCITY_CONVERSION_FACTOR = POSITION_CONVERSION_FACTOR / 60.0;
-
+                public final static double MAX_VELOCITY_IN_MPS = 6000 * VELOCITY_CONVERSION_FACTOR;
             }
 
             public static class Controls {
@@ -95,7 +94,17 @@ public final class Constants {
 
     public static class States {
         public static class Intake {
-            public static double radiusInMeters = 0;
+            public static double RADIUS_IN_METERS = 0;
+            public static double ELEVATOR_HEIGHT = 0.27;
+        }
+
+        public static class Score {
+            public static double RADIUS_IN_METERS = 0;
+
+            public static double ELEVATOR_HEIGHT = 0;
+        }
+        public static class None{
+            public static double ELEVATOR_HEIGHT = 0;
         }
     }
 }

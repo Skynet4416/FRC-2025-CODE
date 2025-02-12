@@ -11,8 +11,6 @@ import frc.robot.subsystems.Intake.IntakeSubsystem;
 
 import java.util.function.Supplier;
 
-import static frc.robot.meth.Distance.isPointNearLineSegment;
-
 public class IntakeShootCommand extends Command {
     private final IntakeSubsystem intakeSubsystem;
     private final Supplier<RobotState> stateSupplier;
@@ -30,7 +28,7 @@ public class IntakeShootCommand extends Command {
     public void initialize() {
         if (stateSupplier.get() == RobotState.SCORE) {
             if (Distance.isPointNearLinesSegment(positionalSupplier.get().getTranslation(),
-                    FieldConstants.Reef.centerFaces, FieldConstants.Reef.faceLength, Constants.States.Intake.radiusInMeters) != null)
+                    FieldConstants.Reef.centerFaces, FieldConstants.Reef.faceLength, Constants.States.Intake.RADIUS_IN_METERS) != null)
                 intakeSubsystem.moveMotor(Constants.Subsystems.Intake.Physical.INTAKE_PERCENTAGE);
         }
     }
