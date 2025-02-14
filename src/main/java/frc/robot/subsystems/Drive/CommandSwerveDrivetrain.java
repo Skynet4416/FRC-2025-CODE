@@ -373,9 +373,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
         }
     }
 
-    public void drive(double xVelocity, double yVelocity, double omegaVelocity, boolean manual) {
-        if (manual) {
-            
-        }
+    public double calculateRotation(double angleInRadians){
+        return m_pathThetaController.calculate(getState().Pose.getRotation().getRadians(), angleInRadians);
     }
 }

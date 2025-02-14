@@ -12,6 +12,7 @@ import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.commands.Autos;
+import frc.robot.commands.DriveCommand;
 import frc.robot.commands.Elevator.ElevatorBasedOnStateCommand;
 import frc.robot.commands.Elevator.ElevatorMoveToHeight;
 import frc.robot.commands.Intake.IntakeBasedOnStateCommand;
@@ -48,6 +49,7 @@ public class RobotContainer {
     private final AutoChooser autoChooser = new AutoChooser();
     public final CommandSwerveDrivetrain drivetrain;
     private final Telemetry logger = new Telemetry(MAX_SPEED);
+    private boolean manualOverride = false;
 
     /**
      * The container for the robot. Contains subsystems, OI devices, and
@@ -80,6 +82,7 @@ public class RobotContainer {
      */
     private void configureBindings() {
         drivetrain.registerTelemetry(logger::telemeterize);
+
         IO.mechanismController.a().onTrue(new InstantCommand(() -> state = RobotState.INTAKE));
         IO.mechanismController.b().onTrue(new InstantCommand(() -> state = RobotState.SCORE));
         IO.mechanismController.y().onTrue(new InstantCommand(() -> state = RobotState.CLIMB));
@@ -89,6 +92,10 @@ public class RobotContainer {
 
         elevatorSubsystem.setDefaultCommand(new ElevatorBasedOnStateCommand(elevatorSubsystem, this::getState, () -> this.drivetrain.getState().Pose));
         IO.mechanismController.leftBumper().whileTrue(new LegGoDownCommand(climbDeepSubsystem).andThen(new ElevatorMoveToHeight(elevatorSubsystem, Constants.States.Climb.ELEVATOR_DOWN)));
+
+        drivetrain.setDefaultCommand(new DriveCommand(drivetrain, this::getState, () -> -IO.driverController.getLeftX(), () -> -IO.driverController.getLeftY(), () -> -IO.driverController.getRightX(), this::getManualOverride));
+        IO.driverController.rightBumper().onTrue(new InstantCommand(() -> this.manualOverride = true));
+        IO.driverController.rightBumper().onFalse(new InstantCommand(() -> this.manualOverride = false));
 
     }
 
@@ -103,5 +110,9 @@ public class RobotContainer {
 
     public RobotState getState() {
         return this.state;
+    }
+
+    public boolean getManualOverride() {
+        return this.manualOverride;
     }
 }

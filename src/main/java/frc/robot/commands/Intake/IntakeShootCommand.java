@@ -28,7 +28,7 @@ public class IntakeShootCommand extends Command {
     public void initialize() {
         if (stateSupplier.get() == RobotState.SCORE) {
             if (Distance.isPointNearLinesSegment(positionalSupplier.get().getTranslation(),
-                    FieldConstants.Reef.centerFaces, FieldConstants.Reef.faceLength, Constants.States.Intake.RADIUS_IN_METERS) != null)
+                    FieldConstants.Reef.centerFaces, FieldConstants.Reef.faceLength, Constants.States.Score.RADIUS_IN_METERS) != null)
                 intakeSubsystem.moveMotor(Constants.Subsystems.Intake.Physical.INTAKE_PERCENTAGE);
         }
     }

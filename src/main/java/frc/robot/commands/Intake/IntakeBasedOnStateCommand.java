@@ -11,6 +11,7 @@ import frc.robot.subsystems.Intake.IntakeSubsystem;
 import java.util.function.Supplier;
 
 import static frc.robot.meth.Distance.isPointNearLineSegment;
+import static frc.robot.meth.Distance.isPointNearLinesSegment;
 
 public class IntakeBasedOnStateCommand extends Command {
     private final IntakeSubsystem intakeSubsystem;
@@ -28,7 +29,9 @@ public class IntakeBasedOnStateCommand extends Command {
     @Override
     public void execute() {
         if (stateSupplier.get() == RobotState.INTAKE && intakeSubsystem.getState() == IntakeState.EMPTY) {
-            if (isPointNearLineSegment(positionalSupplier.get().getTranslation(), FieldConstants.CoralStation.leftCenterFace, FieldConstants.CoralStation.stationLength, Constants.States.Intake.RADIUS_IN_METERS) || isPointNearLineSegment(positionalSupplier.get().getTranslation(), FieldConstants.CoralStation.rightCenterFace, FieldConstants.CoralStation.stationLength, Constants.States.Intake.RADIUS_IN_METERS))
+            if (isPointNearLinesSegment(positionalSupplier.get().getTranslation(),
+                    new Pose2d[]{FieldConstants.CoralStation.leftCenterFace, FieldConstants.CoralStation.rightCenterFace},
+                    FieldConstants.CoralStation.stationLength, Constants.States.Intake.RADIUS_IN_METERS) != null)
                 intakeSubsystem.moveMotor(Constants.Subsystems.Intake.Physical.INTAKE_PERCENTAGE);
         } else {
             intakeSubsystem.stopMotor();

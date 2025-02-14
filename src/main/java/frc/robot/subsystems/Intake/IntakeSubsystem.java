@@ -53,7 +53,7 @@ public class IntakeSubsystem extends SubsystemBase {
                 case FULL ->
                         intakeState = upperMasterIntakeFlexEncoder.getVelocity() - prevVelocity > Intake.Physical.DECELERATION_THRESHOLD ? IntakeState.FULL : intakeState;
                 case EMPTY ->
-                        intakeState = upperMasterIntakeFlexEncoder.getVelocity() - prevVelocity > -Intake.Physical.DECELERATION_THRESHOLD ? IntakeState.EMPTY : intakeState;
+                        intakeState = upperMasterIntakeFlexEncoder.getVelocity() - prevVelocity < Intake.Physical.DECELERATION_THRESHOLD ? IntakeState.EMPTY : intakeState;
             }
         }
 
