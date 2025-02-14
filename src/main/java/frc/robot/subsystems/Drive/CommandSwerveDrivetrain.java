@@ -137,6 +137,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
             SwerveDrivetrainConstants drivetrainConstants,
             SwerveModuleConstants<?, ?, ?>... modules) {
         super(drivetrainConstants, modules);
+        m_pathThetaController.enableContinuousInput(-Math.PI, Math.PI);
         if (Utils.isSimulation()) {
             startSimThread();
         }
@@ -163,6 +164,8 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
         if (Utils.isSimulation()) {
             startSimThread();
         }
+        m_pathThetaController.enableContinuousInput(-Math.PI, Math.PI);
+
     }
 
     /**
@@ -193,6 +196,8 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
         if (Utils.isSimulation()) {
             startSimThread();
         }
+        m_pathThetaController.enableContinuousInput(-Math.PI, Math.PI);
+
     }
 
     /**
@@ -239,7 +244,6 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
      * @param sample Sample along the path to follow
      */
     public void followPath(SwerveSample sample) {
-        m_pathThetaController.enableContinuousInput(-Math.PI, Math.PI);
 
         var pose = getState().Pose;
 
@@ -366,6 +370,12 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
 
         } else {
             SmartDashboard.putBoolean("DRIVE VISION REJECTED", true);
+        }
+    }
+
+    public void drive(double xVelocity, double yVelocity, double omegaVelocity, boolean manual) {
+        if (manual) {
+            
         }
     }
 }
