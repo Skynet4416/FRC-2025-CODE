@@ -41,8 +41,8 @@ public class RobotContainer {
     private final IntakeSubsystem intakeSubsystem;
     private final ElevatorSubsystem elevatorSubsystem;
     private final ClimbDeepSubsystem climbDeepSubsystem;
-    private double MAX_SPEED = TunerConstants.kSpeedAt12Volts.in(Units.MetersPerSecond); // kSpeedAt12Volts desired top speed
-    private double MAX_ANGULAR_RATE = RotationsPerSecond.of(0.75).in(RadiansPerSecond); // 3/4 of a rotation per second max angular velocity
+    private final double MAX_SPEED = TunerConstants.kSpeedAt12Volts.in(Units.MetersPerSecond); // kSpeedAt12Volts desired top speed
+    private final double MAX_ANGULAR_RATE = RotationsPerSecond.of(0.75).in(RadiansPerSecond); // 3/4 of a rotation per second max angular velocity
 
     private final AutoFactory autoFactory;
     private final Autos autoRoutines;
@@ -93,7 +93,7 @@ public class RobotContainer {
         elevatorSubsystem.setDefaultCommand(new ElevatorBasedOnStateCommand(elevatorSubsystem, this::getState, () -> this.drivetrain.getState().Pose));
         IO.mechanismController.leftBumper().whileTrue(new LegGoDownCommand(climbDeepSubsystem).andThen(new ElevatorMoveToHeight(elevatorSubsystem, Constants.States.Climb.ELEVATOR_DOWN)));
 
-        drivetrain.setDefaultCommand(new DriveCommand(drivetrain, this::getState, () -> -IO.driverController.getLeftX(), () -> -IO.driverController.getLeftY(), () -> -IO.driverController.getRightX(), this::getManualOverride));
+        drivetrain.setDefaultCommand(new DriveCommand(drivetrain, this::getState, () -> -IO.driverController.getLeftY() * MAX_SPEED, () -> -IO.driverController.getLeftX() * MAX_SPEED, () -> -IO.driverController.getRightX() * MAX_ANGULAR_RATE, this::getManualOverride));
         IO.driverController.rightBumper().onTrue(new InstantCommand(() -> this.manualOverride = true));
         IO.driverController.rightBumper().onFalse(new InstantCommand(() -> this.manualOverride = false));
 
