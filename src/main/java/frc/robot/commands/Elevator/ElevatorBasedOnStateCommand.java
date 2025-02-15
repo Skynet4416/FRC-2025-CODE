@@ -11,7 +11,6 @@ import frc.robot.subsystems.Elevator.ElevatorSubsystem;
 
 import java.util.function.Supplier;
 
-import static frc.robot.meth.Distance.isPointNearLineSegment;
 import static frc.robot.meth.Distance.isPointNearLinesSegment;
 
 public class ElevatorBasedOnStateCommand extends Command {
@@ -35,22 +34,31 @@ public class ElevatorBasedOnStateCommand extends Command {
                 if (isPointNearLinesSegment(positionSupplier.get().getTranslation(),
                         new Pose2d[]{FieldConstants.CoralStation.leftCenterFace, FieldConstants.CoralStation.rightCenterFace},
                         FieldConstants.CoralStation.stationLength, Constants.States.Intake.RADIUS_IN_METERS) != null) {
-                    elevatorSubsystem.setElevatorDistanceInMeters(Constants.States.Score.ELEVATOR_HEIGHT);
-                    break;
+                    if (elevatorSubsystem.getIntendedState() == ElevatorState.DOWN && !elevatorSubsystem.elevatorAtSetpoint(Constants.States.None.ELEVATOR_HEIGHT)) {
+                        elevatorSubsystem.setPercentage(-Constants.Subsystems.Elevator.Controls.ELEVATOR_PERCENTAGE);
+                        break;
+                    } else if (elevatorSubsystem.getIntendedState() == ElevatorState.UP && !elevatorSubsystem.elevatorAtSetpoint(Constants.States.Intake.ELEVATOR_HEIGHT)) {
+                        elevatorSubsystem.setPercentage(-Constants.Subsystems.Elevator.Controls.ELEVATOR_PERCENTAGE);
+                        break;
+                    }
                 }
             case SCORE:
                 if ((Distance.isPointNearLinesSegment(positionSupplier.get().getTranslation(),
                         FieldConstants.Reef.centerFaces, FieldConstants.Reef.faceLength, Constants.States.Intake.RADIUS_IN_METERS) != null))
-                    elevatorSubsystem.setElevatorDistanceInMeters(Constants.States.Score.ELEVATOR_HEIGHT);
-                break;
+                    if (elevatorSubsystem.getIntendedState() == ElevatorState.DOWN && !elevatorSubsystem.elevatorAtSetpoint(Constants.States.None.ELEVATOR_HEIGHT)) {
+                        elevatorSubsystem.setPercentage(-Constants.Subsystems.Elevator.Controls.ELEVATOR_PERCENTAGE);
+                        break;
+                    } else if (elevatorSubsystem.getIntendedState() == ElevatorState.UP && !elevatorSubsystem.elevatorAtSetpoint(Constants.States.Score.ELEVATOR_HEIGHT)) {
+                        elevatorSubsystem.setPercentage(-Constants.Subsystems.Elevator.Controls.ELEVATOR_PERCENTAGE);
+                        break;
+                    }
             case CLIMB:
-                if (elevatorSubsystem.getState() == ElevatorState.DOWN) {
-                    elevatorSubsystem.setElevatorDistanceInMeters(Constants.States.Climb.ELEVATOR_HEIGHT);
-                    elevatorSubsystem.setState(ElevatorState.UP);
+                if (elevatorSubsystem.getIntendedState() == ElevatorState.UP && !elevatorSubsystem.elevatorAtSetpoint(Constants.States.Climb.ELEVATOR_HEIGHT))  {
+                    elevatorSubsystem.setPercentage(Constants.Subsystems.Elevator.Controls.ELEVATOR_PERCENTAGE);
+                    break;
                 }
-                break;
             default:
-                elevatorSubsystem.setElevatorDistanceInMeters(Constants.States.None.ELEVATOR_HEIGHT);
+                elevatorSubsystem.setPercentage(0);
                 break;
         }
     }

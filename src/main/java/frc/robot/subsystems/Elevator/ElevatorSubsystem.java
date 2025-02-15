@@ -1,8 +1,6 @@
 package frc.robot.subsystems.Elevator;
 
-import com.ctre.phoenix6.SignalLogger;
 import com.revrobotics.RelativeEncoder;
-import com.revrobotics.spark.SparkBase.ControlType;
 import com.revrobotics.spark.SparkBase.PersistMode;
 import com.revrobotics.spark.SparkBase.ResetMode;
 import com.revrobotics.spark.SparkClosedLoopController;
@@ -11,15 +9,10 @@ import com.revrobotics.spark.SparkMax;
 import com.revrobotics.spark.config.SparkBaseConfig;
 import com.revrobotics.spark.config.SparkMaxConfig;
 
-import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.Constants.Subsystems.Elevator;
-
-import static edu.wpi.first.units.Units.Second;
-import static edu.wpi.first.units.Units.Volts;
 
 public class ElevatorSubsystem extends SubsystemBase {
 
@@ -35,6 +28,7 @@ public class ElevatorSubsystem extends SubsystemBase {
 
     private double setpoint = 0;
     private SparkMaxConfig leaderConfig = new SparkMaxConfig();
+    private boolean resetedEncoder = false;
 
     public ElevatorSubsystem() {
         hallEffect = new DigitalInput(Elevator.Sensors.HALL_EFFECT_PORT);
@@ -66,21 +60,8 @@ public class ElevatorSubsystem extends SubsystemBase {
 
         this.masterEncoder = this.motorLeader.getEncoder();
         this.masterClosedLoopController = this.motorLeader.getClosedLoopController();
-
-        SmartDashboard.putNumber("elevator P", Elevator.PID.KP);
-        SmartDashboard.putNumber("elevator D", Elevator.PID.KD);
-        SmartDashboard.putNumber("elevator I", Elevator.PID.KI);
-
-
     }
 
-    public void setElevatorDistanceInMeters(double targetDistanceInMeters) {
-        double clampedDistanceInMeters = MathUtil.clamp(targetDistanceInMeters, 0, Elevator.Physical.MAX_HEIGHT_IN_METERS);
-        masterClosedLoopController.setReference(clampedDistanceInMeters,
-                ControlType.kMAXMotionPositionControl);
-
-        setpoint = clampedDistanceInMeters;
-    }
 
     public void setPercentage(double percentage) {
         motorLeader.set(percentage);
@@ -98,26 +79,31 @@ public class ElevatorSubsystem extends SubsystemBase {
 
         if (elevatorDown() && masterEncoder.getVelocity() <= 0) {
             masterEncoder.setPosition(0);
+            resetedEncoder = true;
         }
         SmartDashboard.putNumber("elevator voltage", motorLeader.getOutputCurrent());
         SmartDashboard.putNumber("elevator setpoint", setpoint);
 
-        if (Math.abs(getElevatorDistanceInMeter() - Elevator.Physical.MAX_HEIGHT_IN_METERS) < Elevator.Controls.HEIGHT_THRESHOLD_IN_METERS && motorLeader.get() > 0) {
+        if (Math.abs(getElevatorDistanceInMeter() - Elevator.Physical.MAX_HEIGHT_IN_METERS) < Elevator.Controls.HEIGHT_THRESHOLD_IN_METERS && motorLeader.get() > 0 || (resetedEncoder && getElevatorDistanceInMeter() < 0)) {
             setPercentage(0);
         }
 
     }
 
-    public void setState(ElevatorState state) {
+    public void setIntendedState(ElevatorState state) {
         this.state = state;
     }
 
-    public ElevatorState getState() {
+    public ElevatorState getIntendedState() {
         return this.state;
     }
 
     public boolean elevatorDown() {
         return !hallEffect.get();
+    }
+
+    public boolean elevatorAtSetpoint(double setpoint) {
+        return Math.abs(getElevatorDistanceInMeter() - setpoint) < Elevator.Controls.HEIGHT_THRESHOLD_IN_METERS;
     }
 
 }

@@ -4,7 +4,6 @@
 package frc.robot;
 
 import choreo.auto.AutoChooser;
-import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.units.Units;
 
 import static edu.wpi.first.units.Units.RadiansPerSecond;
@@ -14,14 +13,12 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
-import frc.robot.commands.Elevator.ElevatorMoveDownBySetPercentage;
 import frc.robot.commands.Elevator.ElevatorMoveToHeight;
 import frc.robot.commands.Elevator.ElevatorMoveUpBySetPercentage;
 import frc.robot.commands.Elevator.ElevatorResetLimitSwitch;
-import frc.robot.commands.Intake.IntakeBasedOnStateCommand;
-import frc.robot.commands.Intake.IntakeShootCommand;
 import frc.robot.subsystems.Drive.Telemetry;
 import frc.robot.subsystems.Drive.TunerConstants;
+import frc.robot.subsystems.Elevator.ElevatorState;
 import frc.robot.subsystems.Elevator.ElevatorSubsystem;
 import frc.robot.subsystems.Intake.IntakeSubsystem;
 
@@ -79,22 +76,20 @@ public class RobotContainer {
     private void configureBindings() {
         // drivetrain.registerTelemetry(logger::telemeterize);
 
-//        IO.mechanismController.a().onTrue(new InstantCommand(() -> state = RobotState.INTAKE));
-//        IO.mechanismController.b().onTrue(new InstantCommand(() -> state = RobotState.SCORE));
-//        IO.mechanismController.y().onTrue(new InstantCommand(() -> state = RobotState.CLIMB));
-
+//        IO.mechanismController.a().onTrue(new InstantCommand(() -> state = RobotState.INTAKE).alongWith(new InstantCommand(() -> elevatorSubsystem.setIntendedState(ElevatorState.UP))));
+//        IO.mechanismController.b().onTrue(new InstantCommand(() -> state = RobotState.SCORE).alongWith(new InstantCommand(() -> elevatorSubsystem.setIntendedState(ElevatorState.UP))));
+//        IO.mechanismController.y().onTrue(new InstantCommand(() -> state = RobotState.CLIMB).alongWith(new InstantCommand(() -> elevatorSubsystem.setIntendedState(ElevatorState.UP))));
+//
 //        intakeSubsystem.setDefaultCommand(new IntakeBasedOnStateCommand(intakeSubsystem, this::getState, () -> new Pose2d()));
-//        IO.mechanismController.leftBumper().whileTrue(new IntakeShootCommand(intakeSubsystem, this::getState, () -> new Pose2d()));
+//        IO.mechanismController.leftBumper().whileTrue(new IntakeShootCommand(intakeSubsystem, this::getState, () -> new Pose2d()).andThen(new InstantCommand(() -> elevatorSubsystem.setIntendedState(ElevatorState.DOWN))));
+//
+//        elevatorSubsystem.setDefaultCommand(new ElevatorBasedOnStateCommand(elevatorSubsystem, this::getState, () -> this.drivetrain.getState().Pose));
+//        IO.mechanismController.leftBumper().whileTrue(new LegGoDownCommand(climbDeepSubsystem).andThen(new ElevatorMoveToHeight(elevatorSubsystem, Constants.States.Climb.ELEVATOR_DOWN).alongWith(new InstantCommand(() -> elevatorSubsystem.setIntendedState(ElevatorState.DOWN)))));
+//
+//        drivetrain.setDefaultCommand(new DriveCommand(drivetrain, this::getState, () -> -IO.driverController.getLeftY() * MAX_SPEED, () -> -IO.driverController.getLeftX() * MAX_SPEED, () -> -IO.driverController.getRightX() * MAX_ANGULAR_RATE, this::getManualOverride));
+//        IO.driverController.rightBumper().onTrue(new InstantCommand(() -> this.manualOverride = true));
+//        IO.driverController.rightBumper().onFalse(new InstantCommand(() -> this.manualOverride = false));
 
-        // elevatorSubsystem.setDefaultCommand(new ElevatorBasedOnStateCommand(elevatorSubsystem, this::getState, () -> this.drivetrain.getState().Pose));
-        // IO.mechanismController.leftBumper().whileTrue(new LegGoDownCommand(climbDeepSubsystem).andThen(new ElevatorMoveToHeight(elevatorSubsystem, Constants.States.Climb.ELEVATOR_DOWN)));
-
-        // drivetrain.setDefaultCommand(new DriveCommand(drivetrain, this::getState, () -> -IO.driverController.getLeftY() * MAX_SPEED, () -> -IO.driverController.getLeftX() * MAX_SPEED, () -> -IO.driverController.getRightX() * MAX_ANGULAR_RATE, this::getManualOverride));
-        // IO.driverController.rightBumper().onTrue(new InstantCommand(() -> this.manualOverride = true));
-        // IO.driverController.rightBumper().onFalse(new InstantCommand(() -> this.manualOverride = false));
-
-        // IO.mechanismController.a().whileTrue(new InstantCommand(()->intakeSubsystem.moveMotor(Constants.Subsystems.Intake.Physical.INTAKE_PERCENTAGE)));
-        // IO.mechanismController.a().onFalse(new InstantCommand(()->intakeSubsystem.stopMotor()));
         IO.mechanismController.leftBumper().whileTrue(new ElevatorMoveUpBySetPercentage(elevatorSubsystem));
         IO.mechanismController.rightBumper().whileTrue(new ElevatorResetLimitSwitch(elevatorSubsystem));
         IO.mechanismController.a().whileTrue(new ElevatorMoveToHeight(elevatorSubsystem, 0.1));
