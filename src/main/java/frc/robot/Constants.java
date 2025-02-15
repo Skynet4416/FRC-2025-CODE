@@ -18,30 +18,32 @@ public final class Constants {
     public static class Subsystems {
 
         public static class Elevator {
+            public static class Sensors {
+                public final static int HALL_EFFECT_PORT = 0;
+            }
 
             public static class Motors {
 
-                public final static int MASTER_CAN_ID = 0;
-                public final static int RIGHT_SLAVE_CAN_ID = 0;
-                public final static int LEFT_SLAVE_1_CAN_ID = 0;
-                public final static int LEFT_SLAVE_2_CAN_ID = 0;
+                public final static int MASTER_CAN_ID = 30;
+                public final static int RIGHT_SLAVE_CAN_ID = 31;
+                public final static int LEFT_SLAVE_1_CAN_ID = 32;
+                public final static int LEFT_SLAVE_2_CAN_ID = 33;
             }
 
             public static class Physical {
-
-                public final static double WHEEL_RADIUS_IN_METERS = 0.0214;
+                public final static double WHEEL_RADIUS_IN_METERS = 0.0213995;
                 public final static double GEAR_RATIO = 38.7072;
-                public final static double MAX_ACCELERATION_IN_MPS_SQUARED = 5.7;
-                public final static double MAX_HEIGHT_IN_METERS = 0.27;
+                public final static double MAX_ACCELERATION_IN_MPS_SQUARED = 10;
+                public final static double MAX_HEIGHT_IN_METERS = 0.21;
                 public final static double POSITION_CONVERSION_FACTOR = WHEEL_RADIUS_IN_METERS * 2 * Math.PI / GEAR_RATIO;
                 public final static double VELOCITY_CONVERSION_FACTOR = POSITION_CONVERSION_FACTOR / 60.0;
-                public final static double MAX_VELOCITY_IN_MPS = 6000 * VELOCITY_CONVERSION_FACTOR;
+                public final static double MAX_VELOCITY_IN_MPS = 5676 * VELOCITY_CONVERSION_FACTOR;
             }
 
             public static class Controls {
 
-                public static final double HEIGHT_THRESHOLD_IN_METERS = 0;
-                public static final double ELEVATOR_PERCENTAGE = 0;
+                public static final double HEIGHT_THRESHOLD_IN_METERS = 0.005;
+                public static final double ELEVATOR_PERCENTAGE = 0.5;
             }
 
             public static class PID {
@@ -56,15 +58,16 @@ public final class Constants {
 
             public static class Motors {
 
-                public final static int UPPER_MASTER_SPARK_FLEX_ID = 1;
-                public final static int LOWER_SLAVE_SPARK_FLEX_ID = 1;
+                public final static int UPPER_MASTER_SPARK_FLEX_ID = 41;
+                public final static int LOWER_SLAVE_SPARK_FLEX_ID = 40;
 
             }
 
             public static class Physical {
 
-                public final static double INTAKE_PERCENTAGE = 0.3;
-                public static final double DECELERATION_THRESHOLD = -50; // how many rpm declerates in one iteration
+                public final static double INTAKE_PERCENTAGE = 0.2;
+                public static final double DECELERATION_THRESHOLD = -80; // how many rpm declerates in one iteration
+                public static final double INTAKE_VELOCIRTY_THREASHOLD = 500;
             }
         }
 
@@ -94,21 +97,23 @@ public final class Constants {
 
     public static class States {
 
-        public static final class Climb{
-            public static double ELEVATOR_HEIGHT=0.27;
-            public static double ELEVATOR_DOWN=0.27;
+        public static final class Climb {
+            public static double ELEVATOR_HEIGHT = 0.27;
+            public static double ELEVATOR_DOWN = 0.27;
         }
+
         public static class Intake {
-            public static double RADIUS_IN_METERS = 0;
+            public static double RADIUS_IN_METERS = 500000;
             public static double ELEVATOR_HEIGHT = 0.27;
         }
 
         public static class Score {
-            public static double RADIUS_IN_METERS = 0;
+            public static double RADIUS_IN_METERS = 10000000;
 
             public static double ELEVATOR_HEIGHT = 0;
         }
-        public static class None{
+
+        public static class None {
             public static double ELEVATOR_HEIGHT = 0;
         }
     }

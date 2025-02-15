@@ -1,17 +1,15 @@
 package frc.robot.commands.Intake;
 
+import java.util.function.Supplier;
+
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.Constants;
 import frc.robot.FieldConstants;
 import frc.robot.RobotState;
+import static frc.robot.meth.Distance.isPointNearLinesSegment;
 import frc.robot.subsystems.Intake.IntakeState;
 import frc.robot.subsystems.Intake.IntakeSubsystem;
-
-import java.util.function.Supplier;
-
-import static frc.robot.meth.Distance.isPointNearLineSegment;
-import static frc.robot.meth.Distance.isPointNearLinesSegment;
 
 public class IntakeBasedOnStateCommand extends Command {
     private final IntakeSubsystem intakeSubsystem;

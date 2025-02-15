@@ -4,30 +4,26 @@
 package frc.robot;
 
 import choreo.auto.AutoChooser;
-import choreo.auto.AutoFactory;
+import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.units.Units;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+
+import static edu.wpi.first.units.Units.RadiansPerSecond;
+import static edu.wpi.first.units.Units.RotationsPerSecond;
+
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
-import frc.robot.commands.Autos;
-import frc.robot.commands.DriveCommand;
-import frc.robot.commands.Elevator.ElevatorBasedOnStateCommand;
+import frc.robot.commands.Elevator.ElevatorMoveDownBySetPercentage;
 import frc.robot.commands.Elevator.ElevatorMoveToHeight;
+import frc.robot.commands.Elevator.ElevatorMoveUpBySetPercentage;
+import frc.robot.commands.Elevator.ElevatorResetLimitSwitch;
 import frc.robot.commands.Intake.IntakeBasedOnStateCommand;
 import frc.robot.commands.Intake.IntakeShootCommand;
-import frc.robot.commands.LegGoDownCommand;
-import frc.robot.subsystems.Elevator.ElevatorState;
-import frc.robot.subsystems.Leg.ClimbDeepSubsystem;
-import frc.robot.subsystems.Drive.CommandSwerveDrivetrain;
 import frc.robot.subsystems.Drive.Telemetry;
 import frc.robot.subsystems.Drive.TunerConstants;
 import frc.robot.subsystems.Elevator.ElevatorSubsystem;
 import frc.robot.subsystems.Intake.IntakeSubsystem;
-
-import static edu.wpi.first.units.Units.RadiansPerSecond;
-import static edu.wpi.first.units.Units.RotationsPerSecond;
 
 /**
  * This class is where the bulk of the robot should be declared. Since
@@ -40,14 +36,14 @@ public class RobotContainer {
     private RobotState state = RobotState.NONE;
     private final IntakeSubsystem intakeSubsystem;
     private final ElevatorSubsystem elevatorSubsystem;
-    private final ClimbDeepSubsystem climbDeepSubsystem;
+    // private final ClimbDeepSubsystem climbDeepSubsystem;
     private final double MAX_SPEED = TunerConstants.kSpeedAt12Volts.in(Units.MetersPerSecond); // kSpeedAt12Volts desired top speed
     private final double MAX_ANGULAR_RATE = RotationsPerSecond.of(0.75).in(RadiansPerSecond); // 3/4 of a rotation per second max angular velocity
 
-    private final AutoFactory autoFactory;
-    private final Autos autoRoutines;
+    // private final AutoFactory autoFactory;
+    // private final Autos autoRoutines;
     private final AutoChooser autoChooser = new AutoChooser();
-    public final CommandSwerveDrivetrain drivetrain;
+    // public final CommandSwerveDrivetrain drivetrain;
     private final Telemetry logger = new Telemetry(MAX_SPEED);
     private boolean manualOverride = false;
 
@@ -56,15 +52,15 @@ public class RobotContainer {
      * commands.
      */
     public RobotContainer() {
-        drivetrain = TunerConstants.createDrivetrain();
-        autoFactory = drivetrain.createAutoFactory();
-        autoRoutines = new Autos(autoFactory);
-        climbDeepSubsystem = new ClimbDeepSubsystem();
+        // drivetrain = TunerConstants.createDrivetrain();
+        // autoFactory = drivetrain.createAutoFactory();
+        // autoRoutines = new Autos(autoFactory);
+        // climbDeepSubsystem = new ClimbDeepSubsystem();
         intakeSubsystem = new IntakeSubsystem();
         elevatorSubsystem = new ElevatorSubsystem();
 
-        autoChooser.addRoutine("SimplePath", () -> autoRoutines.getAutoRoutine("SimplePath"));
-        SmartDashboard.putData("Auto Chooser", autoChooser);
+        // autoChooser.addRoutine("SimplePath", () -> autoRoutines.getAutoRoutine("SimplePath"));
+        // SmartDashboard.putData("Auto Chooser", autoChooser);
         // Configure the trigger bindings
         configureBindings();
     }
@@ -81,22 +77,27 @@ public class RobotContainer {
      * joysticks}.
      */
     private void configureBindings() {
-        drivetrain.registerTelemetry(logger::telemeterize);
+        // drivetrain.registerTelemetry(logger::telemeterize);
 
-        IO.mechanismController.a().onTrue(new InstantCommand(() -> state = RobotState.INTAKE));
-        IO.mechanismController.b().onTrue(new InstantCommand(() -> state = RobotState.SCORE));
-        IO.mechanismController.y().onTrue(new InstantCommand(() -> state = RobotState.CLIMB));
+//        IO.mechanismController.a().onTrue(new InstantCommand(() -> state = RobotState.INTAKE));
+//        IO.mechanismController.b().onTrue(new InstantCommand(() -> state = RobotState.SCORE));
+//        IO.mechanismController.y().onTrue(new InstantCommand(() -> state = RobotState.CLIMB));
 
-        intakeSubsystem.setDefaultCommand(new IntakeBasedOnStateCommand(intakeSubsystem, this::getState, () -> this.drivetrain.getState().Pose));
-        IO.mechanismController.leftBumper().whileTrue(new IntakeShootCommand(intakeSubsystem, this::getState, () -> this.drivetrain.getState().Pose));
+//        intakeSubsystem.setDefaultCommand(new IntakeBasedOnStateCommand(intakeSubsystem, this::getState, () -> new Pose2d()));
+//        IO.mechanismController.leftBumper().whileTrue(new IntakeShootCommand(intakeSubsystem, this::getState, () -> new Pose2d()));
 
-        elevatorSubsystem.setDefaultCommand(new ElevatorBasedOnStateCommand(elevatorSubsystem, this::getState, () -> this.drivetrain.getState().Pose));
-        IO.mechanismController.leftBumper().whileTrue(new LegGoDownCommand(climbDeepSubsystem).andThen(new ElevatorMoveToHeight(elevatorSubsystem, Constants.States.Climb.ELEVATOR_DOWN)));
+        // elevatorSubsystem.setDefaultCommand(new ElevatorBasedOnStateCommand(elevatorSubsystem, this::getState, () -> this.drivetrain.getState().Pose));
+        // IO.mechanismController.leftBumper().whileTrue(new LegGoDownCommand(climbDeepSubsystem).andThen(new ElevatorMoveToHeight(elevatorSubsystem, Constants.States.Climb.ELEVATOR_DOWN)));
 
-        drivetrain.setDefaultCommand(new DriveCommand(drivetrain, this::getState, () -> -IO.driverController.getLeftY() * MAX_SPEED, () -> -IO.driverController.getLeftX() * MAX_SPEED, () -> -IO.driverController.getRightX() * MAX_ANGULAR_RATE, this::getManualOverride));
-        IO.driverController.rightBumper().onTrue(new InstantCommand(() -> this.manualOverride = true));
-        IO.driverController.rightBumper().onFalse(new InstantCommand(() -> this.manualOverride = false));
+        // drivetrain.setDefaultCommand(new DriveCommand(drivetrain, this::getState, () -> -IO.driverController.getLeftY() * MAX_SPEED, () -> -IO.driverController.getLeftX() * MAX_SPEED, () -> -IO.driverController.getRightX() * MAX_ANGULAR_RATE, this::getManualOverride));
+        // IO.driverController.rightBumper().onTrue(new InstantCommand(() -> this.manualOverride = true));
+        // IO.driverController.rightBumper().onFalse(new InstantCommand(() -> this.manualOverride = false));
 
+        // IO.mechanismController.a().whileTrue(new InstantCommand(()->intakeSubsystem.moveMotor(Constants.Subsystems.Intake.Physical.INTAKE_PERCENTAGE)));
+        // IO.mechanismController.a().onFalse(new InstantCommand(()->intakeSubsystem.stopMotor()));
+        IO.mechanismController.leftBumper().whileTrue(new ElevatorMoveUpBySetPercentage(elevatorSubsystem));
+        IO.mechanismController.rightBumper().whileTrue(new ElevatorResetLimitSwitch(elevatorSubsystem));
+        IO.mechanismController.a().whileTrue(new ElevatorMoveToHeight(elevatorSubsystem, 0.1));
     }
 
     /**

@@ -19,13 +19,17 @@ public class ElevatorMoveToHeight extends Command {
     }
 
     @Override
-    public void initialize() {
-        elevatorSubsystem.setElevatorDistanceInMeters(elevatorSetPointInMeters);
+    public void execute() {
+        elevatorSubsystem.setPercentage(Elevator.Controls.ELEVATOR_PERCENTAGE * (elevatorSubsystem.getElevatorDistanceInMeter() > elevatorSetPointInMeters ? -1 : 1));
     }
-
 
     @Override
     public boolean isFinished() {
         return Math.abs(elevatorSubsystem.getElevatorDistanceInMeter() - this.elevatorSetPointInMeters) < Elevator.Controls.HEIGHT_THRESHOLD_IN_METERS;
+    }
+
+    @Override
+    public void end(boolean interrupted) {
+        elevatorSubsystem.setPercentage(0);
     }
 }
