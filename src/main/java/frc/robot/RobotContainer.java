@@ -84,7 +84,7 @@ public class RobotContainer {
 //        IO.mechanismController.leftBumper().whileTrue(new IntakeShootCommand(intakeSubsystem, this::getState, () -> new Pose2d()).andThen(new InstantCommand(() -> elevatorSubsystem.setIntendedState(ElevatorState.DOWN))));
 //
 //        elevatorSubsystem.setDefaultCommand(new ElevatorBasedOnStateCommand(elevatorSubsystem, this::getState, () -> this.drivetrain.getState().Pose));
-//        IO.mechanismController.leftBumper().whileTrue(new LegGoDownCommand(climbDeepSubsystem).andThen(new ElevatorMoveToHeight(elevatorSubsystem, Constants.States.Climb.ELEVATOR_DOWN).alongWith(new InstantCommand(() -> elevatorSubsystem.setIntendedState(ElevatorState.DOWN)))));
+//        IO.mechanismController.leftBumper().whileTrue(new LegGoDownCommand(climbDeepSubsystem).andThen(new InstantCommand(() -> elevatorSubsystem.setIntendedState(ElevatorState.DOWN))));
 //
 //        drivetrain.setDefaultCommand(new DriveCommand(drivetrain, this::getState, () -> -IO.driverController.getLeftY() * MAX_SPEED, () -> -IO.driverController.getLeftX() * MAX_SPEED, () -> -IO.driverController.getRightX() * MAX_ANGULAR_RATE, this::getManualOverride));
 //        IO.driverController.rightBumper().onTrue(new InstantCommand(() -> this.manualOverride = true));
