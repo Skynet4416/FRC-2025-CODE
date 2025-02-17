@@ -4,18 +4,23 @@
 package frc.robot;
 
 import choreo.auto.AutoChooser;
+import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.units.Units;
 
 import static edu.wpi.first.units.Units.RadiansPerSecond;
 import static edu.wpi.first.units.Units.RotationsPerSecond;
 
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
+import frc.robot.commands.Elevator.ElevatorBasedOnStateCommand;
 import frc.robot.commands.Elevator.ElevatorMoveToHeight;
 import frc.robot.commands.Elevator.ElevatorMoveUpBySetPercentage;
 import frc.robot.commands.Elevator.ElevatorResetLimitSwitch;
+import frc.robot.commands.Intake.IntakeBasedOnStateCommand;
+import frc.robot.commands.Intake.IntakeShootCommand;
 import frc.robot.subsystems.Drive.Telemetry;
 import frc.robot.subsystems.Drive.TunerConstants;
 import frc.robot.subsystems.Elevator.ElevatorState;
@@ -53,8 +58,8 @@ public class RobotContainer {
         // autoFactory = drivetrain.createAutoFactory();
         // autoRoutines = new Autos(autoFactory);
         // climbDeepSubsystem = new ClimbDeepSubsystem();
-        intakeSubsystem = new IntakeSubsystem();
         elevatorSubsystem = new ElevatorSubsystem();
+        intakeSubsystem = new IntakeSubsystem(elevatorSubsystem::setIntendedState);
 
         // autoChooser.addRoutine("SimplePath", () -> autoRoutines.getAutoRoutine("SimplePath"));
         // SmartDashboard.putData("Auto Chooser", autoChooser);
@@ -76,23 +81,23 @@ public class RobotContainer {
     private void configureBindings() {
         // drivetrain.registerTelemetry(logger::telemeterize);
 
-//        IO.mechanismController.a().onTrue(new InstantCommand(() -> state = RobotState.INTAKE).alongWith(new InstantCommand(() -> elevatorSubsystem.setIntendedState(ElevatorState.UP))));
-//        IO.mechanismController.b().onTrue(new InstantCommand(() -> state = RobotState.SCORE).alongWith(new InstantCommand(() -> elevatorSubsystem.setIntendedState(ElevatorState.UP))));
-//        IO.mechanismController.y().onTrue(new InstantCommand(() -> state = RobotState.CLIMB).alongWith(new InstantCommand(() -> elevatorSubsystem.setIntendedState(ElevatorState.UP))));
-//
-//        intakeSubsystem.setDefaultCommand(new IntakeBasedOnStateCommand(intakeSubsystem, this::getState, () -> new Pose2d()));
-//        IO.mechanismController.leftBumper().whileTrue(new IntakeShootCommand(intakeSubsystem, this::getState, () -> new Pose2d()).andThen(new InstantCommand(() -> elevatorSubsystem.setIntendedState(ElevatorState.DOWN))));
-//
-//        elevatorSubsystem.setDefaultCommand(new ElevatorBasedOnStateCommand(elevatorSubsystem, this::getState, () -> this.drivetrain.getState().Pose));
+        IO.mechanismController.a().onTrue(new InstantCommand(() -> state = RobotState.INTAKE).alongWith(new InstantCommand(() -> elevatorSubsystem.setIntendedState(ElevatorState.UP))));
+        IO.mechanismController.b().onTrue(new InstantCommand(() -> state = RobotState.SCORE).alongWith(new InstantCommand(() -> elevatorSubsystem.setIntendedState(ElevatorState.DOWN))));
+        IO.mechanismController.y().onTrue(new InstantCommand(() -> state = RobotState.CLIMB).alongWith(new InstantCommand(() -> elevatorSubsystem.setIntendedState(ElevatorState.UP))));
+
+        intakeSubsystem.setDefaultCommand(new IntakeBasedOnStateCommand(intakeSubsystem, this::getState, () -> new Pose2d()));
+        IO.mechanismController.leftBumper().whileTrue(new IntakeShootCommand(intakeSubsystem, this::getState, () -> new Pose2d()).andThen(new InstantCommand(() -> elevatorSubsystem.setIntendedState(ElevatorState.DOWN))));
+
+        elevatorSubsystem.setDefaultCommand(new ElevatorBasedOnStateCommand(elevatorSubsystem, this::getState, () -> new Pose2d()));
 //        IO.mechanismController.leftBumper().whileTrue(new LegGoDownCommand(climbDeepSubsystem).andThen(new InstantCommand(() -> elevatorSubsystem.setIntendedState(ElevatorState.DOWN))));
 //
 //        drivetrain.setDefaultCommand(new DriveCommand(drivetrain, this::getState, () -> -IO.driverController.getLeftY() * MAX_SPEED, () -> -IO.driverController.getLeftX() * MAX_SPEED, () -> -IO.driverController.getRightX() * MAX_ANGULAR_RATE, this::getManualOverride));
 //        IO.driverController.rightBumper().onTrue(new InstantCommand(() -> this.manualOverride = true));
 //        IO.driverController.rightBumper().onFalse(new InstantCommand(() -> this.manualOverride = false));
 
-        IO.mechanismController.leftBumper().whileTrue(new ElevatorMoveUpBySetPercentage(elevatorSubsystem));
-        IO.mechanismController.rightBumper().whileTrue(new ElevatorResetLimitSwitch(elevatorSubsystem));
-        IO.mechanismController.a().whileTrue(new ElevatorMoveToHeight(elevatorSubsystem, 0.1));
+//        IO.mechanismController.x().whileTrue(new ElevatorMoveUpBySetPercentage(elevatorSubsystem));
+        IO.mechanismController.x().whileTrue(new ElevatorResetLimitSwitch(elevatorSubsystem));
+//        IO.mechanismController.a().whileTrue(new ElevatorMoveToHeight(elevatorSubsystem, 0.1));
     }
 
     /**
@@ -105,7 +110,9 @@ public class RobotContainer {
     }
 
     public RobotState getState() {
+        SmartDashboard.putString("robot state", String.valueOf(this.state));
         return this.state;
+
     }
 
     public boolean getManualOverride() {

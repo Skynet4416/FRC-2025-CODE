@@ -43,7 +43,7 @@ public final class Constants {
             public static class Controls {
 
                 public static final double HEIGHT_THRESHOLD_IN_METERS = 0.005;
-                public static final double ELEVATOR_PERCENTAGE = 0.5;
+                public static final double ELEVATOR_PERCENTAGE = 1;
             }
 
             public static class PID {
@@ -65,7 +65,7 @@ public final class Constants {
 
             public static class Physical {
 
-                public final static double INTAKE_PERCENTAGE = 0.2;
+                public final static double INTAKE_PERCENTAGE = 0.5;
                 public static final double DECELERATION_THRESHOLD = -80; // how many rpm declerates in one iteration
                 public static final double INTAKE_VELOCIRTY_THREASHOLD = 500;
             }
@@ -98,13 +98,13 @@ public final class Constants {
     public static class States {
 
         public static final class Climb {
-            public static double ELEVATOR_HEIGHT = 0.27;
-            public static double ELEVATOR_DOWN = 0.27;
+            public static double ELEVATOR_HEIGHT = 0.2;
+            public static double ELEVATOR_DOWN = 0;
         }
 
         public static class Intake {
             public static double RADIUS_IN_METERS = 500000;
-            public static double ELEVATOR_HEIGHT = 0.27;
+            public static double ELEVATOR_HEIGHT = 0.2;
         }
 
         public static class Score {

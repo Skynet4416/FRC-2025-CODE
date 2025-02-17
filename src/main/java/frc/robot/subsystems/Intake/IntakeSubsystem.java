@@ -10,6 +10,9 @@ import com.revrobotics.spark.config.SparkFlexConfig;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants.Subsystems.Intake;
+import frc.robot.subsystems.Elevator.ElevatorState;
+
+import java.util.function.Consumer;
 
 public class IntakeSubsystem extends SubsystemBase {
 
@@ -24,28 +27,31 @@ public class IntakeSubsystem extends SubsystemBase {
     private boolean reachedVelocity = false;
     private double prevVelocityUp = 0;
     private double prevVelocityDown = 0;
+    private final Consumer<ElevatorState> setElevatorState;
 
-    public IntakeSubsystem() {
+    public IntakeSubsystem(Consumer<ElevatorState> setElevatorState) {
         upperIntakeSparkFlex = new SparkFlex(Intake.Motors.UPPER_MASTER_SPARK_FLEX_ID, MotorType.kBrushless);
         lowerIntakeSparkFlex = new SparkFlex(Intake.Motors.LOWER_SLAVE_SPARK_FLEX_ID, MotorType.kBrushless);
         SparkBaseConfig masterConfig = new SparkFlexConfig().smartCurrentLimit(30).idleMode(SparkBaseConfig.IdleMode.kBrake);
         upperIntakeSparkFlex.configure(masterConfig, SparkBase.ResetMode.kResetSafeParameters, SparkBase.PersistMode.kPersistParameters);
 
-        SparkBaseConfig slaveConfig = new SparkFlexConfig().smartCurrentLimit(30).smartCurrentLimit(40).idleMode(SparkBaseConfig.IdleMode.kBrake);
-        slaveConfig.follow(upperIntakeSparkFlex);
+//        SparkBaseConfig slaveConfig = new SparkFlexConfig().smartCurrentLimit(30).smartCurrentLimit(40).idleMode(SparkBaseConfig.IdleMode.kBrake);
+//        slaveConfig.follow(upperIntakeSparkFlex);
 
-        lowerIntakeSparkFlex.configure(slaveConfig, SparkBase.ResetMode.kResetSafeParameters, SparkBase.PersistMode.kPersistParameters);
+        lowerIntakeSparkFlex.configure(masterConfig, SparkBase.ResetMode.kResetSafeParameters, SparkBase.PersistMode.kPersistParameters);
         this.upperMasterIntakeFlexEncoder = upperIntakeSparkFlex.getEncoder();
         this.lowerIntakeFlexEncoder = lowerIntakeSparkFlex.getEncoder();
+        this.setElevatorState = setElevatorState;
     }
 
     public void moveMotor(double percentage) {
         this.upperIntakeSparkFlex.set(percentage);
+        this.lowerIntakeSparkFlex.set(percentage * 0.25);
         intendedState = percentage > 0 ? IntakeState.FULL : IntakeState.EMPTY;
     }
 
     public void stopMotor() {
-        this.upperIntakeSparkFlex.set(0);
+        this.moveMotor(0);
     }
 
     @Override
@@ -61,8 +67,12 @@ public class IntakeSubsystem extends SubsystemBase {
         if (intendedState != intakeState) {
             switch (intendedState) {
                 case FULL -> {
-                    intakeState = reachedVelocity && (upperMasterIntakeFlexEncoder.getVelocity() < Intake.Physical.INTAKE_VELOCIRTY_THREASHOLD / 30 || lowerIntakeFlexEncoder.getVelocity() < Intake.Physical.INTAKE_VELOCIRTY_THREASHOLD / 30) ? IntakeState.FULL : intakeState;
-                    reachedVelocity = intakeState != IntakeState.FULL && reachedVelocity;
+                    intakeState = reachedVelocity && (upperMasterIntakeFlexEncoder.getVelocity() < Intake.Physical.INTAKE_VELOCIRTY_THREASHOLD / 55 || lowerIntakeFlexEncoder.getVelocity() < Intake.Physical.INTAKE_VELOCIRTY_THREASHOLD / 55) ? IntakeState.FULL : intakeState;
+
+                    if (reachedVelocity && intakeState == IntakeState.FULL) {
+                        reachedVelocity = false;
+                        this.setElevatorState.accept(ElevatorState.DOWN);
+                    }
                 }
                 case EMPTY -> {
                     intakeState = upperMasterIntakeFlexEncoder.getVelocity() - prevVelocityUp < Intake.Physical.DECELERATION_THRESHOLD || lowerIntakeFlexEncoder.getVelocity() - prevVelocityDown < Intake.Physical.DECELERATION_THRESHOLD ? IntakeState.EMPTY : intakeState;

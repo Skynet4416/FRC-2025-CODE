@@ -26,6 +26,5 @@ public class ElevatorResetLimitSwitch extends Command {
     @Override
     public void end(boolean interrupted) {
         elevatorSubsystem.setPercentage(0);
-        elevatorSubsystem.setElevatorDistanceInMeters(elevatorSubsystem.getElevatorDistanceInMeter());
     }
 }

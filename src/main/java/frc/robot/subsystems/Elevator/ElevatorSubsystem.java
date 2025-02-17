@@ -41,18 +41,18 @@ public class ElevatorSubsystem extends SubsystemBase {
         leaderConfig.inverted(true);
         leaderConfig.encoder.positionConversionFactor(Elevator.Physical.POSITION_CONVERSION_FACTOR);
         leaderConfig.encoder.velocityConversionFactor(Elevator.Physical.VELOCITY_CONVERSION_FACTOR);
-        leaderConfig.smartCurrentLimit(25).voltageCompensation(12).idleMode(SparkBaseConfig.IdleMode.kBrake);
+        leaderConfig.smartCurrentLimit(35).voltageCompensation(12).idleMode(SparkBaseConfig.IdleMode.kBrake);
         leaderConfig.closedLoop.pid(Elevator.PID.KP, Elevator.PID.KI, Elevator.PID.KD).maxMotion.maxVelocity(Elevator.Physical.MAX_VELOCITY_IN_MPS).maxAcceleration(Elevator.Physical.MAX_ACCELERATION_IN_MPS_SQUARED).allowedClosedLoopError(Elevator.Controls.HEIGHT_THRESHOLD_IN_METERS);
 
         motorLeader.configure(leaderConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
 
         SparkMaxConfig rightSlaveConfig = new SparkMaxConfig();
-        rightSlaveConfig.smartCurrentLimit(25).voltageCompensation(12).idleMode(SparkBaseConfig.IdleMode.kBrake);
+        rightSlaveConfig.smartCurrentLimit(35).voltageCompensation(12).idleMode(SparkBaseConfig.IdleMode.kBrake);
         rightSlaveConfig.follow(motorLeader);
 
         SparkMaxConfig leftSlaveConfig = new SparkMaxConfig();
 
-        leftSlaveConfig.follow(motorLeader, true).smartCurrentLimit(25).idleMode(SparkBaseConfig.IdleMode.kBrake);
+        leftSlaveConfig.follow(motorLeader, true).smartCurrentLimit(35).idleMode(SparkBaseConfig.IdleMode.kBrake);
         leftSlaveConfig.inverted(true);
         motorRightSlave.configure(rightSlaveConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
         motorLeftSlave1.configure(leftSlaveConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
@@ -64,7 +64,11 @@ public class ElevatorSubsystem extends SubsystemBase {
 
 
     public void setPercentage(double percentage) {
-        motorLeader.set(percentage);
+        if (percentage > 0 && getElevatorDistanceInMeter() < Elevator.Physical.MAX_HEIGHT_IN_METERS || percentage < 0 && !elevatorDown()) {
+            motorLeader.set(percentage);
+        } else {
+            motorLeader.set(0);
+        }
     }
 
     public double getElevatorDistanceInMeter() {
@@ -81,12 +85,15 @@ public class ElevatorSubsystem extends SubsystemBase {
             masterEncoder.setPosition(0);
             resetedEncoder = true;
         }
+
         SmartDashboard.putNumber("elevator voltage", motorLeader.getOutputCurrent());
         SmartDashboard.putNumber("elevator setpoint", setpoint);
 
-        if (Math.abs(getElevatorDistanceInMeter() - Elevator.Physical.MAX_HEIGHT_IN_METERS) < Elevator.Controls.HEIGHT_THRESHOLD_IN_METERS && motorLeader.get() > 0 || (resetedEncoder && getElevatorDistanceInMeter() < 0)) {
+        if ((getElevatorDistanceInMeter() > Elevator.Physical.MAX_HEIGHT_IN_METERS && motorLeader.get() > 0) || (resetedEncoder && getElevatorDistanceInMeter() < 0)) {
             setPercentage(0);
         }
+
+        SmartDashboard.putBoolean("Elevator forced stop", (getElevatorDistanceInMeter() > Elevator.Physical.MAX_HEIGHT_IN_METERS && motorLeader.get() > 0) || (resetedEncoder && getElevatorDistanceInMeter() < 0));
 
     }
 

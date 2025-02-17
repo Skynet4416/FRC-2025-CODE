@@ -8,7 +8,9 @@ import frc.robot.RobotState;
 import frc.robot.meth.Distance;
 import frc.robot.subsystems.Elevator.ElevatorState;
 import frc.robot.subsystems.Elevator.ElevatorSubsystem;
+import frc.robot.subsystems.Intake.IntakeState;
 
+import java.util.function.BooleanSupplier;
 import java.util.function.Supplier;
 
 import static frc.robot.meth.Distance.isPointNearLinesSegment;
@@ -38,7 +40,7 @@ public class ElevatorBasedOnStateCommand extends Command {
                         elevatorSubsystem.setPercentage(-Constants.Subsystems.Elevator.Controls.ELEVATOR_PERCENTAGE);
                         break;
                     } else if (elevatorSubsystem.getIntendedState() == ElevatorState.UP && !elevatorSubsystem.elevatorAtSetpoint(Constants.States.Intake.ELEVATOR_HEIGHT)) {
-                        elevatorSubsystem.setPercentage(-Constants.Subsystems.Elevator.Controls.ELEVATOR_PERCENTAGE);
+                        elevatorSubsystem.setPercentage(Constants.Subsystems.Elevator.Controls.ELEVATOR_PERCENTAGE);
                         break;
                     }
                 }
@@ -48,12 +50,9 @@ public class ElevatorBasedOnStateCommand extends Command {
                     if (elevatorSubsystem.getIntendedState() == ElevatorState.DOWN && !elevatorSubsystem.elevatorAtSetpoint(Constants.States.None.ELEVATOR_HEIGHT)) {
                         elevatorSubsystem.setPercentage(-Constants.Subsystems.Elevator.Controls.ELEVATOR_PERCENTAGE);
                         break;
-                    } else if (elevatorSubsystem.getIntendedState() == ElevatorState.UP && !elevatorSubsystem.elevatorAtSetpoint(Constants.States.Score.ELEVATOR_HEIGHT)) {
-                        elevatorSubsystem.setPercentage(-Constants.Subsystems.Elevator.Controls.ELEVATOR_PERCENTAGE);
-                        break;
                     }
             case CLIMB:
-                if (elevatorSubsystem.getIntendedState() == ElevatorState.UP && !elevatorSubsystem.elevatorAtSetpoint(Constants.States.Climb.ELEVATOR_HEIGHT))  {
+                if (elevatorSubsystem.getIntendedState() == ElevatorState.UP && !elevatorSubsystem.elevatorAtSetpoint(Constants.States.Climb.ELEVATOR_HEIGHT)) {
                     elevatorSubsystem.setPercentage(Constants.Subsystems.Elevator.Controls.ELEVATOR_PERCENTAGE);
                     break;
                 }
