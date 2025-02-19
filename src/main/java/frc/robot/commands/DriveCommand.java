@@ -7,6 +7,7 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.units.LinearVelocityUnit;
 import edu.wpi.first.units.measure.LinearVelocity;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.Constants;
 import frc.robot.FieldConstants;
@@ -28,13 +29,16 @@ public class DriveCommand extends Command {
     private final DoubleSupplier rotationSupplier;
     private final BooleanSupplier manualOverride;
 
-    public DriveCommand(CommandSwerveDrivetrain driveSubsystem, Supplier<RobotState> stateSupplier, DoubleSupplier xSupplier, DoubleSupplier ySupplier, DoubleSupplier rotationSupplier, BooleanSupplier manualOverride) {
+    public DriveCommand(CommandSwerveDrivetrain driveSubsystem, Supplier<RobotState> stateSupplier,
+            DoubleSupplier xSupplier, DoubleSupplier ySupplier, DoubleSupplier rotationSupplier,
+            BooleanSupplier manualOverride) {
         this.driveSubsystem = driveSubsystem;
         this.stateSupplier = stateSupplier;
         this.xSupplier = xSupplier;
         this.ySupplier = ySupplier;
         this.rotationSupplier = rotationSupplier;
         this.manualOverride = manualOverride;
+        addRequirements(driveSubsystem);
     }
 
     public Pose2d getPosition() {
@@ -51,14 +55,16 @@ public class DriveCommand extends Command {
         switch (stateSupplier.get()) {
             case SCORE:
                 Pose2d scorePoint = isPointNearLinesSegment(getPosition().getTranslation(),
-                        FieldConstants.Reef.centerFaces, FieldConstants.Reef.faceLength, Constants.States.Score.RADIUS_IN_METERS);
+                        FieldConstants.Reef.centerFaces, FieldConstants.Reef.faceLength,
+                        Constants.States.Score.RADIUS_IN_METERS);
                 if (scorePoint != null && !manualOverride.getAsBoolean()) {
                     wantedAngle = scorePoint.getRotation().plus(Rotation2d.fromDegrees(180)).getDegrees();
                     break;
                 }
             case INTAKE:
                 Pose2d intakePoint = isPointNearLinesSegment(getPosition().getTranslation(),
-                        new Pose2d[]{FieldConstants.CoralStation.leftCenterFace, FieldConstants.CoralStation.rightCenterFace},
+                        new Pose2d[] { FieldConstants.CoralStation.leftCenterFace,
+                                FieldConstants.CoralStation.rightCenterFace },
                         FieldConstants.CoralStation.stationLength, Constants.States.Intake.RADIUS_IN_METERS);
                 if (intakePoint != null && !manualOverride.getAsBoolean()) {
                     wantedAngle = intakePoint.getRotation().plus(Rotation2d.fromDegrees(180)).getDegrees();
@@ -67,6 +73,13 @@ public class DriveCommand extends Command {
             default:
                 wantedAngle += rotationSupplier.getAsDouble() * Units.millisecondsToSeconds(20);
         }
-        driveSubsystem.applyRequest(() -> new SwerveRequest.FieldCentric().withDriveRequestType(SwerveModule.DriveRequestType.Velocity).withVelocityX(xSupplier.getAsDouble()).withVelocityY(ySupplier.getAsDouble()).withRotationalRate(driveSubsystem.calculateRotation(Units.degreesToRadians(wantedAngle))));
+
+        SmartDashboard.putNumber("drive x", xSupplier.getAsDouble());
+        SmartDashboard.putNumber("drive y", ySupplier.getAsDouble());
+        SmartDashboard.putNumber("drive theta", wantedAngle);
+        driveSubsystem.setControl(
+                new SwerveRequest.FieldCentric().withDriveRequestType(SwerveModule.DriveRequestType.Velocity)
+                        .withVelocityX(xSupplier.getAsDouble()).withVelocityY(ySupplier.getAsDouble())
+                        .withRotationalRate(rotationSupplier.getAsDouble()));
     }
 }
