@@ -15,17 +15,21 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
+import frc.robot.commands.DriveCommand;
 import frc.robot.commands.Elevator.ElevatorBasedOnStateCommand;
 import frc.robot.commands.Elevator.ElevatorMoveToHeight;
 import frc.robot.commands.Elevator.ElevatorMoveUpBySetPercentage;
 import frc.robot.commands.Elevator.ElevatorResetLimitSwitch;
 import frc.robot.commands.Intake.IntakeBasedOnStateCommand;
 import frc.robot.commands.Intake.IntakeShootCommand;
+import frc.robot.subsystems.Drive.CommandSwerveDrivetrain;
 import frc.robot.subsystems.Drive.Telemetry;
 import frc.robot.subsystems.Drive.TunerConstants;
 import frc.robot.subsystems.Elevator.ElevatorState;
 import frc.robot.subsystems.Elevator.ElevatorSubsystem;
 import frc.robot.subsystems.Intake.IntakeSubsystem;
+import frc.robot.subsystems.Vision.LimelightObserver;
+import frc.robot.subsystems.Vision.LimelightSubsystem;
 
 /**
  * This class is where the bulk of the robot should be declared. Since
@@ -35,87 +39,124 @@ import frc.robot.subsystems.Intake.IntakeSubsystem;
  * commands, and trigger mappings) should be declared here.
  */
 public class RobotContainer {
-    private RobotState state = RobotState.NONE;
-    private final IntakeSubsystem intakeSubsystem;
-    private final ElevatorSubsystem elevatorSubsystem;
-    // private final ClimbDeepSubsystem climbDeepSubsystem;
-    private final double MAX_SPEED = TunerConstants.kSpeedAt12Volts.in(Units.MetersPerSecond); // kSpeedAt12Volts desired top speed
-    private final double MAX_ANGULAR_RATE = RotationsPerSecond.of(0.75).in(RadiansPerSecond); // 3/4 of a rotation per second max angular velocity
+  private RobotState state = RobotState.NONE;
+  private final CommandSwerveDrivetrain drivetrain;
+  // private final LimelightSubsystem limelightSubsystem;
+  // private final IntakeSubsystem intakeSubsystem;
+  private final ElevatorSubsystem elevatorSubsystem;
+  // private final ClimbDeepSubsystem climbDeepSubsystem;
+  private final double MAX_SPEED = TunerConstants.kSpeedAt12Volts.in(Units.MetersPerSecond); // kSpeedAt12Volts desired
+                                                                                             // top speed
+  private final double MAX_ANGULAR_RATE = RotationsPerSecond.of(0.75).in(RadiansPerSecond); // 3/4 of a rotation per
+                                                                                            // second max angular
+                                                                                            // velocity
 
-    // private final AutoFactory autoFactory;
-    // private final Autos autoRoutines;
-    private final AutoChooser autoChooser = new AutoChooser();
-    // public final CommandSwerveDrivetrain drivetrain;
-    private final Telemetry logger = new Telemetry(MAX_SPEED);
-    private boolean manualOverride = false;
+  // private final AutoFactory autoFactory;
+  // private final Autos autoRoutines;
+  private final AutoChooser autoChooser = new AutoChooser();
+  // public final CommandSwerveDrivetrain drivetrain;
+  private final Telemetry logger = new Telemetry(MAX_SPEED);
+  private boolean manualOverride = false;
 
-    /**
-     * The container for the robot. Contains subsystems, OI devices, and
-     * commands.
-     */
-    public RobotContainer() {
-        // drivetrain = TunerConstants.createDrivetrain();
-        // autoFactory = drivetrain.createAutoFactory();
-        // autoRoutines = new Autos(autoFactory);
-        // climbDeepSubsystem = new ClimbDeepSubsystem();
-        elevatorSubsystem = new ElevatorSubsystem();
-        intakeSubsystem = new IntakeSubsystem(elevatorSubsystem::setIntendedState);
+  /**
+   * The container for the robot. Contains subsystems, OI devices, and
+   * commands.
+   */
+  public RobotContainer() {
+    drivetrain = TunerConstants.createDrivetrain();
+    // this.limelightSubsystem = new LimelightSubsystem(new LimelightObserver[] { drivetrain });
+    // autoFactory = drivetrain.createAutoFactory();
+    // autoRoutines = new Autos(autoFactory);
+    // climbDeepSubsystem = new ClimbDeepSubsystem();
+    elevatorSubsystem = new ElevatorSubsystem();
+    // intakeSubsystem = new IntakeSubsystem(elevatorSubsystem::setIntendedState);
 
-        // autoChooser.addRoutine("SimplePath", () -> autoRoutines.getAutoRoutine("SimplePath"));
-        // SmartDashboard.putData("Auto Chooser", autoChooser);
-        // Configure the trigger bindings
-        configureBindings();
+    // autoChooser.addRoutine("SimplePath", () ->
+    // autoRoutines.getAutoRoutine("SimplePath"));
+    // SmartDashboard.putData("Auto Chooser", autoChooser);
+    // Configure the trigger bindings
+    configureBindings();
+  }
+
+  public double deadband(double value){
+    if(Math.abs(value)>0.1){
+      return value;
     }
+    return 0;
+  }
 
-    /**
-     * Use this method to define your trigger->command mappings. Triggers can be
-     * created via the
-     * {@link Trigger#Trigger(java.util.function.BooleanSupplier)} constructor
-     * with an arbitrary predicate, or via the named factories in {@link
-     * edu.wpi.first.wpilibj2.command.button.CommandGenericHID}'s subclasses for      {@link
-     * CommandXboxController
-     * Xbox}/{@link edu.wpi.first.wpilibj2.command.button.CommandPS4Controller
-     * PS4} controllers or      {@link edu.wpi.first.wpilibj2.command.button.CommandJoystick Flight
-     * joysticks}.
-     */
-    private void configureBindings() {
-        // drivetrain.registerTelemetry(logger::telemeterize);
+  /**
+   * Use this method to define your trigger->command mappings. Triggers can be
+   * created via the
+   * {@link Trigger#Trigger(java.util.function.BooleanSupplier)} constructor
+   * with an arbitrary predicate, or via the named factories in {@link
+   * edu.wpi.first.wpilibj2.command.button.CommandGenericHID}'s subclasses for
+   * {@link
+   * CommandXboxController
+   * Xbox}/{@link edu.wpi.first.wpilibj2.command.button.CommandPS4Controller
+   * PS4} controllers or
+   * {@link edu.wpi.first.wpilibj2.command.button.CommandJoystick Flight
+   * joysticks}.
+   */
+  private void configureBindings() {
+    drivetrain.registerTelemetry(logger::telemeterize);
 
-        IO.mechanismController.a().onTrue(new InstantCommand(() -> state = RobotState.INTAKE).alongWith(new InstantCommand(() -> elevatorSubsystem.setIntendedState(ElevatorState.UP))));
-        IO.mechanismController.b().onTrue(new InstantCommand(() -> state = RobotState.SCORE).alongWith(new InstantCommand(() -> elevatorSubsystem.setIntendedState(ElevatorState.DOWN))));
-        IO.mechanismController.y().onTrue(new InstantCommand(() -> state = RobotState.CLIMB).alongWith(new InstantCommand(() -> elevatorSubsystem.setIntendedState(ElevatorState.UP))));
+    // IO.mechanismController.a().onTrue(new InstantCommand(() -> state =
+    // RobotState.INTAKE).alongWith(new InstantCommand(() ->
+    // elevatorSubsystem.setIntendedState(ElevatorState.UP))));
+    // IO.mechanismController.b().onTrue(new InstantCommand(() -> state =
+    // RobotState.SCORE).alongWith(new InstantCommand(() ->
+    // elevatorSubsystem.setIntendedState(ElevatorState.DOWN))));
+    // IO.mechanismController.y().onTrue(new InstantCommand(() -> state =
+    // RobotState.CLIMB).alongWith(new InstantCommand(() ->
+    // elevatorSubsystem.setIntendedState(ElevatorState.UP))));
 
-        intakeSubsystem.setDefaultCommand(new IntakeBasedOnStateCommand(intakeSubsystem, this::getState, () -> new Pose2d()));
-        IO.mechanismController.leftBumper().whileTrue(new IntakeShootCommand(intakeSubsystem, this::getState, () -> new Pose2d()).andThen(new InstantCommand(() -> elevatorSubsystem.setIntendedState(ElevatorState.DOWN))));
+    // intakeSubsystem.setDefaultCommand(new
+    // IntakeBasedOnStateCommand(intakeSubsystem, this::getState, () -> new
+    // Pose2d()));
+    // IO.mechanismController.leftBumper().whileTrue(new
+    // IntakeShootCommand(intakeSubsystem, this::getState, () -> new
+    // Pose2d()).andThen(new InstantCommand(() ->
+    // elevatorSubsystem.setIntendedState(ElevatorState.DOWN))));
 
-        elevatorSubsystem.setDefaultCommand(new ElevatorBasedOnStateCommand(elevatorSubsystem, this::getState, () -> new Pose2d()));
-//        IO.mechanismController.leftBumper().whileTrue(new LegGoDownCommand(climbDeepSubsystem).andThen(new InstantCommand(() -> elevatorSubsystem.setIntendedState(ElevatorState.DOWN))));
-//
-//        drivetrain.setDefaultCommand(new DriveCommand(drivetrain, this::getState, () -> -IO.driverController.getLeftY() * MAX_SPEED, () -> -IO.driverController.getLeftX() * MAX_SPEED, () -> -IO.driverController.getRightX() * MAX_ANGULAR_RATE, this::getManualOverride));
-//        IO.driverController.rightBumper().onTrue(new InstantCommand(() -> this.manualOverride = true));
-//        IO.driverController.rightBumper().onFalse(new InstantCommand(() -> this.manualOverride = false));
+    // elevatorSubsystem.setDefaultCommand(new
+    // ElevatorBasedOnStateCommand(elevatorSubsystem, this::getState, () -> new
+    // Pose2d()));
+    // IO.mechanismController.leftBumper().whileTrue(new
+    // LegGoDownCommand(climbDeepSubsystem).andThen(new InstantCommand(() ->
+    // elevatorSubsystem.setIntendedState(ElevatorState.DOWN))));
+    //
+    // drivetrain.setDefaultCommand(new DriveCommand(drivetrain, this::getState,
+    //     () -> deadband(-IO.driverController.getLeftY()) * MAX_SPEED, () -> deadband(-IO.driverController.getLeftX()) * MAX_SPEED,
+    //     () -> deadband(-IO.driverController.getRightX()) * MAX_ANGULAR_RATE, this::getManualOverride));
+    // IO.driverController.rightBumper().onTrue(new InstantCommand(() ->
+    // this.manualOverride = true));
+    // IO.driverController.rightBumper().onFalse(new InstantCommand(() ->
+    // this.manualOverride = false));
+      
+    // IO.mechanismController.x().whileTrue(new
+    // ElevatorMoveUpBySetPercentage(elevatorSubsystem));
+    IO.mechanismController.x().whileTrue(new ElevatorResetLimitSwitch(elevatorSubsystem));
+    IO.mechanismController.a().whileTrue(new
+    ElevatorMoveToHeight(elevatorSubsystem, 0.125));
+  }
 
-//        IO.mechanismController.x().whileTrue(new ElevatorMoveUpBySetPercentage(elevatorSubsystem));
-        IO.mechanismController.x().whileTrue(new ElevatorResetLimitSwitch(elevatorSubsystem));
-//        IO.mechanismController.a().whileTrue(new ElevatorMoveToHeight(elevatorSubsystem, 0.1));
-    }
+  // /**
+  //  * Use this to pass the autonomous command to the main {@link Robot} class.
+  //  *
+  //  * @return the command to run in autonomous
+  //  */
+  // public Command getAutonomousCommand() {
+  //   return autoChooser.selectedCommand();
+  // }
 
-    /**
-     * Use this to pass the autonomous command to the main {@link Robot} class.
-     *
-     * @return the command to run in autonomous
-     */
-    public Command getAutonomousCommand() {
-        return autoChooser.selectedCommand();
-    }
+  // public RobotState getState() {
+  //   SmartDashboard.putString("robot state", String.valueOf(this.state));
+  //   return this.state;
 
-    public RobotState getState() {
-        SmartDashboard.putString("robot state", String.valueOf(this.state));
-        return this.state;
+  // }
 
-    }
-
-    public boolean getManualOverride() {
-        return this.manualOverride;
-    }
+  // public boolean getManualOverride() {
+  //   return this.manualOverride;
+  // }
 }
