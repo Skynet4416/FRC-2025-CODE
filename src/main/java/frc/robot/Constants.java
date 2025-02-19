@@ -105,12 +105,18 @@ public final class Constants {
         public static class Intake {
             public static double RADIUS_IN_METERS = 500000;
             public static double ELEVATOR_HEIGHT = 0.2;
+            public static double VELOCITY_THREASHOLD = 500;
+            public static double INTAKE_THREASHOLD = 80;
+            public static double INTAKE_PERCEHNTAGE = 0.1;
+
         }
 
         public static class Score {
             public static double RADIUS_IN_METERS = 10000000;
 
             public static double ELEVATOR_HEIGHT = 0;
+            public static double INTAKE_PERCNETAGE= 0;
+            public static double INTAKE_TIME = 0;
         }
 
         public static class None {

@@ -15,13 +15,11 @@ public class ElevatorResetLimitSwitch extends Command {
 
     @Override
     public void initialize() {
-        elevatorSubsystem.setPercentage(-Constants.Subsystems.Elevator.Controls.ELEVATOR_PERCENTAGE);
+        if (!elevatorSubsystem.elevatorDown()) {
+            elevatorSubsystem.setPercentage(-Constants.Subsystems.Elevator.Controls.ELEVATOR_PERCENTAGE);
+        }
     }
 
-    @Override
-    public boolean isFinished() {
-        return elevatorSubsystem.elevatorDown();
-    }
 
     @Override
     public void end(boolean interrupted) {

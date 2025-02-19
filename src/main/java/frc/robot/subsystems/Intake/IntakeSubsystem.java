@@ -35,10 +35,10 @@ public class IntakeSubsystem extends SubsystemBase {
         SparkBaseConfig masterConfig = new SparkFlexConfig().smartCurrentLimit(30).idleMode(SparkBaseConfig.IdleMode.kBrake);
         upperIntakeSparkFlex.configure(masterConfig, SparkBase.ResetMode.kResetSafeParameters, SparkBase.PersistMode.kPersistParameters);
 
-//        SparkBaseConfig slaveConfig = new SparkFlexConfig().smartCurrentLimit(30).smartCurrentLimit(40).idleMode(SparkBaseConfig.IdleMode.kBrake);
-//        slaveConfig.follow(upperIntakeSparkFlex);
+        SparkBaseConfig slaveConfig = new SparkFlexConfig().smartCurrentLimit(30).smartCurrentLimit(40).idleMode(SparkBaseConfig.IdleMode.kBrake);
+        slaveConfig.follow(upperIntakeSparkFlex);
 
-        lowerIntakeSparkFlex.configure(masterConfig, SparkBase.ResetMode.kResetSafeParameters, SparkBase.PersistMode.kPersistParameters);
+        lowerIntakeSparkFlex.configure(slaveConfig, SparkBase.ResetMode.kResetSafeParameters, SparkBase.PersistMode.kPersistParameters);
         this.upperMasterIntakeFlexEncoder = upperIntakeSparkFlex.getEncoder();
         this.lowerIntakeFlexEncoder = lowerIntakeSparkFlex.getEncoder();
         this.setElevatorState = setElevatorState;
@@ -46,7 +46,6 @@ public class IntakeSubsystem extends SubsystemBase {
 
     public void moveMotor(double percentage) {
         this.upperIntakeSparkFlex.set(percentage);
-        this.lowerIntakeSparkFlex.set(percentage * 0.25);
         intendedState = percentage > 0 ? IntakeState.FULL : IntakeState.EMPTY;
     }
 
@@ -85,6 +84,10 @@ public class IntakeSubsystem extends SubsystemBase {
         }
         prevVelocityUp = upperMasterIntakeFlexEncoder.getVelocity();
         prevVelocityDown = lowerIntakeFlexEncoder.getVelocity();
+    }
+
+    public double getIntakeVelocity() {
+        return upperMasterIntakeFlexEncoder.getVelocity();
     }
 
     public IntakeState getState() {

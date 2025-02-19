@@ -1,13 +1,24 @@
 package frc.robot.subsystems.Drive;
 
-import choreo.Choreo.TrajectoryLogger;
-import choreo.auto.AutoFactory;
-import choreo.trajectory.SwerveSample;
+import java.io.IOException;
+import java.util.function.Supplier;
+
+import org.json.simple.parser.ParseException;
+
 import com.ctre.phoenix6.SignalLogger;
 import com.ctre.phoenix6.Utils;
 import com.ctre.phoenix6.swerve.SwerveDrivetrainConstants;
 import com.ctre.phoenix6.swerve.SwerveModuleConstants;
 import com.ctre.phoenix6.swerve.SwerveRequest;
+
+import com.pathplanner.lib.auto.AutoBuilder;
+import com.pathplanner.lib.config.PIDConstants;
+import com.pathplanner.lib.config.RobotConfig;
+import com.pathplanner.lib.controllers.PPHolonomicDriveController;
+
+import choreo.Choreo.TrajectoryLogger;
+import choreo.auto.AutoFactory;
+import choreo.trajectory.SwerveSample;
 import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.Vector;
 import edu.wpi.first.math.controller.PIDController;
@@ -15,6 +26,10 @@ import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
+
+import static edu.wpi.first.units.Units.Second;
+import static edu.wpi.first.units.Units.Volts;
+
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.Notifier;
@@ -27,11 +42,6 @@ import frc.robot.subsystems.Drive.TunerConstants.TunerSwerveDrivetrain;
 import frc.robot.subsystems.Vision.LimelightHelpers;
 import frc.robot.subsystems.Vision.LimelightObserver;
 
-import java.util.function.Supplier;
-
-import static edu.wpi.first.units.Units.Second;
-import static edu.wpi.first.units.Units.Volts;
-
 /**
  * Class that extends the Phoenix 6 SwerveDrivetrain class and implements
  * Subsystem so it can easily be used in command-based projects.
@@ -41,6 +51,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
     private static final double kSimLoopPeriod = 0.005; // 5 ms
     private Notifier m_simNotifier = null;
     private double m_lastSimTime;
+    private final SwerveRequest.ApplyRobotSpeeds m_pathApplyRobotSpeeds = new SwerveRequest.ApplyRobotSpeeds();
 
     /* Blue alliance sees forward as 0 degrees (toward red alliance wall) */
     private static final Rotation2d kBlueAlliancePerspectiveRotation = Rotation2d.kZero;
@@ -131,7 +142,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
      * access them through getters in the classes.
      *
      * @param drivetrainConstants Drivetrain-wide constants for the swerve drive
-     * @param modules             Constants for each specific module
+     * @param modules Constants for each specific module
      */
     public CommandSwerveDrivetrain(
             SwerveDrivetrainConstants drivetrainConstants,
@@ -150,11 +161,11 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
      * construct the devices themselves. If they need the devices, they can
      * access them through getters in the classes.
      *
-     * @param drivetrainConstants     Drivetrain-wide constants for the swerve drive
+     * @param drivetrainConstants Drivetrain-wide constants for the swerve drive
      * @param odometryUpdateFrequency The frequency to run the odometry loop. If
-     *                                unspecified or set to 0 Hz, this is 250 Hz on CAN FD, and 100 Hz on CAN
-     *                                2.0.
-     * @param modules                 Constants for each specific module
+     * unspecified or set to 0 Hz, this is 250 Hz on CAN FD, and 100 Hz on CAN
+     * 2.0.
+     * @param modules Constants for each specific module
      */
     public CommandSwerveDrivetrain(
             SwerveDrivetrainConstants drivetrainConstants,
@@ -175,15 +186,15 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
      * construct the devices themselves. If they need the devices, they can
      * access them through getters in the classes.
      *
-     * @param drivetrainConstants       Drivetrain-wide constants for the swerve drive
-     * @param odometryUpdateFrequency   The frequency to run the odometry loop. If
-     *                                  unspecified or set to 0 Hz, this is 250 Hz on CAN FD, and 100 Hz on CAN
-     *                                  2.0.
+     * @param drivetrainConstants Drivetrain-wide constants for the swerve drive
+     * @param odometryUpdateFrequency The frequency to run the odometry loop. If
+     * unspecified or set to 0 Hz, this is 250 Hz on CAN FD, and 100 Hz on CAN
+     * 2.0.
      * @param odometryStandardDeviation The standard deviation for odometry
-     *                                  calculation in the form [x, y, theta]ᵀ, with units in meters and radians
-     * @param visionStandardDeviation   The standard deviation for vision
-     *                                  calculation in the form [x, y, theta]ᵀ, with units in meters and radians
-     * @param modules                   Constants for each specific module
+     * calculation in the form [x, y, theta]ᵀ, with units in meters and radians
+     * @param visionStandardDeviation The standard deviation for vision
+     * calculation in the form [x, y, theta]ᵀ, with units in meters and radians
+     * @param modules Constants for each specific module
      */
     public CommandSwerveDrivetrain(
             SwerveDrivetrainConstants drivetrainConstants,
@@ -329,9 +340,9 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
      * odometry pose estimate while still accounting for measurement noise.
      *
      * @param visionRobotPoseMeters The pose of the robot as measured by the
-     *                              vision camera.
-     * @param timestampSeconds      The timestamp of the vision measurement in
-     *                              seconds.
+     * vision camera.
+     * @param timestampSeconds The timestamp of the vision measurement in
+     * seconds.
      */
     @Override
     public void addVisionMeasurement(Pose2d visionRobotPoseMeters, double timestampSeconds) {
@@ -346,12 +357,12 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
      * method will continue to apply to future measurements until a subsequent
      * call to {@link #setVisionMeasurementStdDevs(Matrix)} or this method.
      *
-     * @param visionRobotPoseMeters    The pose of the robot as measured by the
-     *                                 vision camera.
-     * @param timestampSeconds         The timestamp of the vision measurement in
-     *                                 seconds.
+     * @param visionRobotPoseMeters The pose of the robot as measured by the
+     * vision camera.
+     * @param timestampSeconds The timestamp of the vision measurement in
+     * seconds.
      * @param visionMeasurementStdDevs Standard deviations of the vision pose
-     *                                 measurement in the form [x, y, theta]ᵀ, with units in meters and radians.
+     * measurement in the form [x, y, theta]ᵀ, with units in meters and radians.
      */
     @Override
     public void addVisionMeasurement(
@@ -373,7 +384,44 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
         }
     }
 
-    public double calculateRotation(double angleInRadians){
+    public double calculateRotation(double angleInRadians) {
         return m_pathThetaController.calculate(getState().Pose.getRotation().getRadians(), angleInRadians);
     }
+
+    public void configureAutoBuilder() {
+        RobotConfig config;
+        try {
+            config = RobotConfig.fromGUISettings();
+
+            AutoBuilder.configure(
+                    () -> getState().Pose, // Supplier of current robot pose
+                    this::resetPose, // Consumer for seeding pose against auto
+                    () -> getState().Speeds, // Supplier of current robot speeds
+                    // Consumer of ChassisSpeeds and feedforwards to drive the robot
+                    (speeds, feedforwards) -> setControl(
+                            m_pathApplyRobotSpeeds.withSpeeds(speeds)
+                                    .withWheelForceFeedforwardsX(feedforwards.robotRelativeForcesXNewtons())
+                                    .withWheelForceFeedforwardsY(feedforwards.robotRelativeForcesYNewtons())
+                    ),
+                    new PPHolonomicDriveController(
+                            // PID constants for translation
+                            new PIDConstants(10, 0, 0),
+                            // PID constants for rotation
+                            new PIDConstants(7, 0, 0)
+                    ),
+                    config,
+                    // Assume the path needs to be flipped for Red vs Blue, this is normally the case
+                    () -> DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red,
+                    this // Subsystem for requirements
+            );
+        }
+        } catch (IOException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        } catch (ParseException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+    
+}
 }
