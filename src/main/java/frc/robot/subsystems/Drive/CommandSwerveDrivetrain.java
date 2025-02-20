@@ -1,20 +1,17 @@
 package frc.robot.subsystems.Drive;
 
-import choreo.Choreo.TrajectoryLogger;
-import choreo.auto.AutoFactory;
-import choreo.trajectory.SwerveSample;
+
+import java.util.function.Supplier;
+
 import com.ctre.phoenix6.SignalLogger;
 import com.ctre.phoenix6.Utils;
 import com.ctre.phoenix6.swerve.SwerveDrivetrainConstants;
 import com.ctre.phoenix6.swerve.SwerveModuleConstants;
 import com.ctre.phoenix6.swerve.SwerveRequest;
-
-import com.pathplanner.lib.util.ReplanningConfig;
-import com.pathplanner.lib.util.PIDConstants;
-import com.pathplanner.lib.util.PathPlannerLogging;
-import com.pathplanner.lib.util.HolonomicPathFollowerConfig;
 import com.pathplanner.lib.auto.AutoBuilder;
-import com.pathplanner.lib.commands.PathPlannerAuto;
+import com.pathplanner.lib.config.PIDConstants;
+import com.pathplanner.lib.config.RobotConfig;
+import com.pathplanner.lib.controllers.PPHolonomicDriveController;
 
 import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.Vector;
@@ -23,6 +20,8 @@ import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
+import static edu.wpi.first.units.Units.Second;
+import static edu.wpi.first.units.Units.Volts;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.Notifier;
@@ -34,11 +33,6 @@ import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.subsystems.Drive.TunerConstants.TunerSwerveDrivetrain;
 import frc.robot.subsystems.Vision.LimelightHelpers;
 import frc.robot.subsystems.Vision.LimelightObserver;
-
-import java.util.function.Supplier;
-
-import static edu.wpi.first.units.Units.Second;
-import static edu.wpi.first.units.Units.Volts;
 
 /**
  * Class that extends the Phoenix 6 SwerveDrivetrain class and implements
@@ -209,32 +203,6 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
 
     }
 
-    /**
-     * Creates a new auto factory for this drivetrain.
-     *
-     * @return AutoFactory for this drivetrain
-     */
-    public AutoFactory createAutoFactory() {
-        return createAutoFactory((sample, isStart) -> {
-        });
-    }
-
-    /**
-     * Creates a new auto factory for this drivetrain with the given trajectory
-     * logger.
-     *
-     * @param trajLogger Logger for the trajectory
-     * @return AutoFactory for this drivetrain
-     */
-    public AutoFactory createAutoFactory(TrajectoryLogger<SwerveSample> trajLogger) {
-        return new AutoFactory(
-                () -> getState().Pose,
-                this::resetPose,
-                this::followPath,
-                true,
-                this,
-                trajLogger);
-    }
 
     /**
      * Returns a command that applies the specified control request to this
@@ -247,28 +215,6 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
         return run(() -> this.setControl(requestSupplier.get()));
     }
 
-    /**
-     * Follows the given field-centric path sample with PID.
-     *
-     * @param sample Sample along the path to follow
-     */
-    public void followPath(SwerveSample sample) {
-
-        var pose = getState().Pose;
-
-        var targetSpeeds = sample.getChassisSpeeds();
-        targetSpeeds.vxMetersPerSecond += m_pathXController.calculate(
-                pose.getX(), sample.x);
-        targetSpeeds.vyMetersPerSecond += m_pathYController.calculate(
-                pose.getY(), sample.y);
-        targetSpeeds.omegaRadiansPerSecond += m_pathThetaController.calculate(
-                pose.getRotation().getRadians(), sample.heading);
-
-        setControl(
-                m_pathApplyFieldSpeeds.withSpeeds(targetSpeeds)
-                        .withWheelForceFeedforwardsX(sample.moduleForcesX())
-                        .withWheelForceFeedforwardsY(sample.moduleForcesY()));
-    }
 
     /**
      * Runs the SysId Quasistatic test in the given direction for the routine
@@ -386,40 +332,33 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
         return m_pathThetaController.calculate(getState().Pose.getRotation().getRadians(), angleInRadians);
     }
 
-   public void configureAutoBuilder() {
-//       RobotConfig config;
-//       try {
-//           config = RobotConfig.fromGUISettings();
-//
-//           AutoBuilder.configure(
-//                   () -> getState().Pose, // Supplier of current robot pose
-//                   this::resetPose, // Consumer for seeding pose against auto
-//                   () -> getState().Speeds, // Supplier of current robot speeds
-//                   // Consumer of ChassisSpeeds and feedforwards to drive the robot
-//                   (speeds, feedforwards) -> setControl(
-//                           m_pathApplyRobotSpeeds.withSpeeds(speeds)
-//                                   .withWheelForceFeedforwardsX(feedforwards.robotRelativeForcesXNewtons())
-//                                   .withWheelForceFeedforwardsY(feedforwards.robotRelativeForcesYNewtons())
-//                   ),
-//                   new PPHolonomicDriveController(
-//                           // PID constants for translation
-//                           new PIDConstants(10, 0, 0),
-//                           // PID constants for rotation
-//                           new PIDConstants(7, 0, 0)
-//                   ),
-//                   config,
-//                   // Assume the path needs to be flipped for Red vs Blue, this is normally the case
-//                   () -> DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red,
-//                   this // Subsystem for requirements
-//           );
-//       }
-//       } catch (IOException e) {
-//           // TODO Auto-generated catch block
-//           e.printStackTrace();
-//       } catch (ParseException e) {
-//           // TODO Auto-generated catch block
-//           e.printStackTrace();
-//       }
-   }
+    public void configureAutoBuilder() {
+        try {
+            var config = RobotConfig.fromGUISettings();
+            AutoBuilder.configure(
+                    () -> getState().Pose,   // Supplier of current robot pose
+                    this::resetPose,         // Consumer for seeding pose against auto
+                    () -> getState().Speeds, // Supplier of current robot speeds
+                    // Consumer of ChassisSpeeds and feedforwards to drive the robot
+                    (speeds, feedforwards) -> setControl(
+                            m_pathApplyRobotSpeeds.withSpeeds(speeds)
+                                    .withWheelForceFeedforwardsX(feedforwards.robotRelativeForcesXNewtons())
+                                    .withWheelForceFeedforwardsY(feedforwards.robotRelativeForcesYNewtons())
+                    ),
+                    new PPHolonomicDriveController(
+                            // PID constants for translation
+                            new PIDConstants(10, 0, 0),
+                            // PID constants for rotation
+                            new PIDConstants(7, 0, 0)
+                    ),
+                    config,
+                    // Assume the path needs to be flipped for Red vs Blue, this is normally the case
+                    () -> DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red,
+                    this // Subsystem for requirements
+            );
+        } catch (Exception ex) {
+            DriverStation.reportError("Failed to load PathPlanner config and configure AutoBuilder", ex.getStackTrace());
+        }
+    }
 }
 

@@ -3,11 +3,18 @@
 // the WPILib BSD license file in the root directory of this project.
 package frc.robot;
 
-import choreo.auto.AutoChooser;
+import java.util.function.DoubleSupplier;
+
+import com.pathplanner.lib.auto.AutoBuilder;
+
 import edu.wpi.first.math.filter.SlewRateLimiter;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.units.Units;
+import static edu.wpi.first.units.Units.RadiansPerSecond;
+import static edu.wpi.first.units.Units.RotationsPerSecond;
+import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.WaitCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
@@ -25,14 +32,6 @@ import frc.robot.subsystems.Elevator.ElevatorState;
 import frc.robot.subsystems.Elevator.ElevatorSubsystem;
 import frc.robot.subsystems.Intake.IntakeState;
 import frc.robot.subsystems.Intake.IntakeSubsystem;
-import frc.robot.subsystems.Leg.ClimbDeepSubsystem;
-import frc.robot.subsystems.Vision.LimelightObserver;
-import frc.robot.subsystems.Vision.LimelightSubsystem;
-
-import java.util.function.DoubleSupplier;
-
-import static edu.wpi.first.units.Units.RadiansPerSecond;
-import static edu.wpi.first.units.Units.RotationsPerSecond;
 
 /**
  * This class is where the bulk of the robot should be declared. Since
@@ -48,7 +47,7 @@ public class RobotContainer {
 
     private final IntakeSubsystem intakeSubsystem = new IntakeSubsystem();
     private final ElevatorSubsystem elevatorSubsystem = new ElevatorSubsystem();
-//    private final ClimbDeepSubsystem climbDeepSubsystem = new ClimbDeepSubsystem();
+    //    private final ClimbDeepSubsystem climbDeepSubsystem = new ClimbDeepSubsystem();
 //    private final LimelightSubsystem limelightSubsystem = new LimelightSubsystem(new LimelightObserver[]{drivetrain});
     private final double MAX_SPEED = TunerConstants.kSpeedAt12Volts.in(Units.MetersPerSecond); // kSpeedAt12Volts desired
     // top speed
@@ -58,7 +57,7 @@ public class RobotContainer {
 
     // private final AutoFactory autoFactory;
     // private final Autos autoRoutines;
-    private final AutoChooser autoChooser = new AutoChooser();
+//    private final AutoChooser autoChooser = new AutoChooser();
     // public final CommandSwerveDrivetrain drivetrain;
     private final Telemetry logger = new Telemetry(MAX_SPEED);
     private boolean manualOverride = false;
@@ -83,10 +82,14 @@ public class RobotContainer {
     private final DoubleSupplier xSupplier = () -> slewRateLimiterx.calculate(deadband(-IO.driverController.getLeftY())) * MAX_SPEED;
     private final DoubleSupplier ySupplier = () -> slewRateLimitery.calculate(deadband(-IO.driverController.getLeftX())) * MAX_SPEED;
     private final DoubleSupplier rotationSupplier = () -> slewRateLimiterRotation.calculate(deadband(-IO.driverController.getRightX())) * MAX_ANGULAR_RATE;
+    private final SendableChooser<Command> autoChooser;
 
-    
+
     public RobotContainer() {
-
+        FollowPathCommand
+        drivetrain.configureAutoBuilder();
+        autoChooser = AutoBuilder.buildAutoChooser();
+        SmartDashboard.putData("Auto Mode", autoChooser);
         // autoFactory = drivetrain.createAutoFactory();
         // autoRoutines = new Autos(autoFactory);
 
@@ -166,9 +169,9 @@ public class RobotContainer {
     //  *
     //  * @return the command to run in autonomous
     //  */
-    // public Command getAutonomousCommand() {
-    //   return autoChooser.selectedCommand();
-    // }
+//     public Command getAutonomousCommand() {
+//       return autoChooser.selectedCommand();
+//     }
     public RobotState getState() {
         SmartDashboard.putString("robot state", String.valueOf(this.state));
         return this.state;

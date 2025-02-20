@@ -11,7 +11,7 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 public class LimelightSubsystem extends SubsystemBase {
 
-    private LimelightObserver[] observers;
+    private final LimelightObserver[] observers;
 
     public LimelightSubsystem(LimelightObserver[] observers) {
         this.observers = observers;
@@ -36,11 +36,11 @@ public class LimelightSubsystem extends SubsystemBase {
             stdDiviation = VecBuilder.fill(.7, .7, 9999999);
         }
 
-        if (poseEstimate.rawFiducials.length > 0 && poseEstimate.rawFiducials[0].ambiguity > 0.5 && poseEstimate.rawFiducials[0].distToCamera > 4) {
+        if (poseEstimate != null && poseEstimate.rawFiducials.length > 0 && poseEstimate.rawFiducials[0].ambiguity > 0.5 && poseEstimate.rawFiducials[0].distToCamera > 4) {
             doRejectUpdate = true;
         }
 
-        if (poseEstimate.tagCount > 0 && !doRejectUpdate) {
+        if (poseEstimate != null && poseEstimate.tagCount > 0 && !doRejectUpdate) {
             for (LimelightObserver observer : observers) {
                 observer.onLimelightDataUpdate(poseEstimate, stdDiviation);
             }
