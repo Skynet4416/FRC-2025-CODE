@@ -79,5 +79,5 @@
   "splits":[0]
  },
  "events":[
-   {"name":"Marker", "from":{"target":2, "targetTimestamp":null, "offset":{"exp":"0 s", "val":0.0}}, "event":{"type":"named", "data":{"name":"Shoot"}}}]
+   {"name":"Marker", "from":{"target":2, "targetTimestamp":1.41368, "offset":{"exp":"0 s", "val":0.0}}, "event":{"type":"named", "data":{"name":"Shoot"}}}]
 }
