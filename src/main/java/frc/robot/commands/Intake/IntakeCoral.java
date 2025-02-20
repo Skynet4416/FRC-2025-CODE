@@ -10,6 +10,7 @@ public class IntakeCoral extends Command {
     private boolean reachedVelocity = false;
 
     public IntakeCoral(IntakeSubsystem intakeSubsystem) {
+        this.intakeSubsystem = intakeSubsystem;
         addRequirements(intakeSubsystem);
     }
 

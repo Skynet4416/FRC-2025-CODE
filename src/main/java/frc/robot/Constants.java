@@ -43,7 +43,7 @@ public final class Constants {
             public static class Controls {
 
                 public static final double HEIGHT_THRESHOLD_IN_METERS = 0.005;
-                public static final double ELEVATOR_PERCENTAGE = 1;
+                public static final double ELEVATOR_PERCENTAGE = 0.3;
             }
 
             public static class PID {

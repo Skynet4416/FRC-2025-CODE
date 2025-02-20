@@ -4,6 +4,7 @@
 package frc.robot;
 
 import choreo.auto.AutoChooser;
+import edu.wpi.first.math.filter.SlewRateLimiter;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.units.Units;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -11,9 +12,11 @@ import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.WaitCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
+import frc.robot.commands.DriveCommand;
 import frc.robot.commands.Elevator.ElevatorMoveToHeight;
 import frc.robot.commands.Elevator.ElevatorResetLimitSwitch;
 import frc.robot.commands.Intake.IntakeCoral;
+import frc.robot.commands.Intake.IntakeDefault;
 import frc.robot.meth.Distance;
 import frc.robot.subsystems.Drive.CommandSwerveDrivetrain;
 import frc.robot.subsystems.Drive.Telemetry;
@@ -25,6 +28,8 @@ import frc.robot.subsystems.Intake.IntakeSubsystem;
 import frc.robot.subsystems.Leg.ClimbDeepSubsystem;
 import frc.robot.subsystems.Vision.LimelightObserver;
 import frc.robot.subsystems.Vision.LimelightSubsystem;
+
+import java.util.function.DoubleSupplier;
 
 import static edu.wpi.first.units.Units.RadiansPerSecond;
 import static edu.wpi.first.units.Units.RotationsPerSecond;
@@ -39,11 +44,12 @@ import static edu.wpi.first.units.Units.RotationsPerSecond;
 public class RobotContainer {
 
     private RobotState state = RobotState.NONE;
-    private final CommandSwerveDrivetrain drivetrain;
-    private final LimelightSubsystem limelightSubsystem;
+    private final CommandSwerveDrivetrain drivetrain = TunerConstants.createDrivetrain();
+
     private final IntakeSubsystem intakeSubsystem = new IntakeSubsystem();
     private final ElevatorSubsystem elevatorSubsystem = new ElevatorSubsystem();
-    private final ClimbDeepSubsystem climbDeepSubsystem = new ClimbDeepSubsystem();
+//    private final ClimbDeepSubsystem climbDeepSubsystem = new ClimbDeepSubsystem();
+//    private final LimelightSubsystem limelightSubsystem = new LimelightSubsystem(new LimelightObserver[]{drivetrain});
     private final double MAX_SPEED = TunerConstants.kSpeedAt12Volts.in(Units.MetersPerSecond); // kSpeedAt12Volts desired
     // top speed
     private final double MAX_ANGULAR_RATE = RotationsPerSecond.of(0.75).in(RadiansPerSecond); // 3/4 of a rotation per
@@ -55,7 +61,7 @@ public class RobotContainer {
     private final AutoChooser autoChooser = new AutoChooser();
     // public final CommandSwerveDrivetrain drivetrain;
     private final Telemetry logger = new Telemetry(MAX_SPEED);
-    private  boolean manualOverride = false;
+    private boolean manualOverride = false;
 
     private final Trigger coralStationTrigger = new Trigger(() -> Distance.isPointNearLinesSegment(new Pose2d().getTranslation(),
             new Pose2d[]{FieldConstants.CoralStation.leftCenterFace, FieldConstants.CoralStation.rightCenterFace},
@@ -70,10 +76,17 @@ public class RobotContainer {
     private final Trigger intakeEmpty = new Trigger(() -> intakeSubsystem.getState() == IntakeState.EMPTY);
     private boolean readyToScore = false;
     private final Trigger readyToScoreTrigger = new Trigger(() -> readyToScore);
+    private final SlewRateLimiter slewRateLimiterx = new SlewRateLimiter(1);
+    private final SlewRateLimiter slewRateLimitery = new SlewRateLimiter(1);
+    private final SlewRateLimiter slewRateLimiterRotation = new SlewRateLimiter(10);
 
+    private final DoubleSupplier xSupplier = () -> slewRateLimiterx.calculate(deadband(-IO.driverController.getLeftY())) * MAX_SPEED;
+    private final DoubleSupplier ySupplier = () -> slewRateLimitery.calculate(deadband(-IO.driverController.getLeftX())) * MAX_SPEED;
+    private final DoubleSupplier rotationSupplier = () -> slewRateLimiterRotation.calculate(deadband(-IO.driverController.getRightX())) * MAX_ANGULAR_RATE;
+
+    
     public RobotContainer() {
-        drivetrain = TunerConstants.createDrivetrain();
-        this.limelightSubsystem = new LimelightSubsystem(new LimelightObserver[]{drivetrain});
+
         // autoFactory = drivetrain.createAutoFactory();
         // autoRoutines = new Autos(autoFactory);
 
@@ -89,6 +102,7 @@ public class RobotContainer {
         if (Math.abs(value) > 0.1) {
             return value;
         }
+
         return 0;
     }
 
@@ -117,9 +131,10 @@ public class RobotContainer {
                 = RobotState.CLIMB).alongWith(new InstantCommand(()
                 -> elevatorSubsystem.setIntendedState(ElevatorState.UP))));
 
-        // intakeSubsystem.setDefaultCommand(); add default to put percnetage at 0
+        intakeSubsystem.setDefaultCommand(new IntakeDefault(intakeSubsystem));
 
         elevatorSubsystem.setDefaultCommand(new ElevatorResetLimitSwitch(elevatorSubsystem));
+
         coralStationTrigger.and(intakeModeTrigger).whileTrue(new IntakeCoral(intakeSubsystem).alongWith(new ElevatorMoveToHeight(elevatorSubsystem, Constants.States.Intake.ELEVATOR_HEIGHT).andThen(new InstantCommand(() -> intakeSubsystem.moveMotor(Constants.States.Intake.INTAKE_PERCEHNTAGE)).raceWith(new WaitCommand(0.3)))));
 
         reefTrigger.and(scoreTrigger).whileTrue(new ElevatorMoveToHeight(elevatorSubsystem, Constants.States.Score.ELEVATOR_HEIGHT).andThen(new InstantCommand(() -> readyToScore = true)));
@@ -139,21 +154,14 @@ public class RobotContainer {
 //        IO.mechanismController.leftBumper().whileTrue(new LegGoDownCommand(climbDeepSubsystem).andThen(new InstantCommand(()
 //                -> elevatorSubsystem.setIntendedState(ElevatorState.DOWN))));
 //
-//        drivetrain.setDefaultCommand(new DriveCommand(drivetrain, this::getState,
-//                () -> deadband(-IO.driverController.getLeftY()) * MAX_SPEED, () -> deadband(-IO.driverController.getLeftX()) * MAX_SPEED,
-//                () -> deadband(-IO.driverController.getRightX()) * MAX_ANGULAR_RATE, this::getManualOverride));
-//        IO.driverController.rightBumper().onTrue(new InstantCommand(()
-//                -> this.manualOverride = true));
-//        IO.driverController.rightBumper().onFalse(new InstantCommand(()
-//                -> this.manualOverride = false));
+        drivetrain.setDefaultCommand(new DriveCommand(drivetrain, xSupplier, ySupplier, rotationSupplier));
 
-        // IO.mechanismController.x().whileTrue(new
-        // ElevatorMoveUpBySetPercentage(elevatorSubsystem));
-        IO.mechanismController.x().whileTrue(new ElevatorResetLimitSwitch(elevatorSubsystem));
-        IO.mechanismController.a().whileTrue(new ElevatorMoveToHeight(elevatorSubsystem, 0.125));
+//        IO.mechanismController.x().whileTrue(new ElevatorResetLimitSwitch(elevatorSubsystem));
+//        IO.mechanismController.a().whileTrue(new ElevatorMoveToHeight(elevatorSubsystem, 0.125));
     }
 
     // /**
+
     //  * Use this to pass the autonomous command to the main {@link Robot} class.
     //  *
     //  * @return the command to run in autonomous
