@@ -49,7 +49,7 @@ public final class Constants {
             public static class Controls {
 
                 public static final double HEIGHT_THRESHOLD_IN_METERS = 0.005;
-                public static final double ELEVATOR_PERCENTAGE = 0.3;
+                public static final double ELEVATOR_PERCENTAGE = 0.8;
             }
 
             public static class PID {
@@ -112,8 +112,8 @@ public final class Constants {
             public static double RADIUS_IN_METERS = 500000;
             public static double ELEVATOR_HEIGHT = 0.2;
             public static double VELOCITY_THREASHOLD = 500;
-            public static double INTAKE_THREASHOLD = 80;
-            public static double INTAKE_PERCEHNTAGE = 0.1;
+            public static double INTAKE_THREASHOLD = 40;
+            public static double INTAKE_PERCEHNTAGE = 0.3;
 
         }
 

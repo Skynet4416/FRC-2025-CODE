@@ -155,8 +155,8 @@ public class RobotContainer {
 //                -> elevatorSubsystem.setIntendedState(ElevatorState.DOWN))));
 //
         drivetrain.setDefaultCommand(new DriveCommand(drivetrain, xSupplier, ySupplier, rotationSupplier, () -> wantedAngle, () -> manualOverride));
-        IO.driverController.leftBumper().onTrue(new DriveMoveToAngleIncreament(-30, (angle) -> wantedAngle = edu.wpi.first.math.util.Units.degreesToRadians(angle), (a) -> this.manualOverride = a, drivetrain));
-        IO.driverController.rightBumper().onTrue(new DriveMoveToAngleIncreament(30, (angle) -> wantedAngle = edu.wpi.first.math.util.Units.degreesToRadians(angle), (a) -> this.manualOverride = a, drivetrain));
+        IO.driverController.leftBumper().onTrue(new DriveMoveToAngleIncreament(60, (angle) -> wantedAngle = edu.wpi.first.math.util.Units.degreesToRadians(angle), (a) -> this.manualOverride = a, drivetrain));
+        IO.driverController.rightBumper().onTrue(new DriveMoveToAngleIncreament(-60, (angle) -> wantedAngle = edu.wpi.first.math.util.Units.degreesToRadians(angle), (a) -> this.manualOverride = a, drivetrain));
 
         //    IO.mechanismController.x().whileTrue(new ElevatorResetLimitSwitch(elevatorSubsystem));
         //    IO.mechanismController.a().whileTrue(new ElevatorMoveToHeight(elevatorSubsystem, 0.125));

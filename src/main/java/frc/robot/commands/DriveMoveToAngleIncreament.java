@@ -23,7 +23,8 @@ public class DriveMoveToAngleIncreament extends Command {
     public void initialize() {
         manualOVerrideSetter.accept(false);
         double absincreament = Math.abs(increament);
-        angleSetter.accept(Math.floor(drivetrain.getGyroRotationInDegrees() / absincreament) * absincreament + increament);
+        // angleSetter.accept(drivetrain.getGyroRotationInDegrees()+increament);
+        angleSetter.accept(Math.round(drivetrain.getGyroRotationInDegrees() / absincreament) * absincreament + increament);
 
     }
 

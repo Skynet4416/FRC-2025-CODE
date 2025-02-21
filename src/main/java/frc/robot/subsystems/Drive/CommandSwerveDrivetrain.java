@@ -142,7 +142,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
             SwerveModuleConstants<?, ?, ?>... modules) {
         super(drivetrainConstants, modules);
         m_pathThetaController.enableContinuousInput(-Math.PI, Math.PI);
-        m_pathThetaController.setTolerance(Units.degreesToRadians(3));
+        m_pathThetaController.setTolerance(Units.degreesToRadians(1.5));
         if (Utils.isSimulation()) {
             startSimThread();
         }
@@ -170,7 +170,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
             startSimThread();
         }
         m_pathThetaController.enableContinuousInput(-Math.PI, Math.PI);
-        m_pathThetaController.setTolerance(Units.degreesToRadians(3));
+        m_pathThetaController.setTolerance(Units.degreesToRadians(1.5));
 
     }
 
@@ -203,7 +203,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
             startSimThread();
         }
         m_pathThetaController.enableContinuousInput(-Math.PI, Math.PI);
-        m_pathThetaController.setTolerance(Units.degreesToRadians(3));
+        m_pathThetaController.setTolerance(Units.degreesToRadians(1.5));
 
     }
 
