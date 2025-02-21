@@ -50,9 +50,9 @@ public class LimelightSubsystem extends SubsystemBase {
             SmartDashboard.putBoolean("VISION REJECTED", true);
         }
 
-        SmartDashboard.putNumberArray("LL pose", new Double[]{
+        if(poseEstimate != null){SmartDashboard.putNumberArray("LL pose", new Double[]{
                 poseEstimate.pose.getX(), poseEstimate.pose.getY(), poseEstimate.pose.getRotation().getDegrees()
-        });
+        });}
     }
 
 }

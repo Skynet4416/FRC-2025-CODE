@@ -7,7 +7,7 @@ import frc.robot.subsystems.Intake.IntakeSubsystem;
 
 public class IntakeCoral extends Command {
     private IntakeSubsystem intakeSubsystem;
-    private boolean reachedVelocity = false;
+    private boolean reachedVelocity;
 
     public IntakeCoral(IntakeSubsystem intakeSubsystem) {
         this.intakeSubsystem = intakeSubsystem;
@@ -17,6 +17,7 @@ public class IntakeCoral extends Command {
     @Override
     public void initialize() {
         intakeSubsystem.moveMotor(Constants.States.Intake.INTAKE_PERCEHNTAGE);
+        this.reachedVelocity =false;
     }
 
     @Override

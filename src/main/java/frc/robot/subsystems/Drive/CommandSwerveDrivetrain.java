@@ -1,6 +1,5 @@
 package frc.robot.subsystems.Drive;
 
-
 import java.util.function.Supplier;
 
 import com.ctre.phoenix6.SignalLogger;
@@ -20,6 +19,7 @@ import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
+import edu.wpi.first.math.util.Units;
 import static edu.wpi.first.units.Units.Second;
 import static edu.wpi.first.units.Units.Volts;
 import edu.wpi.first.wpilibj.DriverStation;
@@ -30,6 +30,7 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Subsystem;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
+import frc.robot.Constants;
 import frc.robot.subsystems.Drive.TunerConstants.TunerSwerveDrivetrain;
 import frc.robot.subsystems.Vision.LimelightHelpers;
 import frc.robot.subsystems.Vision.LimelightObserver;
@@ -58,7 +59,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
     private final SwerveRequest.ApplyFieldSpeeds m_pathApplyFieldSpeeds = new SwerveRequest.ApplyFieldSpeeds();
     private final PIDController m_pathXController = new PIDController(10, 0, 0);
     private final PIDController m_pathYController = new PIDController(10, 0, 0);
-    private final PIDController m_pathThetaController = new PIDController(7, 0, 0);
+    private final PIDController m_pathThetaController = new PIDController(Constants.Subsystems.Drive.Rotation.KP, 0, Constants.Subsystems.Drive.Rotation.KI);
 
     /* Swerve requests to apply during SysId characterization */
     private final SwerveRequest.SysIdSwerveTranslation m_translationCharacterization = new SwerveRequest.SysIdSwerveTranslation();
@@ -134,13 +135,14 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
      * access them through getters in the classes.
      *
      * @param drivetrainConstants Drivetrain-wide constants for the swerve drive
-     * @param modules             Constants for each specific module
+     * @param modules Constants for each specific module
      */
     public CommandSwerveDrivetrain(
             SwerveDrivetrainConstants drivetrainConstants,
             SwerveModuleConstants<?, ?, ?>... modules) {
         super(drivetrainConstants, modules);
         m_pathThetaController.enableContinuousInput(-Math.PI, Math.PI);
+        m_pathThetaController.setTolerance(Units.degreesToRadians(3));
         if (Utils.isSimulation()) {
             startSimThread();
         }
@@ -153,11 +155,11 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
      * construct the devices themselves. If they need the devices, they can
      * access them through getters in the classes.
      *
-     * @param drivetrainConstants     Drivetrain-wide constants for the swerve drive
+     * @param drivetrainConstants Drivetrain-wide constants for the swerve drive
      * @param odometryUpdateFrequency The frequency to run the odometry loop. If
-     *                                unspecified or set to 0 Hz, this is 250 Hz on CAN FD, and 100 Hz on CAN
-     *                                2.0.
-     * @param modules                 Constants for each specific module
+     * unspecified or set to 0 Hz, this is 250 Hz on CAN FD, and 100 Hz on CAN
+     * 2.0.
+     * @param modules Constants for each specific module
      */
     public CommandSwerveDrivetrain(
             SwerveDrivetrainConstants drivetrainConstants,
@@ -168,6 +170,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
             startSimThread();
         }
         m_pathThetaController.enableContinuousInput(-Math.PI, Math.PI);
+        m_pathThetaController.setTolerance(Units.degreesToRadians(3));
 
     }
 
@@ -178,15 +181,15 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
      * construct the devices themselves. If they need the devices, they can
      * access them through getters in the classes.
      *
-     * @param drivetrainConstants       Drivetrain-wide constants for the swerve drive
-     * @param odometryUpdateFrequency   The frequency to run the odometry loop. If
-     *                                  unspecified or set to 0 Hz, this is 250 Hz on CAN FD, and 100 Hz on CAN
-     *                                  2.0.
+     * @param drivetrainConstants Drivetrain-wide constants for the swerve drive
+     * @param odometryUpdateFrequency The frequency to run the odometry loop. If
+     * unspecified or set to 0 Hz, this is 250 Hz on CAN FD, and 100 Hz on CAN
+     * 2.0.
      * @param odometryStandardDeviation The standard deviation for odometry
-     *                                  calculation in the form [x, y, theta]ᵀ, with units in meters and radians
-     * @param visionStandardDeviation   The standard deviation for vision
-     *                                  calculation in the form [x, y, theta]ᵀ, with units in meters and radians
-     * @param modules                   Constants for each specific module
+     * calculation in the form [x, y, theta]ᵀ, with units in meters and radians
+     * @param visionStandardDeviation The standard deviation for vision
+     * calculation in the form [x, y, theta]ᵀ, with units in meters and radians
+     * @param modules Constants for each specific module
      */
     public CommandSwerveDrivetrain(
             SwerveDrivetrainConstants drivetrainConstants,
@@ -200,9 +203,9 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
             startSimThread();
         }
         m_pathThetaController.enableContinuousInput(-Math.PI, Math.PI);
+        m_pathThetaController.setTolerance(Units.degreesToRadians(3));
 
     }
-
 
     /**
      * Returns a command that applies the specified control request to this
@@ -214,7 +217,6 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
     public Command applyRequest(Supplier<SwerveRequest> requestSupplier) {
         return run(() -> this.setControl(requestSupplier.get()));
     }
-
 
     /**
      * Runs the SysId Quasistatic test in the given direction for the routine
@@ -251,6 +253,12 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
          * This ensures driving behavior doesn't change until an explicit disable event
          * occurs during testing.
          */
+        SmartDashboard.putNumber("current angle", getGyroRotationInDegrees());
+        // m_pathThetaController.setP(SmartDashboard.getNumber("KP", 0));
+        // m_pathThetaController.setI(SmartDashboard.getNumber("KI", 0));
+        // SmartDashboard.putNumber("KP", m_pathThetaController.getP());
+        // SmartDashboard.putNumber("KI", m_pathThetaController.getI());
+
         LimelightHelpers.SetRobotOrientation("limelight", getState().Pose.getRotation().getDegrees(), 0, 0, 0, 0, 0);
 
         if (!m_hasAppliedOperatorPerspective || DriverStation.isDisabled()) {
@@ -284,9 +292,9 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
      * odometry pose estimate while still accounting for measurement noise.
      *
      * @param visionRobotPoseMeters The pose of the robot as measured by the
-     *                              vision camera.
-     * @param timestampSeconds      The timestamp of the vision measurement in
-     *                              seconds.
+     * vision camera.
+     * @param timestampSeconds The timestamp of the vision measurement in
+     * seconds.
      */
     @Override
     public void addVisionMeasurement(Pose2d visionRobotPoseMeters, double timestampSeconds) {
@@ -301,12 +309,12 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
      * method will continue to apply to future measurements until a subsequent
      * call to {@link #setVisionMeasurementStdDevs(Matrix)} or this method.
      *
-     * @param visionRobotPoseMeters    The pose of the robot as measured by the
-     *                                 vision camera.
-     * @param timestampSeconds         The timestamp of the vision measurement in
-     *                                 seconds.
+     * @param visionRobotPoseMeters The pose of the robot as measured by the
+     * vision camera.
+     * @param timestampSeconds The timestamp of the vision measurement in
+     * seconds.
      * @param visionMeasurementStdDevs Standard deviations of the vision pose
-     *                                 measurement in the form [x, y, theta]ᵀ, with units in meters and radians.
+     * measurement in the form [x, y, theta]ᵀ, with units in meters and radians.
      */
     @Override
     public void addVisionMeasurement(
@@ -329,15 +337,15 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
     }
 
     public double calculateRotation(double angleInRadians) {
-        return m_pathThetaController.calculate(getState().Pose.getRotation().getRadians(), angleInRadians);
+        return m_pathThetaController.calculate(Units.degreesToRadians(getGyroRotationInDegrees()), angleInRadians);
     }
 
     public void configureAutoBuilder() {
         try {
             var config = RobotConfig.fromGUISettings();
             AutoBuilder.configure(
-                    () -> getState().Pose,   // Supplier of current robot pose
-                    this::resetPose,         // Consumer for seeding pose against auto
+                    () -> getState().Pose, // Supplier of current robot pose
+                    this::resetPose, // Consumer for seeding pose against auto
                     () -> getState().Speeds, // Supplier of current robot speeds
                     // Consumer of ChassisSpeeds and feedforwards to drive the robot
                     (speeds, feedforwards) -> setControl(
@@ -360,5 +368,12 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
             DriverStation.reportError("Failed to load PathPlanner config and configure AutoBuilder", ex.getStackTrace());
         }
     }
-}
 
+    public  double getGyroRotationInDegrees(){ 
+        return this.getPigeon2().getYaw().getValueAsDouble() %360   ;
+    }
+
+    public boolean atRotationSetpoint(){
+        return this.m_pathThetaController.atSetpoint();
+    }
+}

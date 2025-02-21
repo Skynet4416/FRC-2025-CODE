@@ -20,15 +20,17 @@ import edu.wpi.first.wpilibj2.command.WaitCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.commands.DriveCommand;
+import frc.robot.commands.DriveMoveToAngleIncreament;
 import frc.robot.commands.Elevator.ElevatorMoveToHeight;
 import frc.robot.commands.Elevator.ElevatorResetLimitSwitch;
+import frc.robot.commands.Intake.IntakeAtPercentage;
 import frc.robot.commands.Intake.IntakeCoral;
 import frc.robot.commands.Intake.IntakeDefault;
+import frc.robot.commands.TurnToAngle;
 import frc.robot.meth.Distance;
 import frc.robot.subsystems.Drive.CommandSwerveDrivetrain;
 import frc.robot.subsystems.Drive.Telemetry;
 import frc.robot.subsystems.Drive.TunerConstants;
-import frc.robot.subsystems.Elevator.ElevatorState;
 import frc.robot.subsystems.Elevator.ElevatorSubsystem;
 import frc.robot.subsystems.Intake.IntakeState;
 import frc.robot.subsystems.Intake.IntakeSubsystem;
@@ -60,8 +62,8 @@ public class RobotContainer {
 //    private final AutoChooser autoChooser = new AutoChooser();
     // public final CommandSwerveDrivetrain drivetrain;
     private final Telemetry logger = new Telemetry(MAX_SPEED);
-    private boolean manualOverride = false;
-
+    private boolean manualOverride = true;
+    private double wantedAngle = 0;
     private final Trigger coralStationTrigger = new Trigger(() -> Distance.isPointNearLinesSegment(new Pose2d().getTranslation(),
             new Pose2d[]{FieldConstants.CoralStation.leftCenterFace, FieldConstants.CoralStation.rightCenterFace},
             FieldConstants.CoralStation.stationLength, Constants.States.Intake.RADIUS_IN_METERS) != null);
@@ -84,15 +86,13 @@ public class RobotContainer {
     private final DoubleSupplier rotationSupplier = () -> slewRateLimiterRotation.calculate(deadband(-IO.driverController.getRightX())) * MAX_ANGULAR_RATE;
     private final SendableChooser<Command> autoChooser;
 
-
     public RobotContainer() {
-        FollowPathCommand
+
         drivetrain.configureAutoBuilder();
         autoChooser = AutoBuilder.buildAutoChooser();
         SmartDashboard.putData("Auto Mode", autoChooser);
         // autoFactory = drivetrain.createAutoFactory();
         // autoRoutines = new Autos(autoFactory);
-
 
         // autoChooser.addRoutine("SimplePath", () ->
         // autoRoutines.getAutoRoutine("SimplePath"));
@@ -115,40 +115,37 @@ public class RobotContainer {
      * {@link Trigger#Trigger(java.util.function.BooleanSupplier)} constructor
      * with an arbitrary predicate, or via the named factories in {@link
      * edu.wpi.first.wpilibj2.command.button.CommandGenericHID}'s subclasses for
+     * null null null null null null null null null null null null null null
      * null null     {@link
      * CommandXboxController
      * Xbox}/{@link edu.wpi.first.wpilibj2.command.button.CommandPS4Controller
-     * PS4} controllers or null null     {@link edu.wpi.first.wpilibj2.command.button.CommandJoystick Flight
+     * PS4} controllers or null null null null null null null null null null
+     * null null null null null null     {@link edu.wpi.first.wpilibj2.command.button.CommandJoystick Flight
      * joysticks}.
      */
     private void configureBindings() {
         drivetrain.registerTelemetry(logger::telemeterize);
 
         IO.mechanismController.a().onTrue(new InstantCommand(() -> state
-                = RobotState.INTAKE).alongWith(new InstantCommand(()
-                -> elevatorSubsystem.setIntendedState(ElevatorState.UP))));
+                = RobotState.INTAKE));
         IO.mechanismController.b().onTrue(new InstantCommand(() -> state
-                = RobotState.SCORE).alongWith(new InstantCommand(()
-                -> elevatorSubsystem.setIntendedState(ElevatorState.DOWN))));
+                = RobotState.SCORE));
         IO.mechanismController.y().onTrue(new InstantCommand(() -> state
-                = RobotState.CLIMB).alongWith(new InstantCommand(()
-                -> elevatorSubsystem.setIntendedState(ElevatorState.UP))));
+                = RobotState.CLIMB));
 
         intakeSubsystem.setDefaultCommand(new IntakeDefault(intakeSubsystem));
 
         elevatorSubsystem.setDefaultCommand(new ElevatorResetLimitSwitch(elevatorSubsystem));
 
-        coralStationTrigger.and(intakeModeTrigger).whileTrue(new IntakeCoral(intakeSubsystem).alongWith(new ElevatorMoveToHeight(elevatorSubsystem, Constants.States.Intake.ELEVATOR_HEIGHT).andThen(new InstantCommand(() -> intakeSubsystem.moveMotor(Constants.States.Intake.INTAKE_PERCEHNTAGE)).raceWith(new WaitCommand(0.3)))));
+        coralStationTrigger.and(intakeModeTrigger).and(intakeEmpty).whileTrue(new IntakeCoral(intakeSubsystem).alongWith(new ElevatorMoveToHeight(elevatorSubsystem, Constants.States.Intake.ELEVATOR_HEIGHT).andThen(new InstantCommand(() -> intakeSubsystem.moveMotor(Constants.States.Intake.INTAKE_PERCEHNTAGE)).raceWith(new WaitCommand(0.3)))));
 
         reefTrigger.and(scoreTrigger).whileTrue(new ElevatorMoveToHeight(elevatorSubsystem, Constants.States.Score.ELEVATOR_HEIGHT).andThen(new InstantCommand(() -> readyToScore = true)));
 
-        reefTrigger.and(scoreTrigger).and(readyToScoreTrigger).and(IO.mechanismController.leftBumper()).onTrue(new InstantCommand(() -> intakeSubsystem.moveMotor(Constants.States.Score.ELEVATOR_HEIGHT)).withTimeout(Constants.States.Score.INTAKE_TIME).andThen(new InstantCommand(() -> {
-            intakeSubsystem.moveMotor(0);
-            intakeSubsystem.setState(IntakeState.EMPTY);
-        })));
+        reefTrigger.and(scoreTrigger).and(readyToScoreTrigger).and(IO.mechanismController.leftBumper()).onTrue(new IntakeAtPercentage(intakeSubsystem, Constants.States.Score.INTAKE_PERCNETAGE).raceWith(new WaitCommand(Constants.States.Score.INTAKE_TIME)).andThen(new InstantCommand(() -> intakeSubsystem.setState(IntakeState.EMPTY)
+        )));
 
         climbTrigger.whileTrue(new ElevatorMoveToHeight(elevatorSubsystem, Constants.States.Climb.ELEVATOR_HEIGHT));
-
+        IO.mechanismController.x().whileTrue(new TurnToAngle(drivetrain, edu.wpi.first.math.util.Units.degreesToRadians(0)));
 //        intakeSubsystem.setDefaultCommand(new IntakeBasedOnStateCommand(intakeSubsystem, this::getState, () -> new Pose2d()));
 //        IO.mechanismController.leftBumper().whileTrue(new IntakeShootCommand(intakeSubsystem, this::getState, () -> new Pose2d()).andThen(new InstantCommand(()
 //                -> elevatorSubsystem.setIntendedState(ElevatorState.DOWN))));
@@ -157,14 +154,15 @@ public class RobotContainer {
 //        IO.mechanismController.leftBumper().whileTrue(new LegGoDownCommand(climbDeepSubsystem).andThen(new InstantCommand(()
 //                -> elevatorSubsystem.setIntendedState(ElevatorState.DOWN))));
 //
-        drivetrain.setDefaultCommand(new DriveCommand(drivetrain, xSupplier, ySupplier, rotationSupplier));
+        drivetrain.setDefaultCommand(new DriveCommand(drivetrain, xSupplier, ySupplier, rotationSupplier, () -> wantedAngle, () -> manualOverride));
+        IO.driverController.leftBumper().onTrue(new DriveMoveToAngleIncreament(-30, (angle) -> wantedAngle = edu.wpi.first.math.util.Units.degreesToRadians(angle), (a) -> this.manualOverride = a, drivetrain));
+        IO.driverController.rightBumper().onTrue(new DriveMoveToAngleIncreament(30, (angle) -> wantedAngle = edu.wpi.first.math.util.Units.degreesToRadians(angle), (a) -> this.manualOverride = a, drivetrain));
 
-//        IO.mechanismController.x().whileTrue(new ElevatorResetLimitSwitch(elevatorSubsystem));
-//        IO.mechanismController.a().whileTrue(new ElevatorMoveToHeight(elevatorSubsystem, 0.125));
+        //    IO.mechanismController.x().whileTrue(new ElevatorResetLimitSwitch(elevatorSubsystem));
+        //    IO.mechanismController.a().whileTrue(new ElevatorMoveToHeight(elevatorSubsystem, 0.125));
     }
 
     // /**
-
     //  * Use this to pass the autonomous command to the main {@link Robot} class.
     //  *
     //  * @return the command to run in autonomous
@@ -180,5 +178,16 @@ public class RobotContainer {
 
     public boolean getManualOverride() {
         return this.manualOverride;
+    }
+
+    public void containerTrigger() {
+        SmartDashboard.putBoolean("coral station trigger", coralStationTrigger.getAsBoolean());
+        SmartDashboard.putBoolean("intake Mode trigger", intakeModeTrigger.getAsBoolean());
+        SmartDashboard.putBoolean("intkae empty trigger", intakeEmpty.getAsBoolean());
+        SmartDashboard.putBoolean("reef trigger", reefTrigger.getAsBoolean());
+        SmartDashboard.putBoolean("climb trigger", climbTrigger.getAsBoolean());
+        SmartDashboard.putBoolean("score trigger", scoreTrigger.getAsBoolean());
+        SmartDashboard.putBoolean("ready to score trigger", readyToScoreTrigger.getAsBoolean());
+        drivetrain.periodic();
     }
 }
