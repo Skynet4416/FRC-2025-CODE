@@ -16,6 +16,12 @@ package frc.robot;
 public final class Constants {
 
     public static class Subsystems {
+        public static class Drive{
+            public static class Rotation{
+                public static double KP = 8;
+                public static double KI = 0;
+            }
+        }
 
         public static class Elevator {
             public static class Sensors {
@@ -43,7 +49,7 @@ public final class Constants {
             public static class Controls {
 
                 public static final double HEIGHT_THRESHOLD_IN_METERS = 0.005;
-                public static final double ELEVATOR_PERCENTAGE = 1;
+                public static final double ELEVATOR_PERCENTAGE = 0.8;
             }
 
             public static class PID {
@@ -105,12 +111,18 @@ public final class Constants {
         public static class Intake {
             public static double RADIUS_IN_METERS = 500000;
             public static double ELEVATOR_HEIGHT = 0.2;
+            public static double VELOCITY_THREASHOLD = 500;
+            public static double INTAKE_THREASHOLD = 40;
+            public static double INTAKE_PERCEHNTAGE = 0.3;
+
         }
 
         public static class Score {
             public static double RADIUS_IN_METERS = 10000000;
 
             public static double ELEVATOR_HEIGHT = 0;
+            public static double INTAKE_PERCNETAGE= -1;
+            public static double INTAKE_TIME = 1;
         }
 
         public static class None {
