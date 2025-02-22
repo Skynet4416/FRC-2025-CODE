@@ -1,4 +1,4 @@
-package frc.robot.commands.Autos;
+package frc.robot.commands.AutoCommands;
 
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Pose2d;

@@ -106,7 +106,7 @@ public class ElevatorSubsystem extends SubsystemBase {
     }
 
     public boolean elevatorDown() {
-        return !hallEffect.get();
+        return hallEffect.get();
     }
 
     public boolean elevatorAtSetpoint(double setpoint) {
