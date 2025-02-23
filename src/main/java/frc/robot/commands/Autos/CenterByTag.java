@@ -56,7 +56,8 @@ public class CenterByTag extends Command {
 
     @Override
     public boolean isFinished() { 
-        return dididoityesno;
+        return dididoityesno;   
+
     }
 
     @Override
