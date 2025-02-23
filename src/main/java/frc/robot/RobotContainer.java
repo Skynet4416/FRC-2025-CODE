@@ -182,8 +182,7 @@ public class RobotContainer {
 
         drivetrain.setDefaultCommand(new DriveCommand(drivetrain, xSupplier, ySupplier, rotationSupplier,
                 () -> wantedAngle, () -> manualOverride));
-        IO.driverController.a()
-                .whileTrue(new shaktonomousCommand(drivetrain, new Pose2d(4, 5, Rotation2d.fromDegrees(0))));
+
         IO.driverController.leftBumper()
                 .onTrue(new DriveMoveToAngleIncreament(60,
                         (angle) -> wantedAngle = edu.wpi.first.math.util.Units.degreesToRadians(angle),
@@ -207,7 +206,11 @@ public class RobotContainer {
     // */
     public Command getAutonomousCommand() {
 
-        return new shaktonomousCommand(drivetrain, Alliance.apply(FieldConstants.Reef.centerFaces[3]));
+        return new shaktonomousCommand(drivetrain, Alliance.apply(FieldConstants.Reef.centerFaces[3]))
+                .withDeadline(new WaitCommand(10))
+                .andThen(new IntakeAtPercentage(intakeSubsystem, Constants.States.Score.INTAKE_PERCNETAGE))
+                .raceWith(new WaitCommand(Constants.States.Score.INTAKE_TIME))
+                .andThen(new InstantCommand(() -> intakeSubsystem.setState(IntakeState.EMPTY)));
     }
 
     public RobotState getState() {

@@ -7,6 +7,7 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
+import frc.robot.meth.Alliance;
 import frc.robot.subsystems.Drive.CommandSwerveDrivetrain;
 import frc.robot.subsystems.Vision.LimelightHelpers;
 import com.ctre.phoenix6.swerve.SwerveRequest;
@@ -19,6 +20,7 @@ public class shaktonomousCommand extends Command {
     private Pose2d robotpose;
     private final Pose2d target;
     private final double offset = 0.2;
+    private boolean hasReset = false;
 
     public shaktonomousCommand(CommandSwerveDrivetrain drive, Pose2d target) {
         this.drive = drive;
@@ -27,6 +29,7 @@ public class shaktonomousCommand extends Command {
         yPID = new PIDController(1, 0, 0);
         rotationPID = new PIDController(0.8, 0, 0);
         addRequirements(drive);
+
     }
 
     @Override
@@ -34,6 +37,7 @@ public class shaktonomousCommand extends Command {
         xPID.reset();
         yPID.reset();
         rotationPID.reset();
+
     }
 
     @Override
@@ -47,6 +51,11 @@ public class shaktonomousCommand extends Command {
         if (robotpose == null)
             return;
 
+        if (!hasReset) {
+            this.drive.resetRotation(Alliance.apply(robotpose.getRotation()));
+            hasReset = true;
+        }
+        
         // Debug output - add these to see what's happening
         SmartDashboard.putNumber("Target X", target.getX());
         SmartDashboard.putNumber("Target Y", target.getY());
