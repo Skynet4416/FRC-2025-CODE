@@ -27,6 +27,7 @@ import frc.robot.commands.Intake.IntakeAtPercentage;
 import frc.robot.commands.Intake.IntakeCoral;
 import frc.robot.commands.Intake.IntakeDefault;
 import frc.robot.commands.TurnToAngle;
+import frc.robot.commands.AutoCommands.shaktonomousCommand;
 import frc.robot.meth.Distance;
 import frc.robot.subsystems.Drive.CommandSwerveDrivetrain;
 import frc.robot.subsystems.Drive.Telemetry;
@@ -155,6 +156,7 @@ public class RobotContainer {
 //                -> elevatorSubsystem.setIntendedState(ElevatorState.DOWN))));
 //
         drivetrain.setDefaultCommand(new DriveCommand(drivetrain, xSupplier, ySupplier, rotationSupplier, () -> wantedAngle, () -> manualOverride));
+        IO.driverController.a().whileTrue(new shaktonomousCommand(drivetrain));
         IO.driverController.leftBumper().onTrue(new DriveMoveToAngleIncreament(60, (angle) -> wantedAngle = edu.wpi.first.math.util.Units.degreesToRadians(angle), (a) -> this.manualOverride = a, drivetrain));
         IO.driverController.rightBumper().onTrue(new DriveMoveToAngleIncreament(-60, (angle) -> wantedAngle = edu.wpi.first.math.util.Units.degreesToRadians(angle), (a) -> this.manualOverride = a, drivetrain));
 
@@ -167,9 +169,9 @@ public class RobotContainer {
     //  *
     //  * @return the command to run in autonomous
     //  */
-//     public Command getAutonomousCommand() {
-//       return autoChooser.selectedCommand();
-//     }
+    public Command getAutonomousCommand() {
+      return new shaktonomousCommand(drivetrain);
+    }
     public RobotState getState() {
         SmartDashboard.putString("robot state", String.valueOf(this.state));
         return this.state;

@@ -1,28 +1,29 @@
 package frc.robot.commands.AutoCommands;
-
+import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
-
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.subsystems.Drive.CommandSwerveDrivetrain;
 import frc.robot.subsystems.Vision.LimelightHelpers;
 import com.ctre.phoenix6.swerve.SwerveRequest;
+
 public class shaktonomousCommand extends Command {
     private final CommandSwerveDrivetrain drive;
     private final PIDController xPID;
     private final PIDController yPID;
     private final PIDController rotationPID;
     private Pose2d robotpose;
-    private Pose2d target = new Pose2d(5.0,5.0, Rotation2d.fromDegrees(30.0));
+    private final Pose2d target = new Pose2d(5, 4, Rotation2d.fromDegrees(0));
     private final double offset = 0.2;
 
     public shaktonomousCommand(CommandSwerveDrivetrain drive) {
         this.drive = drive;
-        xPID = new PIDController(0, 0, 0);
-        yPID = new PIDController(0, 0, 0);
-        rotationPID = new PIDController(8, 0, 0);
+        xPID = new PIDController(1, 0, 0);
+        yPID = new PIDController(1, 0, 0);
+        rotationPID = new PIDController(0.8, 0, 0);
         addRequirements(drive);
     }
 
@@ -35,33 +36,56 @@ public class shaktonomousCommand extends Command {
 
     @Override
     public void execute() {
-        boolean tv = LimelightHelpers.getTV("limelight");
+        boolean tv = LimelightHelpers.getTV("");
         if (!tv) {
             return;
         }
-        robotpose = LimelightHelpers.getBotPose2d("limelight");
-
-
-        double xCorrection = xPID.calculate(robotpose.getX(), target.getX());
-        double yCorrection = yPID.calculate(robotpose.getY(), target.getY());
-        double rotationCorrection = rotationPID.calculate(robotpose.getRotation().getRadians(), target.getRotation().getRadians());
-
-        ChassisSpeeds chassisSpeeds = ChassisSpeeds.fromFieldRelativeSpeeds(xCorrection, yCorrection, rotationCorrection,robotpose.getRotation());
-        SwerveRequest request = drive.m_pathApplyRobotSpeeds.withSpeeds(chassisSpeeds);
-        drive.setControl(request);
+    
+        robotpose = LimelightHelpers.getBotPose2d_wpiBlue("");
+        if (robotpose == null) return;
+    
+        // Debug output - add these to see what's happening
+        SmartDashboard.putNumber("Target X", target.getX());
+        SmartDashboard.putNumber("Target Y", target.getY());
+        SmartDashboard.putNumber("Robot X", robotpose.getX());
+        SmartDashboard.putNumber("Robot Y", robotpose.getY());
+        SmartDashboard.putNumber("Robot Rotation", robotpose.getRotation().getDegrees());
+        
+        // Calculate errors
+        double xError = target.getX() - robotpose.getX();
+        double yError = target.getY() - robotpose.getY();
+        
+        SmartDashboard.putNumber("X Error", xError);
+        SmartDashboard.putNumber("Y Error", yError);
+    
+        double xCorrection = MathUtil.clamp(xPID.calculate(robotpose.getX(), target.getX()), -1, 1);
+        double yCorrection = MathUtil.clamp(yPID.calculate(robotpose.getY(), target.getY()), -1, 1);
+        
+        // Debug PID outputs
+        SmartDashboard.putNumber("X Correction", xCorrection);
+        SmartDashboard.putNumber("Y Correction", yCorrection);
+    
+        ChassisSpeeds chassisSpeeds = ChassisSpeeds.fromFieldRelativeSpeeds(
+            xCorrection,
+            yCorrection,
+            0,  // Removed rotation for now to simplify
+            robotpose.getRotation()
+        );
+    
+        drive.setControl(drive.m_pathApplyRobotSpeeds.withSpeeds(chassisSpeeds));
     }
 
     @Override
     public boolean isFinished() {
+        if(robotpose == null) return false;
         double xError = Math.abs(robotpose.getX() - target.getX());
         double yError = Math.abs(robotpose.getY() - target.getY());
-        return xError < offset && yError < offset;
+        return Math.abs(xError) < offset && Math.abs(yError) < offset;
     }
 
     @Override
     public void end(boolean interrupted) {
         ChassisSpeeds zeroSpeeds = new ChassisSpeeds(0.0, 0.0, 0.0);
-        SwerveRequest request = drive.m_pathApplyRobotSpeeds.withSpeeds(zeroSpeeds);
-        drive.setControl(request);
+        drive.setControl(drive.m_pathApplyRobotSpeeds.withSpeeds(zeroSpeeds));
     }
 }
