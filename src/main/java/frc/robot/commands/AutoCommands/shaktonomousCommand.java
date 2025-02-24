@@ -72,7 +72,7 @@ public class shaktonomousCommand extends Command {
 
         double xCorrection = MathUtil.clamp(xPID.calculate(robotpose.getX(), target.getX()), -1, 1);
         double yCorrection = MathUtil.clamp(yPID.calculate(robotpose.getY(), target.getY()), -1, 1);
-
+        double rotationCorrection = MathUtil.clamp(rotationPID.calculate(robotpose.getRotation().getDegrees(), target.getRotation().getDegrees()), -1, 1);
         // Debug PID outputs
         SmartDashboard.putNumber("X Correction", xCorrection);
         SmartDashboard.putNumber("Y Correction", yCorrection);
@@ -80,7 +80,7 @@ public class shaktonomousCommand extends Command {
         ChassisSpeeds chassisSpeeds = ChassisSpeeds.fromFieldRelativeSpeeds(
                 xCorrection,
                 yCorrection,
-                0, // Removed rotation for now to simplify
+                rotationCorrection,
                 robotpose.getRotation());
 
         drive.setControl(drive.m_pathApplyRobotSpeeds.withSpeeds(chassisSpeeds));
@@ -88,8 +88,6 @@ public class shaktonomousCommand extends Command {
 
     @Override
     public boolean isFinished() {
-        if (robotpose == null)
-            return false;
         double xError = Math.abs(robotpose.getX() - target.getX());
         double yError = Math.abs(robotpose.getY() - target.getY());
         return Math.abs(xError) < offset && Math.abs(yError) < offset;
