@@ -9,6 +9,7 @@ import com.pathplanner.lib.auto.AutoBuilder;
 
 import edu.wpi.first.math.filter.SlewRateLimiter;
 import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.units.Units;
 import static edu.wpi.first.units.Units.RadiansPerSecond;
 import static edu.wpi.first.units.Units.RotationsPerSecond;
@@ -28,6 +29,7 @@ import frc.robot.commands.Intake.IntakeCoral;
 import frc.robot.commands.Intake.IntakeDefault;
 import frc.robot.commands.TurnToAngle;
 import frc.robot.commands.AutoCommands.shaktonomousCommand;
+import frc.robot.meth.Alliance;
 import frc.robot.meth.Distance;
 import frc.robot.subsystems.Drive.CommandSwerveDrivetrain;
 import frc.robot.subsystems.Drive.Telemetry;
@@ -50,9 +52,12 @@ public class RobotContainer {
 
     private final IntakeSubsystem intakeSubsystem = new IntakeSubsystem();
     private final ElevatorSubsystem elevatorSubsystem = new ElevatorSubsystem();
-    //    private final ClimbDeepSubsystem climbDeepSubsystem = new ClimbDeepSubsystem();
-//    private final LimelightSubsystem limelightSubsystem = new LimelightSubsystem(new LimelightObserver[]{drivetrain});
-    private final double MAX_SPEED = TunerConstants.kSpeedAt12Volts.in(Units.MetersPerSecond); // kSpeedAt12Volts desired
+    // private final ClimbDeepSubsystem climbDeepSubsystem = new
+    // ClimbDeepSubsystem();
+    // private final LimelightSubsystem limelightSubsystem = new
+    // LimelightSubsystem(new LimelightObserver[]{drivetrain});
+    private final double MAX_SPEED = TunerConstants.kSpeedAt12Volts.in(Units.MetersPerSecond); // kSpeedAt12Volts
+                                                                                               // desired
     // top speed
     private final double MAX_ANGULAR_RATE = RotationsPerSecond.of(0.75).in(RadiansPerSecond); // 3/4 of a rotation per
     // second max angular
@@ -60,17 +65,20 @@ public class RobotContainer {
 
     // private final AutoFactory autoFactory;
     // private final Autos autoRoutines;
-//    private final AutoChooser autoChooser = new AutoChooser();
+    // private final AutoChooser autoChooser = new AutoChooser();
     // public final CommandSwerveDrivetrain drivetrain;
     private final Telemetry logger = new Telemetry(MAX_SPEED);
     private boolean manualOverride = true;
     private double wantedAngle = 0;
-    private final Trigger coralStationTrigger = new Trigger(() -> Distance.isPointNearLinesSegment(new Pose2d().getTranslation(),
-            new Pose2d[]{FieldConstants.CoralStation.leftCenterFace, FieldConstants.CoralStation.rightCenterFace},
+    private final Trigger coralStationTrigger = new Trigger(() -> Distance.isPointNearLinesSegment(
+            new Pose2d().getTranslation(),
+            new Pose2d[] { FieldConstants.CoralStation.leftCenterFace, FieldConstants.CoralStation.rightCenterFace },
             FieldConstants.CoralStation.stationLength, Constants.States.Intake.RADIUS_IN_METERS) != null);
 
-    private final Trigger reefTrigger = new Trigger(() -> Distance.isPointNearLinesSegment(new Pose2d().getTranslation(),
-            FieldConstants.Reef.centerFaces, FieldConstants.Reef.faceLength, Constants.States.Score.RADIUS_IN_METERS) != null);
+    private final Trigger reefTrigger = new Trigger(
+            () -> Distance.isPointNearLinesSegment(new Pose2d().getTranslation(),
+                    FieldConstants.Reef.centerFaces, FieldConstants.Reef.faceLength,
+                    Constants.States.Score.RADIUS_IN_METERS) != null);
 
     private final Trigger intakeModeTrigger = new Trigger(() -> this.getState() == RobotState.INTAKE);
     private final Trigger climbTrigger = new Trigger(() -> this.getState() == RobotState.CLIMB);
@@ -82,9 +90,12 @@ public class RobotContainer {
     private final SlewRateLimiter slewRateLimitery = new SlewRateLimiter(1);
     private final SlewRateLimiter slewRateLimiterRotation = new SlewRateLimiter(10);
 
-    private final DoubleSupplier xSupplier = () -> slewRateLimiterx.calculate(deadband(-IO.driverController.getLeftY())) * MAX_SPEED;
-    private final DoubleSupplier ySupplier = () -> slewRateLimitery.calculate(deadband(-IO.driverController.getLeftX())) * MAX_SPEED;
-    private final DoubleSupplier rotationSupplier = () -> slewRateLimiterRotation.calculate(deadband(-IO.driverController.getRightX())) * MAX_ANGULAR_RATE;
+    private final DoubleSupplier xSupplier = () -> slewRateLimiterx.calculate(deadband(-IO.driverController.getLeftY()))
+            * MAX_SPEED;
+    private final DoubleSupplier ySupplier = () -> slewRateLimitery.calculate(deadband(-IO.driverController.getLeftX()))
+            * MAX_SPEED;
+    private final DoubleSupplier rotationSupplier = () -> slewRateLimiterRotation
+            .calculate(deadband(-IO.driverController.getRightX())) * MAX_ANGULAR_RATE;
     private final SendableChooser<Command> autoChooser;
 
     public RobotContainer() {
@@ -117,61 +128,91 @@ public class RobotContainer {
      * with an arbitrary predicate, or via the named factories in {@link
      * edu.wpi.first.wpilibj2.command.button.CommandGenericHID}'s subclasses for
      * null null null null null null null null null null null null null null
-     * null null     {@link
+     * null null {@link
      * CommandXboxController
      * Xbox}/{@link edu.wpi.first.wpilibj2.command.button.CommandPS4Controller
      * PS4} controllers or null null null null null null null null null null
-     * null null null null null null     {@link edu.wpi.first.wpilibj2.command.button.CommandJoystick Flight
+     * null null null null null null
+     * {@link edu.wpi.first.wpilibj2.command.button.CommandJoystick Flight
      * joysticks}.
      */
     private void configureBindings() {
         drivetrain.registerTelemetry(logger::telemeterize);
 
-        IO.mechanismController.a().onTrue(new InstantCommand(() -> state
-                = RobotState.INTAKE));
-        IO.mechanismController.b().onTrue(new InstantCommand(() -> state
-                = RobotState.SCORE));
-        IO.mechanismController.y().onTrue(new InstantCommand(() -> state
-                = RobotState.CLIMB));
+        IO.mechanismController.a().onTrue(new InstantCommand(() -> state = RobotState.INTAKE));
+        IO.mechanismController.b().onTrue(new InstantCommand(() -> state = RobotState.SCORE));
+        IO.mechanismController.y().onTrue(new InstantCommand(() -> state = RobotState.CLIMB));
 
         intakeSubsystem.setDefaultCommand(new IntakeDefault(intakeSubsystem));
 
         elevatorSubsystem.setDefaultCommand(new ElevatorResetLimitSwitch(elevatorSubsystem));
 
-        coralStationTrigger.and(intakeModeTrigger).and(intakeEmpty).whileTrue(new IntakeCoral(intakeSubsystem).alongWith(new ElevatorMoveToHeight(elevatorSubsystem, Constants.States.Intake.ELEVATOR_HEIGHT).andThen(new InstantCommand(() -> intakeSubsystem.moveMotor(Constants.States.Intake.INTAKE_PERCEHNTAGE)).raceWith(new WaitCommand(0.3)))));
+        coralStationTrigger.and(intakeModeTrigger).and(intakeEmpty).whileTrue(new IntakeCoral(intakeSubsystem)
+                .alongWith(new ElevatorMoveToHeight(elevatorSubsystem, Constants.States.Intake.ELEVATOR_HEIGHT).andThen(
+                        new InstantCommand(() -> intakeSubsystem.moveMotor(Constants.States.Intake.INTAKE_PERCEHNTAGE))
+                                .raceWith(new WaitCommand(0.3)))));
 
-        reefTrigger.and(scoreTrigger).whileTrue(new ElevatorMoveToHeight(elevatorSubsystem, Constants.States.Score.ELEVATOR_HEIGHT).andThen(new InstantCommand(() -> readyToScore = true)));
+        reefTrigger.and(scoreTrigger)
+                .whileTrue(new ElevatorMoveToHeight(elevatorSubsystem, Constants.States.Score.ELEVATOR_HEIGHT)
+                        .andThen(new InstantCommand(() -> readyToScore = true)));
 
-        reefTrigger.and(scoreTrigger).and(readyToScoreTrigger).and(IO.mechanismController.leftBumper()).onTrue(new IntakeAtPercentage(intakeSubsystem, Constants.States.Score.INTAKE_PERCNETAGE).raceWith(new WaitCommand(Constants.States.Score.INTAKE_TIME)).andThen(new InstantCommand(() -> intakeSubsystem.setState(IntakeState.EMPTY)
-        )));
+        reefTrigger.and(scoreTrigger).and(readyToScoreTrigger).and(IO.mechanismController.leftBumper())
+                .onTrue(new IntakeAtPercentage(intakeSubsystem, Constants.States.Score.INTAKE_PERCNETAGE)
+                        .raceWith(new WaitCommand(Constants.States.Score.INTAKE_TIME))
+                        .andThen(new InstantCommand(() -> intakeSubsystem.setState(IntakeState.EMPTY))));
 
         climbTrigger.whileTrue(new ElevatorMoveToHeight(elevatorSubsystem, Constants.States.Climb.ELEVATOR_HEIGHT));
-        IO.mechanismController.x().whileTrue(new TurnToAngle(drivetrain, edu.wpi.first.math.util.Units.degreesToRadians(0)));
-//        intakeSubsystem.setDefaultCommand(new IntakeBasedOnStateCommand(intakeSubsystem, this::getState, () -> new Pose2d()));
-//        IO.mechanismController.leftBumper().whileTrue(new IntakeShootCommand(intakeSubsystem, this::getState, () -> new Pose2d()).andThen(new InstantCommand(()
-//                -> elevatorSubsystem.setIntendedState(ElevatorState.DOWN))));
-//
-//        elevatorSubsystem.setDefaultCommand(new ElevatorBasedOnStateCommand(elevatorSubsystem, this::getState, () -> new Pose2d()));
-//        IO.mechanismController.leftBumper().whileTrue(new LegGoDownCommand(climbDeepSubsystem).andThen(new InstantCommand(()
-//                -> elevatorSubsystem.setIntendedState(ElevatorState.DOWN))));
-//
-        drivetrain.setDefaultCommand(new DriveCommand(drivetrain, xSupplier, ySupplier, rotationSupplier, () -> wantedAngle, () -> manualOverride));
-        IO.driverController.a().whileTrue(new shaktonomousCommand(drivetrain));
-        IO.driverController.leftBumper().onTrue(new DriveMoveToAngleIncreament(60, (angle) -> wantedAngle = edu.wpi.first.math.util.Units.degreesToRadians(angle), (a) -> this.manualOverride = a, drivetrain));
-        IO.driverController.rightBumper().onTrue(new DriveMoveToAngleIncreament(-60, (angle) -> wantedAngle = edu.wpi.first.math.util.Units.degreesToRadians(angle), (a) -> this.manualOverride = a, drivetrain));
+        IO.mechanismController.x()
+                .whileTrue(new TurnToAngle(drivetrain, edu.wpi.first.math.util.Units.degreesToRadians(0)));
+        // intakeSubsystem.setDefaultCommand(new
+        // IntakeBasedOnStateCommand(intakeSubsystem, this::getState, () -> new
+        // Pose2d()));
+        // IO.mechanismController.leftBumper().whileTrue(new
+        // IntakeShootCommand(intakeSubsystem, this::getState, () -> new
+        // Pose2d()).andThen(new InstantCommand(()
+        // -> elevatorSubsystem.setIntendedState(ElevatorState.DOWN))));
+        //
+        // elevatorSubsystem.setDefaultCommand(new
+        // ElevatorBasedOnStateCommand(elevatorSubsystem, this::getState, () -> new
+        // Pose2d()));
+        // IO.mechanismController.leftBumper().whileTrue(new
+        // LegGoDownCommand(climbDeepSubsystem).andThen(new InstantCommand(()
+        // -> elevatorSubsystem.setIntendedState(ElevatorState.DOWN))));
+        //
 
-        //    IO.mechanismController.x().whileTrue(new ElevatorResetLimitSwitch(elevatorSubsystem));
-        //    IO.mechanismController.a().whileTrue(new ElevatorMoveToHeight(elevatorSubsystem, 0.125));
+        drivetrain.setDefaultCommand(new DriveCommand(drivetrain, xSupplier, ySupplier, rotationSupplier,
+                () -> wantedAngle, () -> manualOverride));
+
+        IO.driverController.leftBumper()
+                .onTrue(new DriveMoveToAngleIncreament(60,
+                        (angle) -> wantedAngle = edu.wpi.first.math.util.Units.degreesToRadians(angle),
+                        (a) -> this.manualOverride = a, drivetrain));
+        IO.driverController.rightBumper()
+                .onTrue(new DriveMoveToAngleIncreament(-60,
+                        (angle) -> wantedAngle = edu.wpi.first.math.util.Units.degreesToRadians(angle),
+                        (a) -> this.manualOverride = a, drivetrain));
+        IO.driverController.b()
+                .whileTrue(new WaitCommand(1).andThen(drivetrain.runOnce(() -> drivetrain.seedFieldCentric())));
+        // IO.mechanismController.x().whileTrue(new
+        // ElevatorResetLimitSwitch(elevatorSubsystem));
+        // IO.mechanismController.a().whileTrue(new
+        // ElevatorMoveToHeight(elevatorSubsystem, 0.125));
     }
 
     // /**
-    //  * Use this to pass the autonomous command to the main {@link Robot} class.
-    //  *
-    //  * @return the command to run in autonomous
-    //  */
+    // * Use this to pass the autonomous command to the main {@link Robot} class.
+    // *
+    // * @return the command to run in autonomous
+    // */
     public Command getAutonomousCommand() {
-      return new shaktonomousCommand(drivetrain);
+
+        return new shaktonomousCommand(drivetrain, Alliance.apply(FieldConstants.Reef.centerFaces[3]))
+                .withDeadline(new WaitCommand(10))
+                .andThen(new IntakeAtPercentage(intakeSubsystem, Constants.States.Score.INTAKE_PERCNETAGE))
+                .raceWith(new WaitCommand(Constants.States.Score.INTAKE_TIME))
+                .andThen(new InstantCommand(() -> intakeSubsystem.setState(IntakeState.EMPTY)));
     }
+
     public RobotState getState() {
         SmartDashboard.putString("robot state", String.valueOf(this.state));
         return this.state;
