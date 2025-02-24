@@ -19,15 +19,15 @@ public class shaktonomousCommand extends Command {
     private final PIDController rotationPID;
     private Pose2d robotpose;
     private final Pose2d target;
-    private final double offset = 0.2;
+    private final double offset = 0.05;
     private boolean hasReset = false;
 
     public shaktonomousCommand(CommandSwerveDrivetrain drive, Pose2d target) {
         this.drive = drive;
         this.target = target;
-        xPID = new PIDController(1, 0, 0);
-        yPID = new PIDController(1, 0, 0);
-        rotationPID = new PIDController(0.8, 0, 0);
+        xPID = new PIDController(1.5, 0, 0);
+        yPID = new PIDController(1.5, 0, 0);
+        rotationPID = new PIDController(1, 0, 0);
         addRequirements(drive);
 
     }
@@ -46,11 +46,10 @@ public class shaktonomousCommand extends Command {
         if (!tv) {
             return;
         }
-
         robotpose = LimelightHelpers.getBotPose2d_wpiBlue("");
         if (robotpose == null)
             return;
-
+        // if (robotpose.getX() == 0 && robotpose.getY() == 0) return;
         if (!hasReset) {
             this.drive.resetRotation(Alliance.apply(robotpose.getRotation()));
             hasReset = true;
@@ -80,7 +79,7 @@ public class shaktonomousCommand extends Command {
         ChassisSpeeds chassisSpeeds = ChassisSpeeds.fromFieldRelativeSpeeds(
                 xCorrection,
                 yCorrection,
-                rotationCorrection,
+                0,
                 robotpose.getRotation());
 
         drive.setControl(drive.m_pathApplyRobotSpeeds.withSpeeds(chassisSpeeds));
@@ -88,6 +87,9 @@ public class shaktonomousCommand extends Command {
 
     @Override
     public boolean isFinished() {
+        if (robotpose == null)
+            return true;
+
         double xError = Math.abs(robotpose.getX() - target.getX());
         double yError = Math.abs(robotpose.getY() - target.getY());
         return Math.abs(xError) < offset && Math.abs(yError) < offset;

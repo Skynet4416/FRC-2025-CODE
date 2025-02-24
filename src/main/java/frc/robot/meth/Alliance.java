@@ -24,7 +24,7 @@ public class Alliance {
 
         public static Pose2d apply(Pose2d pose) {
             return shouldFlip()
-                    ? new Pose2d(apply(pose.getTranslation()), apply(pose.getRotation()))
+                    ? new Pose2d(apply(pose.getTranslation()), pose.getRotation())
                     : pose;
         }
 

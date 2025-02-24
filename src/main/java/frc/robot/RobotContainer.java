@@ -17,6 +17,7 @@ import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
+import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import edu.wpi.first.wpilibj2.command.WaitCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
@@ -28,6 +29,7 @@ import frc.robot.commands.Intake.IntakeAtPercentage;
 import frc.robot.commands.Intake.IntakeCoral;
 import frc.robot.commands.Intake.IntakeDefault;
 import frc.robot.commands.TurnToAngle;
+import frc.robot.commands.AutoCommands.Forwards;
 import frc.robot.commands.AutoCommands.shaktonomousCommand;
 import frc.robot.meth.Alliance;
 import frc.robot.meth.Distance;
@@ -142,6 +144,7 @@ public class RobotContainer {
         IO.mechanismController.a().onTrue(new InstantCommand(() -> state = RobotState.INTAKE));
         IO.mechanismController.b().onTrue(new InstantCommand(() -> state = RobotState.SCORE));
         IO.mechanismController.y().onTrue(new InstantCommand(() -> state = RobotState.CLIMB));
+        IO.mechanismController.x().whileTrue(new IntakeAtPercentage(intakeSubsystem, -1));
 
         intakeSubsystem.setDefaultCommand(new IntakeDefault(intakeSubsystem));
 
@@ -206,11 +209,10 @@ public class RobotContainer {
     // */
     public Command getAutonomousCommand() {
 
-        return new shaktonomousCommand(drivetrain, Alliance.apply(FieldConstants.Reef.centerFaces[3]))
-                .withDeadline(new WaitCommand(10))
-                .andThen(new IntakeAtPercentage(intakeSubsystem, Constants.States.Score.INTAKE_PERCNETAGE))
-                .raceWith(new WaitCommand(Constants.States.Score.INTAKE_TIME))
-                .andThen(new InstantCommand(() -> intakeSubsystem.setState(IntakeState.EMPTY)));
+        return new SequentialCommandGroup(
+        new Forwards(drivetrain).raceWith(new WaitCommand(4)),
+        new IntakeAtPercentage(intakeSubsystem, Constants.States.Score.INTAKE_PERCNETAGE*5).raceWith(new WaitCommand(Constants.States.Score.INTAKE_TIME*2)),
+        new InstantCommand(() -> intakeSubsystem.setState(IntakeState.EMPTY)));
     }
 
     public RobotState getState() {
