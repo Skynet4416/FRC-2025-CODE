@@ -32,18 +32,18 @@ public class Forwards extends Command {
     public void execute() {
         ChassisSpeeds chassisSpeeds = new ChassisSpeeds(2.0, 0.0, 0.0);
         drive.setControl(drive.m_pathApplyRobotSpeeds.withSpeeds(chassisSpeeds));
-        // boolean tv = LimelightHelpers.getTV("");
-        // if (!tv) {
-        //     return;
-        // }
-        // robotpose = LimelightHelpers.getBotPose2d_wpiBlue("");
-        // if (robotpose == null)
-        //     return;
-        // // if (robotpose.getX() == 0 && robotpose.getY() == 0) return;
-        // if (!hasReset) {
-        //     this.drive.resetRotation(Alliance.apply(robotpose.getRotation()));
-        //     hasReset = true;
-        // }
+        boolean tv = LimelightHelpers.getTV("");
+        if (!tv) {
+            return;
+        }
+        robotpose = LimelightHelpers.getBotPose2d_wpiBlue("");
+        if (robotpose == null)
+            return;
+        if (robotpose.getX() == 0 && robotpose.getY() == 0) return;
+        if (!hasReset) {
+            this.drive.resetRotation(robotpose.getRotation());
+            hasReset = true;
+        }
         
 
 
@@ -56,7 +56,7 @@ public class Forwards extends Command {
 
     @Override
     public void end(boolean interrupted) {
-        // ChassisSpeeds zeroSpeeds = new ChassisSpeeds(0.0, 0.0, 0.0);
-        // drive.setControl(drive.m_pathApplyRobotSpeeds.withSpeeds(zeroSpeeds));
+        ChassisSpeeds zeroSpeeds = new ChassisSpeeds(0.0, 0.0, 0.0);
+        drive.setControl(drive.m_pathApplyRobotSpeeds.withSpeeds(zeroSpeeds));
     }
 }

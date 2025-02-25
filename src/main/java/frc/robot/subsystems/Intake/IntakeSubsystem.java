@@ -31,10 +31,10 @@ public class IntakeSubsystem extends SubsystemBase {
     public IntakeSubsystem() {
         upperIntakeSparkFlex = new SparkFlex(Intake.Motors.UPPER_MASTER_SPARK_FLEX_ID, MotorType.kBrushless);
         lowerIntakeSparkFlex = new SparkFlex(Intake.Motors.LOWER_SLAVE_SPARK_FLEX_ID, MotorType.kBrushless);
-        SparkBaseConfig masterConfig = new SparkFlexConfig().smartCurrentLimit(30).idleMode(SparkBaseConfig.IdleMode.kBrake);
+        SparkBaseConfig masterConfig = new SparkFlexConfig().smartCurrentLimit(35).idleMode(SparkBaseConfig.IdleMode.kBrake);
         upperIntakeSparkFlex.configure(masterConfig, SparkBase.ResetMode.kResetSafeParameters, SparkBase.PersistMode.kPersistParameters);
 
-        SparkBaseConfig slaveConfig = new SparkFlexConfig().smartCurrentLimit(30).smartCurrentLimit(40).idleMode(SparkBaseConfig.IdleMode.kBrake);
+        SparkBaseConfig slaveConfig = new SparkFlexConfig().smartCurrentLimit(35).smartCurrentLimit(40).idleMode(SparkBaseConfig.IdleMode.kBrake);
         slaveConfig.follow(upperIntakeSparkFlex);
 
         lowerIntakeSparkFlex.configure(slaveConfig, SparkBase.ResetMode.kResetSafeParameters, SparkBase.PersistMode.kPersistParameters);
