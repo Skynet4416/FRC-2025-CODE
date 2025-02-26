@@ -40,7 +40,7 @@ public final class Constants {
                 public final static double WHEEL_RADIUS_IN_METERS = 0.0213995;
                 public final static double GEAR_RATIO = 38.7072;
                 public final static double MAX_ACCELERATION_IN_MPS_SQUARED = 10;
-                public final static double MAX_HEIGHT_IN_METERS = 0.21;
+                public final static double MAX_HEIGHT_IN_METERS = 0.25;
                 public final static double POSITION_CONVERSION_FACTOR = WHEEL_RADIUS_IN_METERS * 2 * Math.PI / GEAR_RATIO;
                 public final static double VELOCITY_CONVERSION_FACTOR = POSITION_CONVERSION_FACTOR / 60.0;
                 public final static double MAX_VELOCITY_IN_MPS = 5676 * VELOCITY_CONVERSION_FACTOR;
@@ -110,7 +110,7 @@ public final class Constants {
 
         public static class Intake {
             public static double RADIUS_IN_METERS = 500000;
-            public static double ELEVATOR_HEIGHT = 0.2;
+            public static double ELEVATOR_HEIGHT = 0.3;
             public static double VELOCITY_THREASHOLD = 500;
             public static double INTAKE_THREASHOLD = 40;
             public static double INTAKE_PERCEHNTAGE = 0.3;
