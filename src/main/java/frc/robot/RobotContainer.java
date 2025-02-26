@@ -91,8 +91,8 @@ public class RobotContainer {
         private final Trigger intakeEmpty = new Trigger(() -> intakeSubsystem.getState() == IntakeState.EMPTY);
         private boolean readyToScore = false;
         private final Trigger readyToScoreTrigger = new Trigger(() -> readyToScore);
-        private final SlewRateLimiter slewRateLimiterx = new SlewRateLimiter(1);
-        private final SlewRateLimiter slewRateLimitery = new SlewRateLimiter(1);
+        private final SlewRateLimiter slewRateLimiterx = new SlewRateLimiter(2.5);
+        private final SlewRateLimiter slewRateLimitery = new SlewRateLimiter(2.5);
         private final SlewRateLimiter slewRateLimiterRotation = new SlewRateLimiter(10);
 
         private final DoubleSupplier xSupplier = () -> slewRateLimiterx
@@ -178,10 +178,10 @@ public class RobotContainer {
 
                 climbTrigger.whileTrue(
                                 new ElevatorMoveToHeight(elevatorSubsystem, Constants.States.Climb.ELEVATOR_HEIGHT));
-                IO.mechanismController.x()
-                                .whileTrue(new TurnToAngle(drivetrain,
-                                                edu.wpi.first.math.util.Units.degreesToRadians(0)));
-                // intakeSubsystem.setDefaultCommand(new
+                // IO.mechanismController.x()
+                //                 .whileTrue(new TurnToAngle(drivetrain,
+                //                                 edu.wpi.first.math.util.Units.degreesToRadians(0)));
+                // // intakeSubsystem.setDefaultCommand(new
                 // IntakeBasedOnStateCommand(intakeSubsystem, this::getState, () -> new
                 // Pose2d()));
                 // IO.mechanismController.leftBumper().whileTrue(new
