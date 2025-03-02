@@ -31,6 +31,7 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Subsystem;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.Constants;
+import frc.robot.Constants.Subsystems.Drive;
 import frc.robot.subsystems.Drive.TunerConstants.TunerSwerveDrivetrain;
 import frc.robot.subsystems.Vision.LimelightHelpers;
 import frc.robot.subsystems.Vision.LimelightObserver;
@@ -254,12 +255,14 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
          * occurs during testing.
          */
         SmartDashboard.putNumber("current angle", getGyroRotationInDegrees());
+        SmartDashboard.putString("units" ,this.getModule(0).getDriveMotor().getClosedLoopReference().getUnits());
+        SmartDashboard.putNumber("FL delta velcoity", this.getModule(0).getDriveMotor().getClosedLoopReference().getValueAsDouble());
         // m_pathThetaController.setP(SmartDashboard.getNumber("KP", 0));
         // m_pathThetaController.setI(SmartDashboard.getNumber("KI", 0));
         // SmartDashboard.putNumber("KP", m_pathThetaController.getP());
         // SmartDashboard.putNumber("KI", m_pathThetaController.getI());
 
-        LimelightHelpers.SetRobotOrientation("limelight", getState().Pose.getRotation().getDegrees(), 0, 0, 0, 0, 0);
+        LimelightHelpers.SetRobotOrientation("", getGyroRotationInDegrees()-45, 0, 0, 0, 0, 0);
 
         if (!m_hasAppliedOperatorPerspective || DriverStation.isDisabled()) {
             DriverStation.getAlliance().ifPresent(allianceColor -> {
@@ -355,9 +358,9 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
                     ),
                     new PPHolonomicDriveController(
                             // PID constants for translation
-                            new PIDConstants(10, 0, 0),
+                            new PIDConstants(0, 0, 0),
                             // PID constants for rotation
-                            new PIDConstants(7, 0, 0)
+                            new PIDConstants(0, 0, 0)
                     ),
                     config,
                     // Assume the path needs to be flipped for Red vs Blue, this is normally the case
@@ -370,7 +373,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
     }
 
     public  double getGyroRotationInDegrees(){ 
-        return this.getPigeon2().getYaw().getValueAsDouble() %360   ;
+        return this.getPigeon2().getYaw().getValueAsDouble() %360;
     }
 
     public boolean atRotationSetpoint(){

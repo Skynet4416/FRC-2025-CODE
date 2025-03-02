@@ -1,6 +1,7 @@
 package frc.robot.subsystems.Elevator;
 
 import com.revrobotics.RelativeEncoder;
+import com.revrobotics.spark.SparkBase.ControlType;
 import com.revrobotics.spark.SparkBase.PersistMode;
 import com.revrobotics.spark.SparkBase.ResetMode;
 import com.revrobotics.spark.SparkClosedLoopController;
@@ -18,15 +19,14 @@ public class ElevatorSubsystem extends SubsystemBase {
 
     private final SparkMax motorLeader;
     private final SparkMax motorRightSlave;
-    private final SparkMax motorLeftSlave1;
-    private final SparkMax motorleftSlave2;
+    // private final SparkMax motorLeftSlave1;
+    // private final SparkMax motorleftSlave2;
 
     private final RelativeEncoder masterEncoder;
     private final SparkClosedLoopController masterClosedLoopController;
     private ElevatorState state;
     private final DigitalInput hallEffect;
 
-    private double setpoint = 0;
     private SparkMaxConfig leaderConfig = new SparkMaxConfig();
     private boolean resetedEncoder = false;
 
@@ -34,29 +34,29 @@ public class ElevatorSubsystem extends SubsystemBase {
         hallEffect = new DigitalInput(Elevator.Sensors.HALL_EFFECT_PORT);
         motorLeader = new SparkMax(Elevator.Motors.MASTER_CAN_ID, MotorType.kBrushless);
         motorRightSlave = new SparkMax(Elevator.Motors.RIGHT_SLAVE_CAN_ID, MotorType.kBrushless);
-        motorLeftSlave1 = new SparkMax(Elevator.Motors.LEFT_SLAVE_1_CAN_ID, MotorType.kBrushless);
-        motorleftSlave2 = new SparkMax(Elevator.Motors.LEFT_SLAVE_2_CAN_ID, MotorType.kBrushless);
+        // motorLeftSlave1 = new SparkMax(Elevator.Motors.LEFT_SLAVE_1_CAN_ID, MotorType.kBrushless);
+        // motorleftSlave2 = new SparkMax(Elevator.Motors.LEFT_SLAVE_2_CAN_ID, MotorType.kBrushless);
         state = ElevatorState.DOWN;
 
         leaderConfig.inverted(true);
         leaderConfig.encoder.positionConversionFactor(Elevator.Physical.POSITION_CONVERSION_FACTOR);
         leaderConfig.encoder.velocityConversionFactor(Elevator.Physical.VELOCITY_CONVERSION_FACTOR);
-        leaderConfig.smartCurrentLimit(35).voltageCompensation(12).idleMode(SparkBaseConfig.IdleMode.kBrake);
+        leaderConfig.smartCurrentLimit(40).voltageCompensation(12).idleMode(SparkBaseConfig.IdleMode.kBrake);
         leaderConfig.closedLoop.pid(Elevator.PID.KP, Elevator.PID.KI, Elevator.PID.KD).maxMotion.maxVelocity(Elevator.Physical.MAX_VELOCITY_IN_MPS).maxAcceleration(Elevator.Physical.MAX_ACCELERATION_IN_MPS_SQUARED).allowedClosedLoopError(Elevator.Controls.HEIGHT_THRESHOLD_IN_METERS);
 
         motorLeader.configure(leaderConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
 
         SparkMaxConfig rightSlaveConfig = new SparkMaxConfig();
-        rightSlaveConfig.smartCurrentLimit(35).voltageCompensation(12).idleMode(SparkBaseConfig.IdleMode.kBrake);
+        rightSlaveConfig.smartCurrentLimit(40).voltageCompensation(12).idleMode(SparkBaseConfig.IdleMode.kBrake);
         rightSlaveConfig.follow(motorLeader);
 
         SparkMaxConfig leftSlaveConfig = new SparkMaxConfig();
 
-        leftSlaveConfig.follow(motorLeader, true).smartCurrentLimit(35).idleMode(SparkBaseConfig.IdleMode.kBrake);
+        leftSlaveConfig.follow(motorLeader, true).smartCurrentLimit(40).idleMode(SparkBaseConfig.IdleMode.kBrake);
         leftSlaveConfig.inverted(true);
         motorRightSlave.configure(rightSlaveConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
-        motorLeftSlave1.configure(leftSlaveConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
-        motorleftSlave2.configure(leftSlaveConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
+        // motorLeftSlave1.configure(leftSlaveConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
+        // motorleftSlave2.configure(leftSlaveConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
 
         this.masterEncoder = this.motorLeader.getEncoder();
         this.masterClosedLoopController = this.motorLeader.getClosedLoopController();
@@ -69,6 +69,10 @@ public class ElevatorSubsystem extends SubsystemBase {
         } else {
             motorLeader.set(0);
         }
+    }
+
+    public void setSetpoint(double setpointInMeters){
+        masterClosedLoopController.setReference(setpointInMeters, ControlType.kPosition);
     }
 
     public double getElevatorDistanceInMeter() {
@@ -86,14 +90,14 @@ public class ElevatorSubsystem extends SubsystemBase {
             resetedEncoder = true;
         }
 
-        SmartDashboard.putNumber("elevator voltage", motorLeader.getOutputCurrent());
-        SmartDashboard.putNumber("elevator setpoint", setpoint);
+        SmartDashboard.putNumber("elevator current", motorLeader.getOutputCurrent());
+        
 
-        if ((getElevatorDistanceInMeter() > Elevator.Physical.MAX_HEIGHT_IN_METERS && motorLeader.get() > 0) || (resetedEncoder && getElevatorDistanceInMeter() < 0)) {
+        if ((getElevatorDistanceInMeter() > Elevator.Physical.MAX_HEIGHT_IN_METERS && motorLeader.get() > 0)) {
             setPercentage(0);
         }
 
-        SmartDashboard.putBoolean("Elevator forced stop", (getElevatorDistanceInMeter() > Elevator.Physical.MAX_HEIGHT_IN_METERS && motorLeader.get() > 0) || (resetedEncoder && getElevatorDistanceInMeter() < 0));
+        SmartDashboard.putBoolean("Elevator forced stop", (getElevatorDistanceInMeter() > Elevator.Physical.MAX_HEIGHT_IN_METERS && motorLeader.get() > 0) );
 
     }
 

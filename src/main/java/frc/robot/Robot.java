@@ -74,7 +74,6 @@ public class Robot extends TimedRobot {
 	 */
 	@Override
 	public void autonomousInit() {
-		LimelightHelpers.setCameraPose_RobotSpace("", 0.125, 0.055, 0, 90, 0, 0);
 		autonomousCommand = robotContainer.getAutonomousCommand();
 
 		// schedule the autonomous command (example)

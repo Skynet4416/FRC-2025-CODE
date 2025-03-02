@@ -64,7 +64,9 @@ public enum Paths {
     REEF6RIGHT_RCS("Reef6Right-RCS"),
 
     RCS_POINT("RCS_Point"),
-    TEST("Test");
+    TEST("Test"),
+    TEST1("Test (1)");
+
 
     private String fileName;
     private PathPlannerPath path;
@@ -75,6 +77,8 @@ public enum Paths {
             this.path = PathPlannerPath.fromChoreoTrajectory(fileName);
         } catch (Exception e) {
             System.out.println(e);
+            System.out.println(fileName
+            );
         }
     }
 

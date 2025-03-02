@@ -1272,7 +1272,8 @@ public class LimelightHelpers {
     public static Pose2d getBotPose2d_wpiBlue(String limelightName) {
 
         double[] result = getBotPose_wpiBlue(limelightName);
-        return toPose2D(result);
+        Pose2d pose = toPose2D(result);
+        return pose;
     }
 
     /**

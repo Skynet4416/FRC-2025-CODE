@@ -3,17 +3,18 @@
 // the WPILib BSD license file in the root directory of this project.
 package frc.robot;
 
+import static edu.wpi.first.units.Units.RadiansPerSecond;
+import static edu.wpi.first.units.Units.RotationsPerSecond;
+
 import java.util.function.DoubleSupplier;
 
 import com.pathplanner.lib.auto.AutoBuilder;
+import com.pathplanner.lib.auto.NamedCommands;
 
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.filter.SlewRateLimiter;
 import edu.wpi.first.math.geometry.Pose2d;
-import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.units.Units;
-import static edu.wpi.first.units.Units.RadiansPerSecond;
-import static edu.wpi.first.units.Units.RotationsPerSecond;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -24,15 +25,14 @@ import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.commands.DriveCommand;
 import frc.robot.commands.DriveMoveToAngleIncreament;
+import frc.robot.commands.AutoCommands.Forwards;
+import frc.robot.commands.Autos.AutoAssembler;
+import frc.robot.commands.Autos.Paths;
 import frc.robot.commands.Elevator.ElevatorMoveToHeight;
 import frc.robot.commands.Elevator.ElevatorResetLimitSwitch;
 import frc.robot.commands.Intake.IntakeAtPercentage;
 import frc.robot.commands.Intake.IntakeCoral;
 import frc.robot.commands.Intake.IntakeDefault;
-import frc.robot.commands.TurnToAngle;
-import frc.robot.commands.AutoCommands.Forwards;
-import frc.robot.commands.AutoCommands.shaktonomousCommand;
-import frc.robot.meth.Alliance;
 import frc.robot.meth.Distance;
 import frc.robot.subsystems.Drive.CommandSwerveDrivetrain;
 import frc.robot.subsystems.Drive.Telemetry;
@@ -40,6 +40,8 @@ import frc.robot.subsystems.Drive.TunerConstants;
 import frc.robot.subsystems.Elevator.ElevatorSubsystem;
 import frc.robot.subsystems.Intake.IntakeState;
 import frc.robot.subsystems.Intake.IntakeSubsystem;
+import frc.robot.subsystems.Vision.LimelightObserver;
+import frc.robot.subsystems.Vision.LimelightSubsystem;
 
 /**
  * This class is where the bulk of the robot should be declared. Since
@@ -57,8 +59,8 @@ public class RobotContainer {
         private final ElevatorSubsystem elevatorSubsystem = new ElevatorSubsystem();
         // private final ClimbDeepSubsystem climbDeepSubsystem = new
         // ClimbDeepSubsystem();
-        // private final LimelightSubsystem limelightSubsystem = new
-        // LimelightSubsystem(new LimelightObserver[]{drivetrain});
+        private final LimelightSubsystem limelightSubsystem = new LimelightSubsystem(
+                        new LimelightObserver[] { drivetrain });
         private final double MAX_SPEED = TunerConstants.kSpeedAt12Volts.in(Units.MetersPerSecond); // kSpeedAt12Volts
                                                                                                    // desired
         // top speed
@@ -91,29 +93,35 @@ public class RobotContainer {
         private final Trigger intakeEmpty = new Trigger(() -> intakeSubsystem.getState() == IntakeState.EMPTY);
         private boolean readyToScore = false;
         private final Trigger readyToScoreTrigger = new Trigger(() -> readyToScore);
-        private final SlewRateLimiter slewRateLimiterx = new SlewRateLimiter(2.5);
-        private final SlewRateLimiter slewRateLimitery = new SlewRateLimiter(2.5);
+        private final SlewRateLimiter slewRateLimiterx = new SlewRateLimiter(5);
+        private final SlewRateLimiter slewRateLimitery = new SlewRateLimiter(5);
         private final SlewRateLimiter slewRateLimiterRotation = new SlewRateLimiter(10);
 
         private final DoubleSupplier xSupplier = () -> slewRateLimiterx
                         .calculate(deadband(-IO.driverController.getLeftY())
-                                        * MathUtil.clamp((1 - IO.driverController.getRightTriggerAxis()),0.1,1)
-                                        * MAX_SPEED);
+                                        * MathUtil.clamp((1 - IO.driverController.getRightTriggerAxis()), 0.1, 1)
+                                        * -MAX_SPEED);
         private final DoubleSupplier ySupplier = () -> slewRateLimitery
                         .calculate(deadband(-IO.driverController.getLeftX())
-                                        * MathUtil.clamp((1 - IO.driverController.getRightTriggerAxis()),0.1,1)
-                                        * MAX_SPEED);
+                                        * MathUtil.clamp((1 - IO.driverController.getRightTriggerAxis()), 0.1, 1)
+                                        * -MAX_SPEED);
         private final DoubleSupplier rotationSupplier = () -> slewRateLimiterRotation
-                        .calculate(deadband(-IO.driverController.getRightX()) * MathUtil.clamp((1 - IO.driverController.getLeftTriggerAxis()),0.1,1)) * MAX_ANGULAR_RATE;
+                        .calculate(deadband(-IO.driverController.getRightX())
+                                        * MathUtil.clamp((1 - IO.driverController.getLeftTriggerAxis()), 0.1, 1))
+                        * MAX_ANGULAR_RATE;
         private final SendableChooser<Command> autoChooser;
+        Command autoCommand;
 
         public RobotContainer() {
 
                 drivetrain.configureAutoBuilder();
                 autoChooser = AutoBuilder.buildAutoChooser();
                 SmartDashboard.putData("Auto Mode", autoChooser);
+                NamedCommands.registerCommand("Shoot", new InstantCommand());
+                NamedCommands.registerCommand("Intake", new InstantCommand());
                 // autoFactory = drivetrain.createAutoFactory();
                 // autoRoutines = new Autos(autoFactory);
+                autoCommand = Paths.LCS_REEF5LEFT.getCommand();
 
                 // autoChooser.addRoutine("SimplePath", () ->
                 // autoRoutines.getAutoRoutine("SimplePath"));
@@ -176,11 +184,11 @@ public class RobotContainer {
                                                 .andThen(new InstantCommand(
                                                                 () -> intakeSubsystem.setState(IntakeState.EMPTY))));
 
-                climbTrigger.whileTrue(
-                                new ElevatorMoveToHeight(elevatorSubsystem, Constants.States.Climb.ELEVATOR_HEIGHT));
+                // climbTrigger.whileTrue(
+                //                 new ElevatorMoveToHeight(elevatorSubsystem, Constants.States.Climb.ELEVATOR_HEIGHT));
                 // IO.mechanismController.x()
-                //                 .whileTrue(new TurnToAngle(drivetrain,
-                //                                 edu.wpi.first.math.util.Units.degreesToRadians(0)));
+                // .whileTrue(new TurnToAngle(drivetrain,
+                // edu.wpi.first.math.util.Units.degreesToRadians(0)));
                 // // intakeSubsystem.setDefaultCommand(new
                 // IntakeBasedOnStateCommand(intakeSubsystem, this::getState, () -> new
                 // Pose2d()));
@@ -196,7 +204,9 @@ public class RobotContainer {
                 // LegGoDownCommand(climbDeepSubsystem).andThen(new InstantCommand(()
                 // -> elevatorSubsystem.setIntendedState(ElevatorState.DOWN))));
                 //
-
+                
+                // IO.mechanismController.a().whileTrue(new InstantCommand(()-> elevatorSubsystem.setSetpoint(0.3)));
+                
                 drivetrain.setDefaultCommand(new DriveCommand(drivetrain, xSupplier, ySupplier, rotationSupplier,
                                 () -> wantedAngle, () -> manualOverride));
 
@@ -213,6 +223,7 @@ public class RobotContainer {
                 IO.driverController.b()
                                 .whileTrue(new WaitCommand(1)
                                                 .andThen(drivetrain.runOnce(() -> drivetrain.seedFieldCentric())));
+                
                 // IO.mechanismController.x().whileTrue(new
                 // ElevatorResetLimitSwitch(elevatorSubsystem));
                 // IO.mechanismController.a().whileTrue(new
@@ -226,11 +237,7 @@ public class RobotContainer {
         // */
         public Command getAutonomousCommand() {
 
-                return new SequentialCommandGroup(
-                                new Forwards(drivetrain).raceWith(new WaitCommand(6)),
-                                new IntakeAtPercentage(intakeSubsystem, -1)
-                                                .raceWith(new WaitCommand(Constants.States.Score.INTAKE_TIME * 2)),
-                                new InstantCommand(() -> intakeSubsystem.setState(IntakeState.EMPTY)));
+                return autoCommand;
         }
 
         public RobotState getState() {
