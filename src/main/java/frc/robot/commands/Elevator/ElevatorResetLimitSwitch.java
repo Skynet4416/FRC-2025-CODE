@@ -18,6 +18,9 @@ public class ElevatorResetLimitSwitch extends Command {
         if (!elevatorSubsystem.elevatorDown()) {
             elevatorSubsystem.setPercentage(-Constants.Subsystems.Elevator.Controls.ELEVATOR_PERCENTAGE);
         }
+        else{
+            elevatorSubsystem.setPercentage(0);
+        }
     }
     
     // @Override

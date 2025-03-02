@@ -93,8 +93,8 @@ public class RobotContainer {
         private final Trigger intakeEmpty = new Trigger(() -> intakeSubsystem.getState() == IntakeState.EMPTY);
         private boolean readyToScore = false;
         private final Trigger readyToScoreTrigger = new Trigger(() -> readyToScore);
-        private final SlewRateLimiter slewRateLimiterx = new SlewRateLimiter(5);
-        private final SlewRateLimiter slewRateLimitery = new SlewRateLimiter(5);
+        private final SlewRateLimiter slewRateLimiterx = new SlewRateLimiter(6);
+        private final SlewRateLimiter slewRateLimitery = new SlewRateLimiter(6);
         private final SlewRateLimiter slewRateLimiterRotation = new SlewRateLimiter(10);
 
         private final DoubleSupplier xSupplier = () -> slewRateLimiterx
