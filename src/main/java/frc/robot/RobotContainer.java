@@ -14,6 +14,7 @@ import com.pathplanner.lib.auto.NamedCommands;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.filter.SlewRateLimiter;
 import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.units.Units;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -40,6 +41,7 @@ import frc.robot.subsystems.Drive.TunerConstants;
 import frc.robot.subsystems.Elevator.ElevatorSubsystem;
 import frc.robot.subsystems.Intake.IntakeState;
 import frc.robot.subsystems.Intake.IntakeSubsystem;
+import frc.robot.subsystems.Vision.LimelightHelpers;
 import frc.robot.subsystems.Vision.LimelightObserver;
 import frc.robot.subsystems.Vision.LimelightSubsystem;
 
@@ -185,7 +187,8 @@ public class RobotContainer {
                                                                 () -> intakeSubsystem.setState(IntakeState.EMPTY))));
 
                 // climbTrigger.whileTrue(
-                //                 new ElevatorMoveToHeight(elevatorSubsystem, Constants.States.Climb.ELEVATOR_HEIGHT));
+                // new ElevatorMoveToHeight(elevatorSubsystem,
+                // Constants.States.Climb.ELEVATOR_HEIGHT));
                 // IO.mechanismController.x()
                 // .whileTrue(new TurnToAngle(drivetrain,
                 // edu.wpi.first.math.util.Units.degreesToRadians(0)));
@@ -204,9 +207,10 @@ public class RobotContainer {
                 // LegGoDownCommand(climbDeepSubsystem).andThen(new InstantCommand(()
                 // -> elevatorSubsystem.setIntendedState(ElevatorState.DOWN))));
                 //
-                
-                // IO.mechanismController.a().whileTrue(new InstantCommand(()-> elevatorSubsystem.setSetpoint(0.3)));
-                
+
+                // IO.mechanismController.a().whileTrue(new InstantCommand(()->
+                // elevatorSubsystem.setSetpoint(0.3)));
+
                 drivetrain.setDefaultCommand(new DriveCommand(drivetrain, xSupplier, ySupplier, rotationSupplier,
                                 () -> wantedAngle, () -> manualOverride));
 
@@ -223,7 +227,12 @@ public class RobotContainer {
                 IO.driverController.b()
                                 .whileTrue(new WaitCommand(1)
                                                 .andThen(drivetrain.runOnce(() -> drivetrain.seedFieldCentric())));
-                
+
+                IO.driverController.x()
+                                .whileTrue(new WaitCommand(1)
+                                                .andThen(drivetrain.runOnce(() -> drivetrain
+                                                                .resetRotation(LimelightHelpers.getBotPose2d_wpiBlue("")
+                                                                                .getRotation()))));
                 // IO.mechanismController.x().whileTrue(new
                 // ElevatorResetLimitSwitch(elevatorSubsystem));
                 // IO.mechanismController.a().whileTrue(new
