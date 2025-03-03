@@ -121,7 +121,7 @@ public class RobotContainer {
                 NamedCommands.registerCommand("Intake", new InstantCommand());
                 // autoFactory = drivetrain.createAutoFactory();
                 // autoRoutines = new Autos(autoFactory);
-                autoCommand = Paths.LCS_REEF5LEFT.getCommand();
+                autoCommand = Paths.TEST1.getCommand().andThen(Paths.REEF4RIGHT_LCS.getCommand());
 
                 // autoChooser.addRoutine("SimplePath", () ->
                 // autoRoutines.getAutoRoutine("SimplePath"));

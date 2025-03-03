@@ -1,5 +1,6 @@
 package frc.robot.commands.Elevator;
 
+import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.Constants;
 import frc.robot.subsystems.Elevator.ElevatorSubsystem;
@@ -16,7 +17,7 @@ public class ElevatorResetLimitSwitch extends Command {
     @Override
     public void execute() {
         if (!elevatorSubsystem.elevatorDown()) {
-            elevatorSubsystem.setPercentage(-Constants.Subsystems.Elevator.Controls.ELEVATOR_PERCENTAGE);
+            elevatorSubsystem.setPercentage(MathUtil.clamp((elevatorSubsystem.getElevatorDistanceInMeter() / 0.3) * -Constants.Subsystems.Elevator.Controls.ELEVATOR_PERCENTAGE*4, -Constants.Subsystems.Elevator.Controls.ELEVATOR_PERCENTAGE, -0.1));
         }
         else{
             elevatorSubsystem.setPercentage(0);
