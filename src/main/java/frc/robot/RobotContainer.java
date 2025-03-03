@@ -8,9 +8,7 @@ import static edu.wpi.first.units.Units.RotationsPerSecond;
 
 import java.util.function.DoubleSupplier;
 
-import com.pathplanner.lib.auto.AutoBuilder;
-import com.pathplanner.lib.auto.NamedCommands;
-
+import choreo.auto.AutoFactory;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.filter.SlewRateLimiter;
 import edu.wpi.first.math.geometry.Pose2d;
@@ -19,6 +17,7 @@ import edu.wpi.first.units.Units;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import edu.wpi.first.wpilibj2.command.WaitCommand;
@@ -26,9 +25,6 @@ import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.commands.DriveCommand;
 import frc.robot.commands.DriveMoveToAngleIncreament;
-import frc.robot.commands.AutoCommands.Forwards;
-import frc.robot.commands.Autos.AutoAssembler;
-import frc.robot.commands.Autos.Paths;
 import frc.robot.commands.Elevator.ElevatorMoveToHeight;
 import frc.robot.commands.Elevator.ElevatorResetLimitSwitch;
 import frc.robot.commands.Intake.IntakeAtPercentage;
@@ -53,6 +49,7 @@ import frc.robot.subsystems.Vision.LimelightSubsystem;
  * commands, and trigger mappings) should be declared here.
  */
 public class RobotContainer {
+        private final AutoFactory autoFactory;
 
         private RobotState state = RobotState.NONE;
         private final CommandSwerveDrivetrain drivetrain = TunerConstants.createDrivetrain();
@@ -102,28 +99,26 @@ public class RobotContainer {
         private final DoubleSupplier xSupplier = () -> slewRateLimiterx
                         .calculate(deadband(-IO.driverController.getLeftY())
                                         * MathUtil.clamp((1 - IO.driverController.getRightTriggerAxis()), 0.1, 1)
-                                        * -MAX_SPEED);
+                                        * MAX_SPEED);
         private final DoubleSupplier ySupplier = () -> slewRateLimitery
                         .calculate(deadband(-IO.driverController.getLeftX())
                                         * MathUtil.clamp((1 - IO.driverController.getRightTriggerAxis()), 0.1, 1)
-                                        * -MAX_SPEED);
+                                        * MAX_SPEED);
         private final DoubleSupplier rotationSupplier = () -> slewRateLimiterRotation
                         .calculate(deadband(-IO.driverController.getRightX())
                                         * MathUtil.clamp((1 - IO.driverController.getLeftTriggerAxis()), 0.1, 1))
                         * MAX_ANGULAR_RATE;
-        private final SendableChooser<Command> autoChooser;
-        Command autoCommand;
 
         public RobotContainer() {
 
-                drivetrain.configureAutoBuilder();
-                autoChooser = AutoBuilder.buildAutoChooser();
-                SmartDashboard.putData("Auto Mode", autoChooser);
-                NamedCommands.registerCommand("Shoot", new InstantCommand());
-                NamedCommands.registerCommand("Intake", new InstantCommand());
-                // autoFactory = drivetrain.createAutoFactory();
-                // autoRoutines = new Autos(autoFactory);
-                autoCommand = Paths.TEST1.getCommand().andThen(Paths.REEF4RIGHT_LCS.getCommand());
+                autoFactory = new AutoFactory(
+                                drivetrain::getPose, // A function that returns the current robot pose
+                                drivetrain::resetOdometry, // A function that resets the current robot pose to the
+                                                           // provided Pose2d
+                                drivetrain::followTrajectory, // The drive subsystem trajectory follower
+                                true, // If alliance flipping should be enabled
+                                drivetrain // The drive subsystem
+                );
 
                 // autoChooser.addRoutine("SimplePath", () ->
                 // autoRoutines.getAutoRoutine("SimplePath"));
@@ -230,9 +225,7 @@ public class RobotContainer {
 
                 IO.driverController.x()
                                 .whileTrue(new WaitCommand(1)
-                                                .andThen(drivetrain.runOnce(() -> drivetrain
-                                                                .resetRotation(LimelightHelpers.getBotPose2d_wpiBlue("")
-                                                                                .getRotation()))));
+                                                .andThen(new InstantCommand(() -> drivetrain.resetOdometry(new Pose2d()))));
                 // IO.mechanismController.x().whileTrue(new
                 // ElevatorResetLimitSwitch(elevatorSubsystem));
                 // IO.mechanismController.a().whileTrue(new
@@ -246,7 +239,7 @@ public class RobotContainer {
         // */
         public Command getAutonomousCommand() {
 
-                return autoCommand;
+                return pickupAndRizzAuto();
         }
 
         public RobotState getState() {
@@ -268,5 +261,33 @@ public class RobotContainer {
                 SmartDashboard.putBoolean("score trigger", scoreTrigger.getAsBoolean());
                 SmartDashboard.putBoolean("ready to score trigger", readyToScoreTrigger.getAsBoolean());
                 drivetrain.periodic();
+        }
+
+        // shaki ops
+        public CommandSwerveDrivetrain getDrive() {
+                return drivetrain;
+        }
+
+        public Command pickupAndRizzAuto() {
+                return Commands.sequence(
+                                autoFactory.resetOdometry("Line-to-Reef4"), //
+                                autoFactory.trajectoryCmd("Line-to-Reef4"),
+                                new IntakeAtPercentage(intakeSubsystem,-0.5).raceWith(new WaitCommand(Constants.States.Score.INTAKE_TIME)).andThen(new InstantCommand(() -> intakeSubsystem.setState(IntakeState.EMPTY))),
+                                autoFactory.trajectoryCmd("Reef4Right-LCS"),
+                                new InstantCommand(() -> state = RobotState.INTAKE),
+                                autoFactory.trajectoryCmd("LCS-to-Reef2"),
+                                new IntakeAtPercentage(intakeSubsystem,-0.5).raceWith(new WaitCommand(Constants.States.Score.INTAKE_TIME)).andThen(new InstantCommand(() -> intakeSubsystem.setState(IntakeState.EMPTY))),
+                                autoFactory.trajectoryCmd("Reef2-LCS"),
+                                new InstantCommand(() -> state = RobotState.INTAKE),
+                                autoFactory.trajectoryCmd("LCS-to-Reef2"),
+                                new IntakeAtPercentage(intakeSubsystem,-0.5).raceWith(new WaitCommand(Constants.States.Score.INTAKE_TIME)).andThen(new InstantCommand(() -> intakeSubsystem.setState(IntakeState.EMPTY))),
+                                autoFactory.trajectoryCmd("Reef2-LCS"),
+                                new InstantCommand(() -> state = RobotState.INTAKE),
+                                autoFactory.trajectoryCmd("LCS-to-Reef2"),
+                                new IntakeAtPercentage(intakeSubsystem,-0.5).raceWith(new WaitCommand(Constants.States.Score.INTAKE_TIME)).andThen(new InstantCommand(() -> intakeSubsystem.setState(IntakeState.EMPTY)))       
+
+
+
+                );
         }
 }

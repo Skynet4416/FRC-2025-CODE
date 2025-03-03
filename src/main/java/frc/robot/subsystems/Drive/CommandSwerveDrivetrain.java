@@ -7,16 +7,14 @@ import com.ctre.phoenix6.Utils;
 import com.ctre.phoenix6.swerve.SwerveDrivetrainConstants;
 import com.ctre.phoenix6.swerve.SwerveModuleConstants;
 import com.ctre.phoenix6.swerve.SwerveRequest;
-import com.pathplanner.lib.auto.AutoBuilder;
-import com.pathplanner.lib.config.PIDConstants;
-import com.pathplanner.lib.config.RobotConfig;
-import com.pathplanner.lib.controllers.PPHolonomicDriveController;
 
+import choreo.trajectory.SwerveSample;
 import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.Vector;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.math.util.Units;
@@ -57,10 +55,9 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
     /**
      * Swerve request to apply during field-centric path following
      */
-    private final SwerveRequest.ApplyFieldSpeeds m_pathApplyFieldSpeeds = new SwerveRequest.ApplyFieldSpeeds();
-    private final PIDController m_pathXController = new PIDController(10, 0, 0);
-    private final PIDController m_pathYController = new PIDController(10, 0, 0);
-    private final PIDController m_pathThetaController = new PIDController(Constants.Subsystems.Drive.Rotation.KP, 0, Constants.Subsystems.Drive.Rotation.KI);
+    private final PIDController m_pathXController = new PIDController(1, 0, 0);
+    private final PIDController m_pathYController = new PIDController(1, 0, 0);
+    private final PIDController m_pathThetaController = new PIDController(Constants.Subsystems.Drive.Rotation.KP, 0, 0);
 
     /* Swerve requests to apply during SysId characterization */
     private final SwerveRequest.SysIdSwerveTranslation m_translationCharacterization = new SwerveRequest.SysIdSwerveTranslation();
@@ -343,34 +340,34 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
         return m_pathThetaController.calculate(Units.degreesToRadians(getGyroRotationInDegrees()), angleInRadians);
     }
 
-    public void configureAutoBuilder() {
-        try {
-            var config = RobotConfig.fromGUISettings();
-            AutoBuilder.configure(
-                    () -> getState().Pose, // Supplier of current robot pose
-                    this::resetPose, // Consumer for seeding pose against auto
-                    () -> getState().Speeds, // Supplier of current robot speeds
-                    // Consumer of ChassisSpeeds and feedforwards to drive the robot
-                    (speeds, feedforwards) -> setControl(
-                            m_pathApplyRobotSpeeds.withSpeeds(speeds)
-                                    .withWheelForceFeedforwardsX(feedforwards.robotRelativeForcesXNewtons())
-                                    .withWheelForceFeedforwardsY(feedforwards.robotRelativeForcesYNewtons())
-                    ),
-                    new PPHolonomicDriveController(
-                            // PID constants for translation
-                            new PIDConstants(10, 0, 0),
-                            // PID constants for rotation
-                            new PIDConstants(0, 0, 0)
-                    ),
-                    config,
-                    // Assume the path needs to be flipped for Red vs Blue, this is normally the case
-                    () -> DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red,
-                    this // Subsystem for requirements
-            );
-        } catch (Exception ex) {
-            DriverStation.reportError("Failed to load PathPlanner config and configure AutoBuilder", ex.getStackTrace());
-        }
-    }
+    // public void configureAutoBuilder() {
+    //     try {
+    //         var config = RobotConfig.fromGUISettings();
+    //         AutoBuilder.configure(
+    //                 () -> getState().Pose, // Supplier of current robot pose
+    //                 this::resetPose, // Consumer for seeding pose against auto
+    //                 () -> getState().Speeds, // Supplier of current robot speeds
+    //                 // Consumer of ChassisSpeeds and feedforwards to drive the robot
+    //                 (speeds, feedforwards) -> setControl(
+    //                         m_pathApplyRobotSpeeds.withSpeeds(speeds)
+    //                                 .withWheelForceFeedforwardsX(feedforwards.robotRelativeForcesXNewtons())
+    //                                 .withWheelForceFeedforwardsY(feedforwards.robotRelativeForcesYNewtons())
+    //                 ),
+    //                 new PPHolonomicDriveController(
+    //                         // PID constants for translation
+    //                         new PIDConstants(10, 0, 0),
+    //                         // PID constants for rotation
+    //                         new PIDConstants(0, 0, 0)
+    //                 ),
+    //                 config,
+    //                 // Assume the path needs to be flipped for Red vs Blue, this is normally the case
+    //                 () -> DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red,
+    //                 this // Subsystem for requirements
+    //         );
+    //     } catch (Exception ex) {
+    //         DriverStation.reportError("Failed to load PathPlanner config and configure AutoBuilder", ex.getStackTrace());
+    //     }
+    // }
 
     public  double getGyroRotationInDegrees(){ 
         return this.getPigeon2().getYaw().getValueAsDouble() %360;
@@ -378,5 +375,38 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
 
     public boolean atRotationSetpoint(){
         return this.m_pathThetaController.atSetpoint();
+    }
+
+
+    //shaknet ops
+    public void followTrajectory(SwerveSample target) {
+        // Get the current pose of the robot
+        Pose2d pose = super.getState().Pose;
+
+        // Generate the next speeds for the robot
+        ChassisSpeeds speeds = ChassisSpeeds.fromFieldRelativeSpeeds(
+            target.vx + m_pathXController.calculate(pose.getX(), target.x),
+            target.vy + m_pathYController.calculate(pose.getY(), target.y),
+            target.omega + m_pathThetaController.calculate(pose.getRotation().getRadians(), target.heading),
+            pose.getRotation()
+        );
+
+        // Apply the generated speeds
+        setControl(m_pathApplyRobotSpeeds.withSpeeds(speeds));
+
+    }
+
+    public Pose2d getPose(){
+        return getState().Pose;
+    }
+
+    public void resetOdometry(Pose2d pose2d){
+        if (LimelightHelpers.getTV("")){
+            resetTranslation(LimelightHelpers.getBotPose2d_wpiBlue("").getTranslation());
+            resetRotation(Rotation2d.fromDegrees(LimelightHelpers.getBotPose2d_wpiBlue("")
+                                                                                .getRotation().getDegrees()));
+        }else
+            resetPose(pose2d);
+            
     }
 }
