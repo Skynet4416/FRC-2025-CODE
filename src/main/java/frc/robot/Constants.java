@@ -16,10 +16,14 @@ package frc.robot;
 public final class Constants {
 
     public static class Subsystems {
-        public static class Drive{
-            public static class Rotation{
+        public static class Drive {
+            public static class Rotation {
                 public static double KP = 8;
                 public static double KI = 0;
+            }
+
+            public static class Position {
+                public static double KP = 1;
             }
         }
 
@@ -41,7 +45,8 @@ public final class Constants {
                 public final static double GEAR_RATIO = 8;
                 public final static double MAX_ACCELERATION_IN_MPS_SQUARED = 10;
                 public final static double MAX_HEIGHT_IN_METERS = 0.185;
-                public final static double POSITION_CONVERSION_FACTOR = WHEEL_RADIUS_IN_METERS * 2 * Math.PI / GEAR_RATIO;
+                public final static double POSITION_CONVERSION_FACTOR = WHEEL_RADIUS_IN_METERS * 2 * Math.PI
+                        / GEAR_RATIO;
                 public final static double VELOCITY_CONVERSION_FACTOR = POSITION_CONVERSION_FACTOR / 60.0;
                 public final static double MAX_VELOCITY_IN_MPS = 5676 * VELOCITY_CONVERSION_FACTOR;
             }
@@ -121,7 +126,7 @@ public final class Constants {
             public static double RADIUS_IN_METERS = 10000000;
 
             public static double ELEVATOR_HEIGHT = 0;
-            public static double INTAKE_PERCNETAGE= -1;
+            public static double INTAKE_PERCNETAGE = -1;
             public static double INTAKE_TIME = 1;
         }
 

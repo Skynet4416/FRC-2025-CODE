@@ -55,8 +55,8 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
     /**
      * Swerve request to apply during field-centric path following
      */
-    private final PIDController m_pathXController = new PIDController(1, 0, 0);
-    private final PIDController m_pathYController = new PIDController(1, 0, 0);
+    private final PIDController m_pathXController = new PIDController(Constants.Subsystems.Drive.Position.KP, 0, 0);
+    private final PIDController m_pathYController = new PIDController(Constants.Subsystems.Drive.Position.KP, 0, 0);
     private final PIDController m_pathThetaController = new PIDController(Constants.Subsystems.Drive.Rotation.KP, 0, 0);
 
     /* Swerve requests to apply during SysId characterization */
@@ -133,7 +133,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
      * access them through getters in the classes.
      *
      * @param drivetrainConstants Drivetrain-wide constants for the swerve drive
-     * @param modules Constants for each specific module
+     * @param modules             Constants for each specific module
      */
     public CommandSwerveDrivetrain(
             SwerveDrivetrainConstants drivetrainConstants,
@@ -153,11 +153,12 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
      * construct the devices themselves. If they need the devices, they can
      * access them through getters in the classes.
      *
-     * @param drivetrainConstants Drivetrain-wide constants for the swerve drive
+     * @param drivetrainConstants     Drivetrain-wide constants for the swerve drive
      * @param odometryUpdateFrequency The frequency to run the odometry loop. If
-     * unspecified or set to 0 Hz, this is 250 Hz on CAN FD, and 100 Hz on CAN
-     * 2.0.
-     * @param modules Constants for each specific module
+     *                                unspecified or set to 0 Hz, this is 250 Hz on
+     *                                CAN FD, and 100 Hz on CAN
+     *                                2.0.
+     * @param modules                 Constants for each specific module
      */
     public CommandSwerveDrivetrain(
             SwerveDrivetrainConstants drivetrainConstants,
@@ -179,15 +180,19 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
      * construct the devices themselves. If they need the devices, they can
      * access them through getters in the classes.
      *
-     * @param drivetrainConstants Drivetrain-wide constants for the swerve drive
-     * @param odometryUpdateFrequency The frequency to run the odometry loop. If
-     * unspecified or set to 0 Hz, this is 250 Hz on CAN FD, and 100 Hz on CAN
-     * 2.0.
+     * @param drivetrainConstants       Drivetrain-wide constants for the swerve
+     *                                  drive
+     * @param odometryUpdateFrequency   The frequency to run the odometry loop. If
+     *                                  unspecified or set to 0 Hz, this is 250 Hz
+     *                                  on CAN FD, and 100 Hz on CAN
+     *                                  2.0.
      * @param odometryStandardDeviation The standard deviation for odometry
-     * calculation in the form [x, y, theta]ᵀ, with units in meters and radians
-     * @param visionStandardDeviation The standard deviation for vision
-     * calculation in the form [x, y, theta]ᵀ, with units in meters and radians
-     * @param modules Constants for each specific module
+     *                                  calculation in the form [x, y, theta]ᵀ, with
+     *                                  units in meters and radians
+     * @param visionStandardDeviation   The standard deviation for vision
+     *                                  calculation in the form [x, y, theta]ᵀ, with
+     *                                  units in meters and radians
+     * @param modules                   Constants for each specific module
      */
     public CommandSwerveDrivetrain(
             SwerveDrivetrainConstants drivetrainConstants,
@@ -252,14 +257,15 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
          * occurs during testing.
          */
         SmartDashboard.putNumber("current angle", getGyroRotationInDegrees());
-        SmartDashboard.putString("units" ,this.getModule(0).getDriveMotor().getClosedLoopReference().getUnits());
-        SmartDashboard.putNumber("FL delta velcoity", this.getModule(0).getDriveMotor().getClosedLoopReference().getValueAsDouble());
+        SmartDashboard.putString("units", this.getModule(0).getDriveMotor().getClosedLoopReference().getUnits());
+        SmartDashboard.putNumber("FL delta velcoity",
+                this.getModule(0).getDriveMotor().getClosedLoopReference().getValueAsDouble());
         // m_pathThetaController.setP(SmartDashboard.getNumber("KP", 0));
         // m_pathThetaController.setI(SmartDashboard.getNumber("KI", 0));
         // SmartDashboard.putNumber("KP", m_pathThetaController.getP());
         // SmartDashboard.putNumber("KI", m_pathThetaController.getI());
 
-        LimelightHelpers.SetRobotOrientation("", getGyroRotationInDegrees()-45, 0, 0, 0, 0, 0);
+        LimelightHelpers.SetRobotOrientation("", getGyroRotationInDegrees() - 45, 0, 0, 0, 0, 0);
 
         if (!m_hasAppliedOperatorPerspective || DriverStation.isDisabled()) {
             DriverStation.getAlliance().ifPresent(allianceColor -> {
@@ -292,9 +298,9 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
      * odometry pose estimate while still accounting for measurement noise.
      *
      * @param visionRobotPoseMeters The pose of the robot as measured by the
-     * vision camera.
-     * @param timestampSeconds The timestamp of the vision measurement in
-     * seconds.
+     *                              vision camera.
+     * @param timestampSeconds      The timestamp of the vision measurement in
+     *                              seconds.
      */
     @Override
     public void addVisionMeasurement(Pose2d visionRobotPoseMeters, double timestampSeconds) {
@@ -309,12 +315,13 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
      * method will continue to apply to future measurements until a subsequent
      * call to {@link #setVisionMeasurementStdDevs(Matrix)} or this method.
      *
-     * @param visionRobotPoseMeters The pose of the robot as measured by the
-     * vision camera.
-     * @param timestampSeconds The timestamp of the vision measurement in
-     * seconds.
+     * @param visionRobotPoseMeters    The pose of the robot as measured by the
+     *                                 vision camera.
+     * @param timestampSeconds         The timestamp of the vision measurement in
+     *                                 seconds.
      * @param visionMeasurementStdDevs Standard deviations of the vision pose
-     * measurement in the form [x, y, theta]ᵀ, with units in meters and radians.
+     *                                 measurement in the form [x, y, theta]ᵀ, with
+     *                                 units in meters and radians.
      */
     @Override
     public void addVisionMeasurement(
@@ -341,72 +348,72 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
     }
 
     // public void configureAutoBuilder() {
-    //     try {
-    //         var config = RobotConfig.fromGUISettings();
-    //         AutoBuilder.configure(
-    //                 () -> getState().Pose, // Supplier of current robot pose
-    //                 this::resetPose, // Consumer for seeding pose against auto
-    //                 () -> getState().Speeds, // Supplier of current robot speeds
-    //                 // Consumer of ChassisSpeeds and feedforwards to drive the robot
-    //                 (speeds, feedforwards) -> setControl(
-    //                         m_pathApplyRobotSpeeds.withSpeeds(speeds)
-    //                                 .withWheelForceFeedforwardsX(feedforwards.robotRelativeForcesXNewtons())
-    //                                 .withWheelForceFeedforwardsY(feedforwards.robotRelativeForcesYNewtons())
-    //                 ),
-    //                 new PPHolonomicDriveController(
-    //                         // PID constants for translation
-    //                         new PIDConstants(10, 0, 0),
-    //                         // PID constants for rotation
-    //                         new PIDConstants(0, 0, 0)
-    //                 ),
-    //                 config,
-    //                 // Assume the path needs to be flipped for Red vs Blue, this is normally the case
-    //                 () -> DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red,
-    //                 this // Subsystem for requirements
-    //         );
-    //     } catch (Exception ex) {
-    //         DriverStation.reportError("Failed to load PathPlanner config and configure AutoBuilder", ex.getStackTrace());
-    //     }
+    // try {
+    // var config = RobotConfig.fromGUISettings();
+    // AutoBuilder.configure(
+    // () -> getState().Pose, // Supplier of current robot pose
+    // this::resetPose, // Consumer for seeding pose against auto
+    // () -> getState().Speeds, // Supplier of current robot speeds
+    // // Consumer of ChassisSpeeds and feedforwards to drive the robot
+    // (speeds, feedforwards) -> setControl(
+    // m_pathApplyRobotSpeeds.withSpeeds(speeds)
+    // .withWheelForceFeedforwardsX(feedforwards.robotRelativeForcesXNewtons())
+    // .withWheelForceFeedforwardsY(feedforwards.robotRelativeForcesYNewtons())
+    // ),
+    // new PPHolonomicDriveController(
+    // // PID constants for translation
+    // new PIDConstants(10, 0, 0),
+    // // PID constants for rotation
+    // new PIDConstants(0, 0, 0)
+    // ),
+    // config,
+    // // Assume the path needs to be flipped for Red vs Blue, this is normally the
+    // case
+    // () -> DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red,
+    // this // Subsystem for requirements
+    // );
+    // } catch (Exception ex) {
+    // DriverStation.reportError("Failed to load PathPlanner config and configure
+    // AutoBuilder", ex.getStackTrace());
+    // }
     // }
 
-    public  double getGyroRotationInDegrees(){ 
-        return this.getPigeon2().getYaw().getValueAsDouble() %360;
+    public double getGyroRotationInDegrees() {
+        return this.getPigeon2().getYaw().getValueAsDouble() % 360;
     }
 
-    public boolean atRotationSetpoint(){
+    public boolean atRotationSetpoint() {
         return this.m_pathThetaController.atSetpoint();
     }
 
-
-    //shaknet ops
+    // shaknet ops
     public void followTrajectory(SwerveSample target) {
         // Get the current pose of the robot
         Pose2d pose = super.getState().Pose;
 
         // Generate the next speeds for the robot
         ChassisSpeeds speeds = ChassisSpeeds.fromFieldRelativeSpeeds(
-            target.vx + m_pathXController.calculate(pose.getX(), target.x),
-            target.vy + m_pathYController.calculate(pose.getY(), target.y),
-            target.omega + m_pathThetaController.calculate(pose.getRotation().getRadians(), target.heading),
-            pose.getRotation()
-        );
+                target.vx + m_pathXController.calculate(pose.getX(), target.x),
+                target.vy + m_pathYController.calculate(pose.getY(), target.y),
+                target.omega + m_pathThetaController.calculate(pose.getRotation().getRadians(), target.heading),
+                pose.getRotation());
 
         // Apply the generated speeds
         setControl(m_pathApplyRobotSpeeds.withSpeeds(speeds));
 
     }
 
-    public Pose2d getPose(){
+    public Pose2d getPose() {
         return getState().Pose;
     }
 
-    public void resetOdometry(Pose2d pose2d){
-        if (LimelightHelpers.getTV("")){
+    public void resetOdometry(Pose2d pose2d) {
+        if (LimelightHelpers.getTV("")) {
             resetTranslation(LimelightHelpers.getBotPose2d_wpiBlue("").getTranslation());
             resetRotation(Rotation2d.fromDegrees(LimelightHelpers.getBotPose2d_wpiBlue("")
-                                                                                .getRotation().getDegrees()));
-        }else
+                    .getRotation().getDegrees()));
+        } else
             resetPose(pose2d);
-            
+
     }
 }
