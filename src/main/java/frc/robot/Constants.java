@@ -27,6 +27,33 @@ public final class Constants {
             }
         }
 
+        public static class Climb {
+            public static class Motors {
+                public static final int MASTER_CAN_ID = 0;
+                public static final int SLAVE_CAN_ID = 0;
+            }
+
+            public static class Physical {
+                public final static double WHEEL_RADIUS_IN_METERS = 0.036;
+                public final static double GEAR_RATIO = 13.22;
+                public final static double POSITION_CONVERSION_FACTOR = WHEEL_RADIUS_IN_METERS * 2 * Math.PI
+                        / GEAR_RATIO;
+                public final static double VELOCITY_CONVERSION_FACTOR = POSITION_CONVERSION_FACTOR / 60.0;
+            }
+
+            public static class PID {
+                public final static double KP = 0;
+                public final static double KI = 0;
+                public final static double KD = 0;
+            }
+
+            public static class Controls {
+                public static final double EXTEND_DISTANCE = 0;
+                public static final double DISTANCE_THRESHOLD = 0;
+                public static final double RETRACTED_DISTANCE = 0;
+            }
+        }
+
         public static class Elevator {
             public static class Sensors {
                 public final static int HALL_EFFECT_PORT = 0;
