@@ -163,10 +163,14 @@ public class RobotContainer {
                 elevatorSubsystem.setDefaultCommand(new ElevatorResetLimitSwitch(elevatorSubsystem));
 
                 coralStationTrigger.and(intakeModeTrigger).and(intakeEmpty).whileTrue(new IntakeCoral(intakeSubsystem)
+                                .alongWith(new LockAngleCommand(this::getPose, ))
                                 .alongWith(new ElevatorMoveToHeight(elevatorSubsystem,
                                                 Constants.States.Intake.ELEVATOR_HEIGHT).andThen(
-                                                                new InstantCommand(() -> intakeSubsystem.moveMotor(
-                                                                                Constants.States.Intake.INTAKE_PERCEHNTAGE))
+                                                                new InstantCommand(() -> {
+                                                                        intakeSubsystem.moveMotor(
+                                                                                        Constants.States.Intake.INTAKE_PERCEHNTAGE);
+                                                                        manualOverride = true;
+                                                                })
                                                                                 .raceWith(new WaitCommand(0.3)))));
 
                 reefTrigger.and(scoreTrigger)
@@ -225,7 +229,8 @@ public class RobotContainer {
 
                 IO.driverController.x()
                                 .whileTrue(new WaitCommand(1)
-                                                .andThen(new InstantCommand(() -> drivetrain.resetOdometry(new Pose2d()))));
+                                                .andThen(new InstantCommand(
+                                                                () -> drivetrain.resetOdometry(new Pose2d()))));
                 // IO.mechanismController.x().whileTrue(new
                 // ElevatorResetLimitSwitch(elevatorSubsystem));
                 // IO.mechanismController.a().whileTrue(new
@@ -246,6 +251,10 @@ public class RobotContainer {
                 SmartDashboard.putString("robot state", String.valueOf(this.state));
                 return this.state;
 
+        }
+
+        public Pose2d getPose() {
+                return this.drivetrain.getPose();
         }
 
         public boolean getManualOverride() {
@@ -272,21 +281,31 @@ public class RobotContainer {
                 return Commands.sequence(
                                 autoFactory.resetOdometry("Line-to-Reef4"), //
                                 autoFactory.trajectoryCmd("Line-to-Reef4"),
-                                new IntakeAtPercentage(intakeSubsystem,-0.5).raceWith(new WaitCommand(Constants.States.Score.INTAKE_TIME)).andThen(new InstantCommand(() -> intakeSubsystem.setState(IntakeState.EMPTY))),
+                                new IntakeAtPercentage(intakeSubsystem, -0.5)
+                                                .raceWith(new WaitCommand(Constants.States.Score.INTAKE_TIME))
+                                                .andThen(new InstantCommand(
+                                                                () -> intakeSubsystem.setState(IntakeState.EMPTY))),
                                 autoFactory.trajectoryCmd("Reef4Right-LCS"),
                                 new InstantCommand(() -> state = RobotState.INTAKE),
                                 autoFactory.trajectoryCmd("LCS-to-Reef2"),
-                                new IntakeAtPercentage(intakeSubsystem,-0.5).raceWith(new WaitCommand(Constants.States.Score.INTAKE_TIME)).andThen(new InstantCommand(() -> intakeSubsystem.setState(IntakeState.EMPTY))),
+                                new IntakeAtPercentage(intakeSubsystem, -0.5)
+                                                .raceWith(new WaitCommand(Constants.States.Score.INTAKE_TIME))
+                                                .andThen(new InstantCommand(
+                                                                () -> intakeSubsystem.setState(IntakeState.EMPTY))),
                                 autoFactory.trajectoryCmd("Reef2-LCS"),
                                 new InstantCommand(() -> state = RobotState.INTAKE),
                                 autoFactory.trajectoryCmd("LCS-to-Reef2"),
-                                new IntakeAtPercentage(intakeSubsystem,-0.5).raceWith(new WaitCommand(Constants.States.Score.INTAKE_TIME)).andThen(new InstantCommand(() -> intakeSubsystem.setState(IntakeState.EMPTY))),
+                                new IntakeAtPercentage(intakeSubsystem, -0.5)
+                                                .raceWith(new WaitCommand(Constants.States.Score.INTAKE_TIME))
+                                                .andThen(new InstantCommand(
+                                                                () -> intakeSubsystem.setState(IntakeState.EMPTY))),
                                 autoFactory.trajectoryCmd("Reef2-LCS"),
                                 new InstantCommand(() -> state = RobotState.INTAKE),
                                 autoFactory.trajectoryCmd("LCS-to-Reef2"),
-                                new IntakeAtPercentage(intakeSubsystem,-0.5).raceWith(new WaitCommand(Constants.States.Score.INTAKE_TIME)).andThen(new InstantCommand(() -> intakeSubsystem.setState(IntakeState.EMPTY)))       
-
-
+                                new IntakeAtPercentage(intakeSubsystem, -0.5)
+                                                .raceWith(new WaitCommand(Constants.States.Score.INTAKE_TIME))
+                                                .andThen(new InstantCommand(
+                                                                () -> intakeSubsystem.setState(IntakeState.EMPTY)))
 
                 );
         }
