@@ -20,6 +20,7 @@ import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.WaitCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
+import frc.robot.commands.ClimbConstantCommand;
 import frc.robot.commands.DriveCommand;
 import frc.robot.commands.DriveMoveToAngleIncreament;
 import frc.robot.commands.Elevator.ElevatorMoveToHeight;
@@ -172,7 +173,7 @@ public class RobotContainer {
         
         climbTrigger.onTrue(new InstantCommand(() -> climbSubsystem.setDistance(Constants.Subsystems.Climb.Controls.EXTEND_DISTANCE)));
         climbTrigger.and(IO.mechanismController.rightBumper()).whileTrue(new InstantCommand(() -> climbSubsystem.setDistance(Constants.Subsystems.Climb.Controls.RETRACTED_DISTANCE)));
-
+        // IO.mechanismController.y().whileTrue(new ClimbConstantCommand(climbSubsystem));
         // IO.mechanismController.a().whileTrue(new InstantCommand(()->
         // elevatorSubsystem.setSetpoint(0.3)));
 

@@ -24,18 +24,18 @@ public class ClimbSubsystem extends SubsystemBase {
 
         leaderConfig.encoder.positionConversionFactor(Constants.Subsystems.Climb.Physical.POSITION_CONVERSION_FACTOR);
         leaderConfig.encoder.velocityConversionFactor(Constants.Subsystems.Climb.Physical.VELOCITY_CONVERSION_FACTOR);
-        leaderConfig.smartCurrentLimit(40).voltageCompensation(12).idleMode(SparkBaseConfig.IdleMode.kBrake);
+        leaderConfig.smartCurrentLimit(80).voltageCompensation(12).idleMode(SparkBaseConfig.IdleMode.kBrake);
         leaderConfig.closedLoop.pid(Constants.Subsystems.Climb.PID.KP, Constants.Subsystems.Climb.PID.KI, Constants.Subsystems.Climb.PID.KD);
 
         climbLeader.configure(leaderConfig, SparkBase.ResetMode.kResetSafeParameters, SparkBase.PersistMode.kPersistParameters);
 
         SparkMaxConfig slaveConfig = new SparkMaxConfig();
-        slaveConfig.smartCurrentLimit(40).voltageCompensation(12).idleMode(SparkBaseConfig.IdleMode.kBrake);
+        slaveConfig.smartCurrentLimit(80).voltageCompensation(12).idleMode(SparkBaseConfig.IdleMode.kBrake);
         slaveConfig.follow(climbLeader);
 
         climbSlave.configure(slaveConfig, SparkBase.ResetMode.kResetSafeParameters, SparkBase.PersistMode.kPersistParameters);
 
-        masterEncoder = climbLeader.getAlternateEncoder();
+        masterEncoder = climbLeader.getEncoder();
         masterClosedLoopController = climbLeader.getClosedLoopController();
     }
 

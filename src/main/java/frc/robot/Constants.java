@@ -29,8 +29,8 @@ public final class Constants {
 
         public static class Climb {
             public static class Motors {
-                public static final int MASTER_CAN_ID = 0;
-                public static final int SLAVE_CAN_ID = 0;
+                public static final int MASTER_CAN_ID = 32;
+                public static final int SLAVE_CAN_ID = 33;
             }
 
             public static class Physical {
@@ -42,7 +42,7 @@ public final class Constants {
             }
 
             public static class PID {
-                public final static double KP = 0;
+                public final static double KP = 5;
                 public final static double KI = 0;
                 public final static double KD = 0;
             }
@@ -106,24 +106,6 @@ public final class Constants {
                 public final static double INTAKE_PERCENTAGE = 0.5;
                 public static final double DECELERATION_THRESHOLD = -80; // how many rpm declerates in one iteration
                 public static final double INTAKE_VELOCIRTY_THREASHOLD = 500;
-            }
-        }
-
-        public static class DeepCage {
-
-            public static class Motors {
-
-                public final static int DEEP_CAGE_MAX_MOTOR_ID = 5;
-            }
-
-            public static class Sensors {
-
-                public final static int LEG_LIMIT_SWITCH_CHANNEL = 0;
-            }
-
-            public static class Physical {
-
-                public final static double percentage = 0.3;
             }
         }
     }
