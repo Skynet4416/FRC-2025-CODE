@@ -275,19 +275,16 @@ public class RobotContainer {
                                 new IntakeAtPercentage(intakeSubsystem,-0.5).raceWith(new WaitCommand(Constants.States.Score.INTAKE_TIME)).andThen(new InstantCommand(() -> intakeSubsystem.setState(IntakeState.EMPTY))),
                                 autoFactory.trajectoryCmd("Reef4Right-LCS"),
                                 new InstantCommand(() -> state = RobotState.INTAKE),
-                                autoFactory.trajectoryCmd("LCS-to-Reef2"),
+                                autoFactory.trajectoryCmd("LCS-Reef2Left"),
                                 new IntakeAtPercentage(intakeSubsystem,-0.5).raceWith(new WaitCommand(Constants.States.Score.INTAKE_TIME)).andThen(new InstantCommand(() -> intakeSubsystem.setState(IntakeState.EMPTY))),
-                                autoFactory.trajectoryCmd("Reef2-LCS"),
+                                autoFactory.trajectoryCmd("Reef2Left-LCS"),
                                 new InstantCommand(() -> state = RobotState.INTAKE),
-                                autoFactory.trajectoryCmd("LCS-to-Reef2"),
+                                autoFactory.trajectoryCmd("LCS-Reef2Left"),
                                 new IntakeAtPercentage(intakeSubsystem,-0.5).raceWith(new WaitCommand(Constants.States.Score.INTAKE_TIME)).andThen(new InstantCommand(() -> intakeSubsystem.setState(IntakeState.EMPTY))),
-                                autoFactory.trajectoryCmd("Reef2-LCS"),
+                                autoFactory.trajectoryCmd("Reef2Left-LCS"),
                                 new InstantCommand(() -> state = RobotState.INTAKE),
-                                autoFactory.trajectoryCmd("LCS-to-Reef2"),
+                                autoFactory.trajectoryCmd("LCS-Reef2Left"),
                                 new IntakeAtPercentage(intakeSubsystem,-0.5).raceWith(new WaitCommand(Constants.States.Score.INTAKE_TIME)).andThen(new InstantCommand(() -> intakeSubsystem.setState(IntakeState.EMPTY)))       
-
-
-
                 );
         }
 }
