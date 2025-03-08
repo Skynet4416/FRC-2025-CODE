@@ -8,6 +8,7 @@ import static edu.wpi.first.units.Units.RotationsPerSecond;
 
 import java.util.function.DoubleSupplier;
 
+import choreo.auto.AutoChooser;
 import choreo.auto.AutoFactory;
 import edu.wpi.first.cameraserver.CameraServer;
 import edu.wpi.first.math.MathUtil;
@@ -26,6 +27,7 @@ import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.commands.DriveCommand;
 import frc.robot.commands.DriveMoveToAngleIncreament;
+import frc.robot.commands.AutoCommands.Forwards;
 import frc.robot.commands.Autos.TrajCommnd;
 import frc.robot.commands.Elevator.ElevatorMoveToHeight;
 import frc.robot.commands.Elevator.ElevatorResetLimitSwitch;
@@ -73,7 +75,7 @@ public class RobotContainer {
 
         // private final AutoFactory autoFactory;
         // private final Autos autoRoutines;
-        // private final AutoChooser autoChooser = new AutoChooser();
+        private final AutoChooser autoChooser = new AutoChooser();
         // public final CommandSwerveDrivetrain drivetrain;
 
         private final Telemetry logger = new Telemetry(MAX_SPEED);
@@ -125,10 +127,12 @@ public class RobotContainer {
                                 drivetrain // The drive subsystem
                 );
 
-                // autoChooser.addRoutine("SimplePath", () ->
-                // autoRoutines.getAutoRoutine("SimplePath"));
-                // SmartDashboard.putData("Auto Chooser", autoChooser);
-                // Configure the trigger bindings
+                autoChooser.addCmd("left", this::pickupAndRizzAutoSide);
+                autoChooser.addCmd("middle", this::middleCommand);
+                autoChooser.addCmd("right", this::rightCommand);
+                autoChooser.addCmd("forward", this::forward);
+
+                SmartDashboard.putData("auto", autoChooser);
                 configureBindings();
                 autoCommand = pickupAndRizzAutoSide();
         }
@@ -245,7 +249,7 @@ public class RobotContainer {
         // * @return the command to run in autonomous
         // */
         public Command getAutonomousCommand() {
-                return autoCommand;
+                return autoChooser.selectedCommand();
         }
 
         public RobotState getState() {
@@ -280,6 +284,32 @@ public class RobotContainer {
                                 .andThen(new ElevatorResetLimitSwitchEnd(
                                                 elevatorSubsystem));
 
+        }
+
+        public Command middleCommand() {
+                return Commands.sequence(autoFactory.resetOdometry("Line-to-Reef4"), //
+                                new TrajCommnd(autoFactory, "Line-to-Reef4", drivetrain),
+                                new IntakeAtPercentage(intakeSubsystem, -1)
+                                                .raceWith(new WaitCommand(0.25))
+                                                .andThen(new InstantCommand(
+                                                                () -> intakeSubsystem.setState(IntakeState.EMPTY))));
+        }
+
+        public Command rightCommand() {
+                return Commands.sequence(autoFactory.resetOdometry("Line-to-Reef5"),
+                                new TrajCommnd(autoFactory, "Line-to-Reef5", drivetrain),
+                                new IntakeAtPercentage(intakeSubsystem, -1)
+                                                .raceWith(new WaitCommand(0.25))
+                                                .andThen(new InstantCommand(
+                                                                () -> intakeSubsystem.setState(IntakeState.EMPTY))));
+        }
+
+        public Command forward() {
+                return new SequentialCommandGroup(
+                                new Forwards(drivetrain).raceWith(new WaitCommand(6)),
+                                new IntakeAtPercentage(intakeSubsystem, -1)
+                                                .raceWith(new WaitCommand(Constants.States.Score.INTAKE_TIME * 2)),
+                                new InstantCommand(() -> intakeSubsystem.setState(IntakeState.EMPTY)));
         }
 
         public Command pickupAndRizzAuto() {
