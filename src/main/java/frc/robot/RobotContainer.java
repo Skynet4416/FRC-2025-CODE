@@ -131,7 +131,7 @@ public class RobotContainer {
                 autoChooser.addCmd("middle", this::middleCommand);
                 autoChooser.addCmd("right", this::rightCommand);
                 autoChooser.addCmd("forward", this::forward);
-
+                autoChooser.addCmd("forward complicated", this::pickupAndRizzAuto);
                 SmartDashboard.putData("auto", autoChooser);
                 configureBindings();
                 autoCommand = pickupAndRizzAutoSide();
