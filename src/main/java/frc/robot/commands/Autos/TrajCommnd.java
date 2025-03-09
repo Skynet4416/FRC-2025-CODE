@@ -12,6 +12,7 @@ import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
+import frc.robot.meth.Alliance;
 import frc.robot.subsystems.Drive.CommandSwerveDrivetrain;
 
 public class TrajCommnd extends Command {
@@ -28,10 +29,10 @@ public class TrajCommnd extends Command {
         arr = new double[poses.length * 3];
         int ndx = 0;
         for (Pose2d pose : poses) {
-            Translation2d translation = pose.getTranslation();
+            Translation2d translation = Alliance.apply(pose.getTranslation());
             arr[ndx + 0] = translation.getX();
             arr[ndx + 1] = translation.getY();
-            arr[ndx + 2] = pose.getRotation().getDegrees();
+            arr[ndx + 2] = Alliance.apply(pose.getRotation()).getDegrees();
             ndx += 3;
         }
         this.driveSubsystem = drivetrain;
