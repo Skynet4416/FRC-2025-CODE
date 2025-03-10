@@ -131,7 +131,7 @@ public class RobotContainer {
                 autoChooser.addCmd("middle", this::middleCommand);
                 autoChooser.addCmd("right", this::rightCommand);
                 autoChooser.addCmd("forward", this::forward);
-                autoChooser.addCmd("forward complicated", this::pickupAndRizzAuto);
+                autoChooser.addCmd("middle complicated", this::pickupAndRizzAuto);
                 SmartDashboard.putData("auto", autoChooser);
                 configureBindings();
                 autoCommand = pickupAndRizzAutoSide();
@@ -280,7 +280,7 @@ public class RobotContainer {
 
         public Command getIntakeCommand() {
                 return new IntakeCoral(intakeSubsystem).deadlineFor(new ElevatorMoveToHeight(elevatorSubsystem,
-                                Constants.States.Intake.ELEVATOR_HEIGHT))
+                                Constants.States.Intake.ELEVATOR_HEIGHT)).raceWith(new WaitCommand(3))
                                 .andThen(new ElevatorResetLimitSwitchEnd(
                                                 elevatorSubsystem));
 
