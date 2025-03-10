@@ -17,7 +17,7 @@ public class IntakeCoral extends Command {
     @Override
     public void initialize() {
         intakeSubsystem.moveMotor(Constants.States.Intake.INTAKE_PERCEHNTAGE);
-        this.reachedVelocity =false;
+        this.reachedVelocity = false;
     }
 
     @Override
@@ -33,6 +33,7 @@ public class IntakeCoral extends Command {
         if (!interrupted) {
             intakeSubsystem.setState(IntakeState.FULL);
         }
+        System.out.println("INTAKE END");
     }
 
     @Override

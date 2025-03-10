@@ -5,9 +5,11 @@ package frc.robot.subsystems.Vision;
 
 import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.Vector;
+import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.subsystems.Vision.LimelightHelpers.PoseEstimate;
 
 public class LimelightSubsystem extends SubsystemBase {
 
@@ -23,16 +25,16 @@ public class LimelightSubsystem extends SubsystemBase {
     }
 
     public void updateLimelightData() {
-        boolean useMegaTag2 = true; // set to false to use MegaTag1
+        boolean useMegaTag2 = false; // set to false to use MegaTag1
         boolean doRejectUpdate = false;
 
         Vector<N3> stdDiviation = null;
         LimelightHelpers.PoseEstimate poseEstimate = null;
         if (useMegaTag2 == false) {
-            poseEstimate = LimelightHelpers.getBotPoseEstimate_wpiBlue("limelight");
+            poseEstimate = LimelightHelpers.getBotPoseEstimate_wpiBlue("");
             stdDiviation = VecBuilder.fill(.5, .5, 9999999);
         } else if (useMegaTag2 == true) {
-            poseEstimate = LimelightHelpers.getBotPoseEstimate_wpiBlue_MegaTag2("limelight");
+            poseEstimate = LimelightHelpers.getBotPoseEstimate_wpiBlue_MegaTag2("");
             stdDiviation = VecBuilder.fill(.7, .7, 9999999);
         }
 

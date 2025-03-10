@@ -16,10 +16,14 @@ package frc.robot;
 public final class Constants {
 
     public static class Subsystems {
-        public static class Drive{
-            public static class Rotation{
+        public static class Drive {
+            public static class Rotation {
                 public static double KP = 8;
                 public static double KI = 0;
+            }
+
+            public static class Position {
+                public static double KP = 1;
             }
         }
 
@@ -38,10 +42,11 @@ public final class Constants {
 
             public static class Physical {
                 public final static double WHEEL_RADIUS_IN_METERS = 0.0213995;
-                public final static double GEAR_RATIO = 38.7072;
+                public final static double GEAR_RATIO = 8;
                 public final static double MAX_ACCELERATION_IN_MPS_SQUARED = 10;
-                public final static double MAX_HEIGHT_IN_METERS = 0.25;
-                public final static double POSITION_CONVERSION_FACTOR = WHEEL_RADIUS_IN_METERS * 2 * Math.PI / GEAR_RATIO;
+                public final static double MAX_HEIGHT_IN_METERS = 0.185;
+                public final static double POSITION_CONVERSION_FACTOR = WHEEL_RADIUS_IN_METERS * 2 * Math.PI
+                        / GEAR_RATIO;
                 public final static double VELOCITY_CONVERSION_FACTOR = POSITION_CONVERSION_FACTOR / 60.0;
                 public final static double MAX_VELOCITY_IN_MPS = 5676 * VELOCITY_CONVERSION_FACTOR;
             }
@@ -49,12 +54,12 @@ public final class Constants {
             public static class Controls {
 
                 public static final double HEIGHT_THRESHOLD_IN_METERS = 0.005;
-                public static final double ELEVATOR_PERCENTAGE = 0.8;
+                public static final double ELEVATOR_PERCENTAGE = 0.5;
             }
 
             public static class PID {
 
-                public final static double KP = 0;
+                public final static double KP = 5;
                 public final static double KI = 0;
                 public final static double KD = 0;
             }
@@ -121,7 +126,7 @@ public final class Constants {
             public static double RADIUS_IN_METERS = 10000000;
 
             public static double ELEVATOR_HEIGHT = 0;
-            public static double INTAKE_PERCNETAGE= -1;
+            public static double INTAKE_PERCNETAGE = -1;
             public static double INTAKE_TIME = 1;
         }
 

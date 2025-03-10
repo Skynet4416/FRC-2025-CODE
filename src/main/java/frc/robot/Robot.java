@@ -4,11 +4,12 @@
 
 package frc.robot;
 
-import com.pathplanner.lib.commands.FollowPathCommand;
-
+import choreo.auto.AutoFactory;
+import edu.wpi.first.cameraserver.CameraServer;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
+import frc.robot.subsystems.Drive.CommandSwerveDrivetrain;
 import frc.robot.subsystems.Vision.LimelightHelpers;
 
 /**
@@ -20,6 +21,8 @@ import frc.robot.subsystems.Vision.LimelightHelpers;
  */
 public class Robot extends TimedRobot {
 	private Command autonomousCommand;
+	// private final CommandSwerveDrivetrain drive;
+	// private final AutoFactory autoFactory;
 
 	private final RobotContainer robotContainer;
 
@@ -33,7 +36,8 @@ public class Robot extends TimedRobot {
 		// and put our
 		// autonomous chooser on the dashboard.
 		robotContainer = new RobotContainer();
-		FollowPathCommand.warmupCommand().schedule();
+		CameraServer.startAutomaticCapture();
+		// drive = robotContainer.getDrive();
 	}
 
 	/**
@@ -74,7 +78,6 @@ public class Robot extends TimedRobot {
 	 */
 	@Override
 	public void autonomousInit() {
-		LimelightHelpers.setCameraPose_RobotSpace("", 0.125, 0.055, 0, 90, 0, 0);
 		autonomousCommand = robotContainer.getAutonomousCommand();
 
 		// schedule the autonomous command (example)

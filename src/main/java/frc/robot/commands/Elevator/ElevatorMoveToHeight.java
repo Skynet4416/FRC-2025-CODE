@@ -20,7 +20,7 @@ public class ElevatorMoveToHeight extends Command {
 
     @Override
     public void execute() {
-        elevatorSubsystem.setPercentage(Elevator.Controls.ELEVATOR_PERCENTAGE * (elevatorSubsystem.getElevatorDistanceInMeter() > elevatorSetPointInMeters ? -1 : 1));
+        elevatorSubsystem.setSetpoint(elevatorSetPointInMeters);
     }
 
     @Override
