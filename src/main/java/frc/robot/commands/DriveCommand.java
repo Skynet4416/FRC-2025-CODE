@@ -23,7 +23,8 @@ public class DriveCommand extends Command {
     private final BooleanSupplier manualOverride;
 
     public DriveCommand(CommandSwerveDrivetrain driveSubsystem,
-            DoubleSupplier xSupplier, DoubleSupplier ySupplier, DoubleSupplier rotationSupplier, DoubleSupplier angleRadiansSupplier, BooleanSupplier manualOVerride) {
+            DoubleSupplier xSupplier, DoubleSupplier ySupplier, DoubleSupplier rotationSupplier,
+            DoubleSupplier angleRadiansSupplier, BooleanSupplier manualOVerride) {
         this.driveSubsystem = driveSubsystem;
 
         this.xSupplier = xSupplier;
@@ -44,16 +45,16 @@ public class DriveCommand extends Command {
         SmartDashboard.putNumber("xSupplier", xSupplier.getAsDouble());
         SmartDashboard.putNumber("ySupplier", ySupplier.getAsDouble());
         SmartDashboard.putNumber("rSupplier", rotationSupplier.getAsDouble());
-        if (!manualOverride.getAsBoolean()) {
-            wantedAngle = angleRadiansSupplier.getAsDouble();
-        } else {
+        if (!manualOverride.getAsBoolean() || angleRadiansSupplier.getAsDouble() == -999) {
             wantedAngle += rotationSupplier.getAsDouble() * 0.02;
+        } else {
+            wantedAngle = angleRadiansSupplier.getAsDouble();
         }
 
         driveSubsystem.setControl(
                 new SwerveRequest.FieldCentric().withDriveRequestType(SwerveModule.DriveRequestType.Velocity)
                         .withVelocityX(xSupplier.getAsDouble()).withVelocityY(ySupplier.getAsDouble())
-                        .withRotationalRate(MathUtil.clamp(driveSubsystem.calculateRotation(wantedAngle), -6.283 * 1.5, 6.283 * 1.5)
-                        ));
+                        .withRotationalRate(MathUtil.clamp(driveSubsystem.calculateRotation(wantedAngle), -6.283 * 1.5,
+                                6.283 * 1.5)));
     }
 }

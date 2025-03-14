@@ -7,33 +7,45 @@ import java.util.function.Supplier;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj2.command.Command;
+import frc.robot.meth.Distance;
 
 public class LockAngleCommand extends Command {
     private final Supplier<Pose2d> poseSupplier;
-    private final DoubleSupplier angleSupplier;
     private final Consumer<Double> angleSetter;
     private final Consumer<Boolean> manualOverride;
+    private final double lineLength;
+    private final double maxDistance;
+    private final Pose2d[] centers;
 
-    public LockAngleCommand(Supplier<Pose2d> poseSupplier, DoubleSupplier angleSupplier, Consumer<Double> angleSetter,
+    public LockAngleCommand(Supplier<Pose2d> poseSupplier, Pose2d[] centers, double lineLength, double maxDistance,
+            Consumer<Double> angleSetter,
             Consumer<Boolean> manualOverride) {
         this.poseSupplier = poseSupplier;
         this.angleSetter = angleSetter;
         this.manualOverride = manualOverride;
-        this.angleSupplier = angleSupplier;
-
+        this.centers = centers;
+        this.maxDistance = maxDistance;
+        this.lineLength = lineLength;
     }
 
     @Override
     public void initialize() {
-        Pose2d pose = poseSupplier.get();
-        double suppliedAngle = this.angleSupplier.getAsDouble();
-        double wantedAngle = pose != null
-                ? pose.getRotation().plus(Rotation2d.k180deg).getDegrees()
-                : suppliedAngle;
-        angleSetter.accept(wantedAngle);
-        if (wantedAngle != suppliedAngle) {
-            manualOverride.accept(false);
-        }
+        manualOverride.accept(false);
+    }
 
+    @Override
+    public void execute() {
+        Pose2d closestCenter = Distance.isPointNearLinesSegment(poseSupplier.get().getTranslation(), centers,
+                lineLength, maxDistance);
+
+        Rotation2d rotation = closestCenter.getRotation().rotateBy(Rotation2d.k180deg);
+
+        angleSetter.accept(rotation.getRadians());
+    }
+
+    @Override
+    public void end(boolean interrupted) {
+        angleSetter.accept((double) -999);
+        manualOverride.accept(true);
     }
 }

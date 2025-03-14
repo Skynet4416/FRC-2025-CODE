@@ -25,6 +25,7 @@ import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.commands.DriveCommand;
 import frc.robot.commands.DriveMoveToAngleIncreament;
+import frc.robot.commands.LockAngleCommand;
 import frc.robot.commands.Elevator.ElevatorMoveToHeight;
 import frc.robot.commands.Elevator.ElevatorResetLimitSwitch;
 import frc.robot.commands.Intake.IntakeAtPercentage;
@@ -162,16 +163,25 @@ public class RobotContainer {
 
                 elevatorSubsystem.setDefaultCommand(new ElevatorResetLimitSwitch(elevatorSubsystem));
 
-                coralStationTrigger.and(intakeModeTrigger).and(intakeEmpty).whileTrue(new IntakeCoral(intakeSubsystem)
-                                .alongWith(new LockAngleCommand(this::getPose, ))
-                                .alongWith(new ElevatorMoveToHeight(elevatorSubsystem,
-                                                Constants.States.Intake.ELEVATOR_HEIGHT).andThen(
-                                                                new InstantCommand(() -> {
-                                                                        intakeSubsystem.moveMotor(
-                                                                                        Constants.States.Intake.INTAKE_PERCEHNTAGE);
-                                                                        manualOverride = true;
-                                                                })
-                                                                                .raceWith(new WaitCommand(0.3)))));
+                coralStationTrigger.and(intakeModeTrigger).and(intakeEmpty).whileTrue(new LockAngleCommand(
+                                this::getPose,
+                                new Pose2d[] { FieldConstants.CoralStation.leftCenterFace,
+                                                FieldConstants.CoralStation.rightCenterFace },
+                                FieldConstants.CoralStation.stationLength,
+                                Constants.States.Intake.RADIUS_IN_METERS, this::angleSetter,
+                                this::manualOverrideSetter).deadlineFor(
+                                                new IntakeCoral(intakeSubsystem)
+                                                                .alongWith(new ElevatorMoveToHeight(elevatorSubsystem,
+                                                                                Constants.States.Intake.ELEVATOR_HEIGHT)
+                                                                                .andThen(
+                                                                                                new InstantCommand(
+                                                                                                                () -> {
+                                                                                                                        intakeSubsystem.moveMotor(
+                                                                                                                                        Constants.States.Intake.INTAKE_PERCEHNTAGE);
+                                                                                                                        manualOverride = true;
+                                                                                                                })
+                                                                                                                .raceWith(new WaitCommand(
+                                                                                                                                0.3))))));
 
                 reefTrigger.and(scoreTrigger)
                                 .whileTrue(new ElevatorMoveToHeight(elevatorSubsystem,
@@ -308,5 +318,22 @@ public class RobotContainer {
                                                                 () -> intakeSubsystem.setState(IntakeState.EMPTY)))
 
                 );
+
+        }
+
+        public void lockAngle(Pose2d[] centers, double distance, double maxDistance) {
+                Pose2d closestCenter = Distance.isPointNearLinesSegment(getPose().getTranslation(), centers, distance,
+                                maxDistance);
+                this.wantedAngle = closestCenter.getRotation().rotateBy(Rotation2d.k180deg).getRadians();
+                this.manualOverride = true;
+
+        }
+
+        public void angleSetter(double angle) {
+                this.wantedAngle = angle;
+        }
+
+        public void manualOverrideSetter(boolean manualOverride) {
+                this.manualOverride = manualOverride;
         }
 }
