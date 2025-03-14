@@ -38,8 +38,8 @@ public class LockAngleCommand extends Command {
         Pose2d closestCenter = Distance.isPointNearLinesSegment(poseSupplier.get().getTranslation(), centers,
                 lineLength, maxDistance);
 
-        Rotation2d rotation = closestCenter.getRotation().rotateBy(Rotation2d.k180deg);
-
+        Rotation2d rotation = closestCenter.getRotation();
+        System.out.println(closestCenter.getX() + "," + closestCenter.getY());
         angleSetter.accept(rotation.getRadians());
     }
 

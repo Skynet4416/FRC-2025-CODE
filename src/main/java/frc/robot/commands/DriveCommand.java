@@ -45,7 +45,7 @@ public class DriveCommand extends Command {
         SmartDashboard.putNumber("xSupplier", xSupplier.getAsDouble());
         SmartDashboard.putNumber("ySupplier", ySupplier.getAsDouble());
         SmartDashboard.putNumber("rSupplier", rotationSupplier.getAsDouble());
-        if (!manualOverride.getAsBoolean() || angleRadiansSupplier.getAsDouble() == -999) {
+        if (manualOverride.getAsBoolean() || angleRadiansSupplier.getAsDouble() == -999) {
             wantedAngle += rotationSupplier.getAsDouble() * 0.02;
         } else {
             wantedAngle = angleRadiansSupplier.getAsDouble();
