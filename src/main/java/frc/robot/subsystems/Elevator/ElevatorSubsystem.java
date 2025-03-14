@@ -91,6 +91,7 @@ public class ElevatorSubsystem extends SubsystemBase {
         }
 
         SmartDashboard.putNumber("elevator current", motorLeader.getOutputCurrent());
+        SmartDashboard.putNumber("elevator slve current", motorRightSlave.getOutputCurrent());
         
 
         if ((getElevatorDistanceInMeter() > Elevator.Physical.MAX_HEIGHT_IN_METERS && motorLeader.get() > 0)) {

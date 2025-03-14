@@ -8,13 +8,13 @@ import static edu.wpi.first.units.Units.RotationsPerSecond;
 
 import java.util.function.DoubleSupplier;
 
+import choreo.auto.AutoChooser;
 import choreo.auto.AutoFactory;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.filter.SlewRateLimiter;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.units.Units;
-import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
@@ -26,8 +26,11 @@ import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.commands.DriveCommand;
 import frc.robot.commands.DriveMoveToAngleIncreament;
 import frc.robot.commands.LockAngleCommand;
+import frc.robot.commands.AutoCommands.Forwards;
+import frc.robot.commands.Autos.TrajCommnd;
 import frc.robot.commands.Elevator.ElevatorMoveToHeight;
 import frc.robot.commands.Elevator.ElevatorResetLimitSwitch;
+import frc.robot.commands.Elevator.ElevatorResetLimitSwitchEnd;
 import frc.robot.commands.Intake.IntakeAtPercentage;
 import frc.robot.commands.Intake.IntakeCoral;
 import frc.robot.commands.Intake.IntakeDefault;
@@ -38,7 +41,6 @@ import frc.robot.subsystems.Drive.TunerConstants;
 import frc.robot.subsystems.Elevator.ElevatorSubsystem;
 import frc.robot.subsystems.Intake.IntakeState;
 import frc.robot.subsystems.Intake.IntakeSubsystem;
-import frc.robot.subsystems.Vision.LimelightHelpers;
 import frc.robot.subsystems.Vision.LimelightObserver;
 import frc.robot.subsystems.Vision.LimelightSubsystem;
 
@@ -71,8 +73,9 @@ public class RobotContainer {
 
         // private final AutoFactory autoFactory;
         // private final Autos autoRoutines;
-        // private final AutoChooser autoChooser = new AutoChooser();
+        private final AutoChooser autoChooser = new AutoChooser();
         // public final CommandSwerveDrivetrain drivetrain;
+
         private final Telemetry logger = new Telemetry(MAX_SPEED);
         private boolean manualOverride = true;
         private double wantedAngle = 0;
@@ -109,6 +112,7 @@ public class RobotContainer {
                         .calculate(deadband(-IO.driverController.getRightX())
                                         * MathUtil.clamp((1 - IO.driverController.getLeftTriggerAxis()), 0.1, 1))
                         * MAX_ANGULAR_RATE;
+        private final Command autoCommand;
 
         public RobotContainer() {
 
@@ -121,11 +125,14 @@ public class RobotContainer {
                                 drivetrain // The drive subsystem
                 );
 
-                // autoChooser.addRoutine("SimplePath", () ->
-                // autoRoutines.getAutoRoutine("SimplePath"));
-                // SmartDashboard.putData("Auto Chooser", autoChooser);
-                // Configure the trigger bindings
+                autoChooser.addCmd("left", this::pickupAndRizzAutoSide);
+                autoChooser.addCmd("middle", this::middleCommand);
+                autoChooser.addCmd("right", this::rightCommand);
+                autoChooser.addCmd("forward", this::forward);
+                autoChooser.addCmd("middle complicated", this::pickupAndRizzAuto);
+                SmartDashboard.putData("auto", autoChooser);
                 configureBindings();
+                autoCommand = pickupAndRizzAutoSide();
         }
 
         public double deadband(double value) {
@@ -234,11 +241,11 @@ public class RobotContainer {
                                                                 .degreesToRadians(angle),
                                                 (a) -> this.manualOverride = a, drivetrain));
                 IO.driverController.b()
-                                .whileTrue(new WaitCommand(1)
+                                .whileTrue(new WaitCommand(0.1)
                                                 .andThen(drivetrain.runOnce(() -> drivetrain.seedFieldCentric())));
 
                 IO.driverController.x()
-                                .whileTrue(new WaitCommand(1)
+                                .whileTrue(new WaitCommand(0.1)
                                                 .andThen(new InstantCommand(
                                                                 () -> drivetrain.resetOdometry(new Pose2d()))));
                 // IO.mechanismController.x().whileTrue(new
@@ -253,8 +260,7 @@ public class RobotContainer {
         // * @return the command to run in autonomous
         // */
         public Command getAutonomousCommand() {
-
-                return pickupAndRizzAuto();
+                return autoChooser.selectedCommand();
         }
 
         public RobotState getState() {
@@ -287,38 +293,100 @@ public class RobotContainer {
                 return drivetrain;
         }
 
+        public Command getIntakeCommand() {
+                return new IntakeCoral(intakeSubsystem).deadlineFor(new ElevatorMoveToHeight(elevatorSubsystem,
+                                Constants.States.Intake.ELEVATOR_HEIGHT)).raceWith(new WaitCommand(3))
+                                .andThen(new ElevatorResetLimitSwitchEnd(
+                                                elevatorSubsystem));
+
+        }
+
+        public Command middleCommand() {
+                return Commands.sequence(autoFactory.resetOdometry("Line-to-Reef4"), //
+                                new TrajCommnd(autoFactory, "Line-to-Reef4", drivetrain),
+                                new IntakeAtPercentage(intakeSubsystem, -1)
+                                                .raceWith(new WaitCommand(0.25))
+                                                .andThen(new InstantCommand(
+                                                                () -> intakeSubsystem.setState(IntakeState.EMPTY))));
+        }
+
+        public Command rightCommand() {
+                return Commands.sequence(autoFactory.resetOdometry("Line-to-Reef5"),
+                                new TrajCommnd(autoFactory, "Line-to-Reef5", drivetrain),
+                                new IntakeAtPercentage(intakeSubsystem, -1)
+                                                .raceWith(new WaitCommand(0.25))
+                                                .andThen(new InstantCommand(
+                                                                () -> intakeSubsystem.setState(IntakeState.EMPTY))));
+        }
+
+        public Command forward() {
+                return new SequentialCommandGroup(
+                                new Forwards(drivetrain).raceWith(new WaitCommand(6)),
+                                new IntakeAtPercentage(intakeSubsystem, -1)
+                                                .raceWith(new WaitCommand(Constants.States.Score.INTAKE_TIME * 2)),
+                                new InstantCommand(() -> intakeSubsystem.setState(IntakeState.EMPTY)));
+        }
+
         public Command pickupAndRizzAuto() {
                 return Commands.sequence(
                                 autoFactory.resetOdometry("Line-to-Reef4"), //
-                                autoFactory.trajectoryCmd("Line-to-Reef4"),
-                                new IntakeAtPercentage(intakeSubsystem, -0.5)
-                                                .raceWith(new WaitCommand(Constants.States.Score.INTAKE_TIME))
+                                new TrajCommnd(autoFactory, "Line-to-Reef4", drivetrain),
+                                new IntakeAtPercentage(intakeSubsystem, -1)
+                                                .raceWith(new WaitCommand(0.25))
                                                 .andThen(new InstantCommand(
                                                                 () -> intakeSubsystem.setState(IntakeState.EMPTY))),
-                                autoFactory.trajectoryCmd("Reef4Right-LCS"),
-                                new InstantCommand(() -> state = RobotState.INTAKE),
-                                autoFactory.trajectoryCmd("LCS-to-Reef2"),
-                                new IntakeAtPercentage(intakeSubsystem, -0.5)
-                                                .raceWith(new WaitCommand(Constants.States.Score.INTAKE_TIME))
+                                new TrajCommnd(autoFactory, "Reef4Right-LCS", drivetrain),
+                                getIntakeCommand(),
+                                new TrajCommnd(autoFactory, "LCS-Reef2Left", drivetrain),
+                                new IntakeAtPercentage(intakeSubsystem, -.5)
+                                                .raceWith(new WaitCommand(0.25))
                                                 .andThen(new InstantCommand(
                                                                 () -> intakeSubsystem.setState(IntakeState.EMPTY))),
-                                autoFactory.trajectoryCmd("Reef2-LCS"),
-                                new InstantCommand(() -> state = RobotState.INTAKE),
-                                autoFactory.trajectoryCmd("LCS-to-Reef2"),
-                                new IntakeAtPercentage(intakeSubsystem, -0.5)
-                                                .raceWith(new WaitCommand(Constants.States.Score.INTAKE_TIME))
+                                new TrajCommnd(autoFactory, "Reef2Left-LCS", drivetrain),
+                                getIntakeCommand(),
+                                new TrajCommnd(autoFactory, "LCS-Reef2Right", drivetrain),
+                                new IntakeAtPercentage(intakeSubsystem, -.5)
+                                                .raceWith(new WaitCommand(0.25))
                                                 .andThen(new InstantCommand(
                                                                 () -> intakeSubsystem.setState(IntakeState.EMPTY))),
-                                autoFactory.trajectoryCmd("Reef2-LCS"),
-                                new InstantCommand(() -> state = RobotState.INTAKE),
-                                autoFactory.trajectoryCmd("LCS-to-Reef2"),
-                                new IntakeAtPercentage(intakeSubsystem, -0.5)
-                                                .raceWith(new WaitCommand(Constants.States.Score.INTAKE_TIME))
+                                new TrajCommnd(autoFactory, "Reef2Right-LCS", drivetrain),
+                                getIntakeCommand(),
+                                new TrajCommnd(autoFactory, "LCS-Reef2Left", drivetrain),
+                                new IntakeAtPercentage(intakeSubsystem, -.5)
+                                                .raceWith(new WaitCommand(0.25))
                                                 .andThen(new InstantCommand(
-                                                                () -> intakeSubsystem.setState(IntakeState.EMPTY)))
+                                                                () -> intakeSubsystem.setState(IntakeState.EMPTY))));
+        }
 
-                );
-
+        public Command pickupAndRizzAutoSide() {
+                return Commands.sequence(
+                                autoFactory.resetOdometry("Line-to-Reef3"), //
+                                new TrajCommnd(autoFactory, "Line-to-Reef3", drivetrain),
+                                new IntakeAtPercentage(intakeSubsystem, -1)
+                                                .raceWith(new WaitCommand(0.25))
+                                                .andThen(new InstantCommand(
+                                                                () -> intakeSubsystem.setState(IntakeState.EMPTY))),
+                                new TrajCommnd(autoFactory, "Reef3Right-LCS", drivetrain),
+                                getIntakeCommand(),
+                                new TrajCommnd(autoFactory, "LCS-Reef2Left", drivetrain),
+                                new IntakeAtPercentage(intakeSubsystem, -.5)
+                                                .raceWith(new WaitCommand(0.25))
+                                                .andThen(new InstantCommand(
+                                                                () -> intakeSubsystem.setState(IntakeState.EMPTY))),
+                                new TrajCommnd(autoFactory, "Reef2Left-LCS", drivetrain),
+                                getIntakeCommand(),
+                                new TrajCommnd(autoFactory, "LCS-Reef2Right", drivetrain),
+                                new IntakeAtPercentage(intakeSubsystem, -.5)
+                                                .raceWith(new WaitCommand(0.25))
+                                                .andThen(new InstantCommand(
+                                                                () -> intakeSubsystem.setState(IntakeState.EMPTY))),
+                                new TrajCommnd(autoFactory, "Reef2Right-LCS", drivetrain),
+                                getIntakeCommand(),
+                                new TrajCommnd(autoFactory, "LCS-Reef2Left", drivetrain),
+                                new IntakeAtPercentage(intakeSubsystem, -.5)
+                                                .raceWith(new WaitCommand(0.25))
+                                                .andThen(new InstantCommand(
+                                                                () -> intakeSubsystem.setState(IntakeState.EMPTY))));
         }
 
         public void lockAngle(Pose2d[] centers, double distance, double maxDistance) {
