@@ -87,7 +87,7 @@ public class RobotContainer {
                         FieldConstants.CoralStation.stationLength, Constants.States.Intake.RADIUS_IN_METERS) != null);
 
         private final Trigger reefTrigger = new Trigger(
-                        () -> Distance.isPointNearLinesSegment(new Pose2d().getTranslation(),
+                        () -> Distance.isPointNearLinesSegment(getPose().getTranslation(),
                                         FieldConstants.Reef.centerFaces, FieldConstants.Reef.faceLength,
                                         Constants.States.Score.RADIUS_IN_METERS) != null);
 
@@ -171,30 +171,24 @@ public class RobotContainer {
 
                 elevatorSubsystem.setDefaultCommand(new ElevatorResetLimitSwitch(elevatorSubsystem));
 
-                coralStationTrigger.and(intakeModeTrigger).and(intakeEmpty).whileTrue(new LockAngleCommand(
-                                this::getPose,
-                                new Pose2d[] { FieldConstants.CoralStation.leftCenterFace,
-                                                FieldConstants.CoralStation.rightCenterFace },
-                                FieldConstants.CoralStation.stationLength,
-                                Constants.States.Intake.RADIUS_IN_METERS, this::angleSetter,
-                                this::manualOverrideSetter).deadlineFor(
-                                                new IntakeCoral(intakeSubsystem)
-                                                                .alongWith(new ElevatorMoveToHeight(elevatorSubsystem,
-                                                                                Constants.States.Intake.ELEVATOR_HEIGHT)
-                                                                                .andThen(
-                                                                                                new InstantCommand(
-                                                                                                                () -> {
-                                                                                                                        intakeSubsystem.moveMotor(
-                                                                                                                                        Constants.States.Intake.INTAKE_PERCEHNTAGE);
-                                                                                                                        manualOverride = true;
-                                                                                                                })
-                                                                                                                .raceWith(new WaitCommand(
-                                                                                                                                0.3))))));
+                coralStationTrigger.and(intakeModeTrigger).and(intakeEmpty).whileTrue(
+                                new IntakeCoral(intakeSubsystem)
+                                                .alongWith(new ElevatorMoveToHeight(elevatorSubsystem,
+                                                                Constants.States.Intake.ELEVATOR_HEIGHT)
+                                                                .andThen(
+                                                                                new InstantCommand(
+                                                                                                () -> {
+                                                                                                        intakeSubsystem.moveMotor(
+                                                                                                                        Constants.States.Intake.INTAKE_PERCEHNTAGE);
+                                                                                                })
+                                                                                                .raceWith(new WaitCommand(
+                                                                                                                0.3)))));
                 reefTrigger.and(scoreTrigger)
                                 .whileTrue(new LockAngleCommand(this::getPose, FieldConstants.Reef.centerFaces,
                                                 FieldConstants.Reef.faceLength, States.Score.RADIUS_IN_METERS,
                                                 this::angleSetter,
                                                 this::manualOverrideSetter));
+
                 reefTrigger.and(scoreTrigger)
                                 .whileTrue(new ElevatorMoveToHeight(elevatorSubsystem,
                                                 Constants.States.Score.ELEVATOR_HEIGHT)

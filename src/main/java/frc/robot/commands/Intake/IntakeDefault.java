@@ -12,7 +12,8 @@ public class IntakeDefault extends Command {
     }
 
     @Override
-    public void execute() {
-        intakeSubsystem.moveMotor(0);
+    public void initialize() {
+        intakeSubsystem.setDistance(intakeSubsystem.getDistance());
     }
+
 }

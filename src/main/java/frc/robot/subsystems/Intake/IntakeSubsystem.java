@@ -2,7 +2,9 @@ package frc.robot.subsystems.Intake;
 
 import com.revrobotics.RelativeEncoder;
 import com.revrobotics.spark.SparkBase;
+import com.revrobotics.spark.SparkClosedLoopController;
 import com.revrobotics.spark.SparkFlex;
+import com.revrobotics.spark.SparkBase.ControlType;
 import com.revrobotics.spark.SparkLowLevel.MotorType;
 import com.revrobotics.spark.config.SparkBaseConfig;
 import com.revrobotics.spark.config.SparkFlexConfig;
@@ -10,9 +12,6 @@ import com.revrobotics.spark.config.SparkFlexConfig;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants.Subsystems.Intake;
-import frc.robot.subsystems.Elevator.ElevatorState;
-
-import java.util.function.Consumer;
 
 public class IntakeSubsystem extends SubsystemBase {
 
@@ -21,8 +20,9 @@ public class IntakeSubsystem extends SubsystemBase {
 
     private final RelativeEncoder upperMasterIntakeFlexEncoder;
     private final RelativeEncoder lowerIntakeFlexEncoder;
+    private final SparkClosedLoopController upperClosedLoppController;
 
-    private IntakeState intakeState = IntakeState.EMPTY; //TODO: remove this
+    private IntakeState intakeState = IntakeState.EMPTY; // TODO: remove this
     private IntakeState intendedState = intakeState;
     private boolean reachedVelocity = false;
     private double prevVelocityUp = 0;
@@ -31,15 +31,21 @@ public class IntakeSubsystem extends SubsystemBase {
     public IntakeSubsystem() {
         upperIntakeSparkFlex = new SparkFlex(Intake.Motors.UPPER_MASTER_SPARK_FLEX_ID, MotorType.kBrushless);
         lowerIntakeSparkFlex = new SparkFlex(Intake.Motors.LOWER_SLAVE_SPARK_FLEX_ID, MotorType.kBrushless);
-        SparkBaseConfig masterConfig = new SparkFlexConfig().smartCurrentLimit(35).idleMode(SparkBaseConfig.IdleMode.kBrake);
-        upperIntakeSparkFlex.configure(masterConfig, SparkBase.ResetMode.kResetSafeParameters, SparkBase.PersistMode.kPersistParameters);
+        SparkBaseConfig masterConfig = new SparkFlexConfig().smartCurrentLimit(35)
+                .idleMode(SparkBaseConfig.IdleMode.kBrake);
+        masterConfig.closedLoop.p(Intake.PID.KP).d(Intake.PID.KD);
+        upperIntakeSparkFlex.configure(masterConfig, SparkBase.ResetMode.kResetSafeParameters,
+                SparkBase.PersistMode.kPersistParameters);
 
-        SparkBaseConfig slaveConfig = new SparkFlexConfig().smartCurrentLimit(35).smartCurrentLimit(40).idleMode(SparkBaseConfig.IdleMode.kBrake);
+        SparkBaseConfig slaveConfig = new SparkFlexConfig().smartCurrentLimit(35).smartCurrentLimit(40)
+                .idleMode(SparkBaseConfig.IdleMode.kBrake);
         slaveConfig.follow(upperIntakeSparkFlex);
 
-        lowerIntakeSparkFlex.configure(slaveConfig, SparkBase.ResetMode.kResetSafeParameters, SparkBase.PersistMode.kPersistParameters);
+        lowerIntakeSparkFlex.configure(slaveConfig, SparkBase.ResetMode.kResetSafeParameters,
+                SparkBase.PersistMode.kPersistParameters);
         this.upperMasterIntakeFlexEncoder = upperIntakeSparkFlex.getEncoder();
         this.lowerIntakeFlexEncoder = lowerIntakeSparkFlex.getEncoder();
+        this.upperClosedLoppController = upperIntakeSparkFlex.getClosedLoopController();
     }
 
     public void moveMotor(double percentage) {
@@ -49,6 +55,14 @@ public class IntakeSubsystem extends SubsystemBase {
 
     public void stopMotor() {
         this.moveMotor(0);
+    }
+
+    public void setDistance(double distance) {
+        this.upperClosedLoppController.setReference(distance, ControlType.kPosition);
+    }
+
+    public double getDistance() {
+        return this.upperMasterIntakeFlexEncoder.getPosition();
     }
 
     @Override
@@ -61,6 +75,7 @@ public class IntakeSubsystem extends SubsystemBase {
         SmartDashboard.putString("Current Intake state", intakeState.toString());
         SmartDashboard.putString("Current Intake intended state", intendedState.toString());
         SmartDashboard.putBoolean("Reached velocity", reachedVelocity);
+        SmartDashboard.putNumber("Intake distance", getDistance());
     }
 
     public double getIntakeVelocity() {

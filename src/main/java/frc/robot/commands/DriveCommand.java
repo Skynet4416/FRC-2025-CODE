@@ -50,6 +50,7 @@ public class DriveCommand extends Command {
         } else {
             wantedAngle = angleRadiansSupplier.getAsDouble();
         }
+        SmartDashboard.putNumber("wanted angel", wantedAngle);
 
         driveSubsystem.setControl(
                 new SwerveRequest.FieldCentric().withDriveRequestType(SwerveModule.DriveRequestType.Velocity)

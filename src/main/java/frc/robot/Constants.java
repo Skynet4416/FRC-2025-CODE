@@ -80,6 +80,11 @@ public final class Constants {
                 public static final double DECELERATION_THRESHOLD = -80; // how many rpm declerates in one iteration
                 public static final double INTAKE_VELOCIRTY_THREASHOLD = 500;
             }
+
+            public static class PID {
+                public static final double KP = 5;
+                public static final double KD = 0;
+            }
         }
 
         public static class DeepCage {
@@ -123,7 +128,7 @@ public final class Constants {
         }
 
         public static class Score {
-            public static double RADIUS_IN_METERS = 10000000;
+            public static double RADIUS_IN_METERS = 1;
 
             public static double ELEVATOR_HEIGHT = 0;
             public static double INTAKE_PERCNETAGE = -1;

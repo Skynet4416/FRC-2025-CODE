@@ -344,7 +344,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
     }
 
     public double calculateRotation(double angleInRadians) {
-        return m_pathThetaController.calculate(Units.degreesToRadians(getGyroRotationInDegrees()), angleInRadians);
+        return m_pathThetaController.calculate(getPose().getRotation().getRadians(), angleInRadians);
     }
 
     // public void configureAutoBuilder() {
