@@ -23,6 +23,7 @@ import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import edu.wpi.first.wpilibj2.command.WaitCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
+import frc.robot.Constants.States;
 import frc.robot.commands.DriveCommand;
 import frc.robot.commands.DriveMoveToAngleIncreament;
 import frc.robot.commands.LockAngleCommand;
@@ -78,7 +79,7 @@ public class RobotContainer {
 
         private final Telemetry logger = new Telemetry(MAX_SPEED);
         private boolean manualOverride = true;
-        private double wantedAngle = 0;
+        private double wantedAngle = -999;
         private final Trigger coralStationTrigger = new Trigger(() -> Distance.isPointNearLinesSegment(
                         new Pose2d().getTranslation(),
                         new Pose2d[] { FieldConstants.CoralStation.leftCenterFace,
@@ -189,7 +190,11 @@ public class RobotContainer {
                                                                                                                 })
                                                                                                                 .raceWith(new WaitCommand(
                                                                                                                                 0.3))))));
-
+                reefTrigger.and(scoreTrigger)
+                                .whileTrue(new LockAngleCommand(this::getPose, FieldConstants.Reef.centerFaces,
+                                                FieldConstants.Reef.faceLength, States.Score.RADIUS_IN_METERS,
+                                                this::angleSetter,
+                                                this::manualOverrideSetter));
                 reefTrigger.and(scoreTrigger)
                                 .whileTrue(new ElevatorMoveToHeight(elevatorSubsystem,
                                                 Constants.States.Score.ELEVATOR_HEIGHT)
@@ -202,44 +207,12 @@ public class RobotContainer {
                                                 .andThen(new InstantCommand(
                                                                 () -> intakeSubsystem.setState(IntakeState.EMPTY))));
 
-                // climbTrigger.whileTrue(
-                // new ElevatorMoveToHeight(elevatorSubsystem,
-                // Constants.States.Climb.ELEVATOR_HEIGHT));
-                // IO.mechanismController.x()
-                // .whileTrue(new TurnToAngle(drivetrain,
-                // edu.wpi.first.math.util.Units.degreesToRadians(0)));
-                // // intakeSubsystem.setDefaultCommand(new
-                // IntakeBasedOnStateCommand(intakeSubsystem, this::getState, () -> new
-                // Pose2d()));
-                // IO.mechanismController.leftBumper().whileTrue(new
-                // IntakeShootCommand(intakeSubsystem, this::getState, () -> new
-                // Pose2d()).andThen(new InstantCommand(()
-                // -> elevatorSubsystem.setIntendedState(ElevatorState.DOWN))));
-                //
-                // elevatorSubsystem.setDefaultCommand(new
-                // ElevatorBasedOnStateCommand(elevatorSubsystem, this::getState, () -> new
-                // Pose2d()));
-                // IO.mechanismController.leftBumper().whileTrue(new
-                // LegGoDownCommand(climbDeepSubsystem).andThen(new InstantCommand(()
-                // -> elevatorSubsystem.setIntendedState(ElevatorState.DOWN))));
-                //
-
-                // IO.mechanismController.a().whileTrue(new InstantCommand(()->
-                // elevatorSubsystem.setSetpoint(0.3)));
-
                 drivetrain.setDefaultCommand(new DriveCommand(drivetrain, xSupplier, ySupplier, rotationSupplier,
                                 () -> wantedAngle, () -> manualOverride));
 
-                IO.driverController.leftBumper()
-                                .onTrue(new DriveMoveToAngleIncreament(60,
-                                                (angle) -> wantedAngle = edu.wpi.first.math.util.Units
-                                                                .degreesToRadians(angle),
-                                                (a) -> this.manualOverride = a, drivetrain));
-                IO.driverController.rightBumper()
-                                .onTrue(new DriveMoveToAngleIncreament(-60,
-                                                (angle) -> wantedAngle = edu.wpi.first.math.util.Units
-                                                                .degreesToRadians(angle),
-                                                (a) -> this.manualOverride = a, drivetrain));
+                IO.driverController.rightBumper().onTrue(new InstantCommand(() -> manualOverride = true));
+                IO.driverController.rightBumper().onFalse(new InstantCommand(() -> manualOverride = false));
+
                 IO.driverController.b()
                                 .whileTrue(new WaitCommand(0.1)
                                                 .andThen(drivetrain.runOnce(() -> drivetrain.seedFieldCentric())));
@@ -248,10 +221,7 @@ public class RobotContainer {
                                 .whileTrue(new WaitCommand(0.1)
                                                 .andThen(new InstantCommand(
                                                                 () -> drivetrain.resetOdometry(new Pose2d()))));
-                // IO.mechanismController.x().whileTrue(new
-                // ElevatorResetLimitSwitch(elevatorSubsystem));
-                // IO.mechanismController.a().whileTrue(new
-                // ElevatorMoveToHeight(elevatorSubsystem, 0.125));
+
         }
 
         // /**
