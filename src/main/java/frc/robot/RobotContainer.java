@@ -81,7 +81,7 @@ public class RobotContainer {
         private boolean manualOverride = true;
         private double wantedAngle = -999;
         private final Trigger coralStationTrigger = new Trigger(() -> Distance.isPointNearLinesSegment(
-                        new Pose2d().getTranslation(),
+                        getPose().getTranslation(),
                         new Pose2d[] { FieldConstants.CoralStation.leftCenterFace,
                                         FieldConstants.CoralStation.rightCenterFace },
                         FieldConstants.CoralStation.stationLength, Constants.States.Intake.RADIUS_IN_METERS) != null);
@@ -165,7 +165,11 @@ public class RobotContainer {
                 IO.mechanismController.a().onTrue(new InstantCommand(() -> state = RobotState.INTAKE));
                 IO.mechanismController.b().onTrue(new InstantCommand(() -> state = RobotState.SCORE));
                 IO.mechanismController.y().onTrue(new InstantCommand(() -> state = RobotState.CLIMB));
-                IO.mechanismController.x().whileTrue(new IntakeAtPercentage(intakeSubsystem, -1));
+                IO.mechanismController.x().whileTrue(new IntakeAtPercentage(intakeSubsystem, -1)
+                                .alongWith(new InstantCommand(() -> {
+                                        intakeSubsystem.setState(IntakeState.EMPTY);
+                                        state = RobotState.NONE;
+                                })));
 
                 intakeSubsystem.setDefaultCommand(new IntakeDefault(intakeSubsystem));
 
@@ -183,6 +187,14 @@ public class RobotContainer {
                                                                                                 })
                                                                                                 .raceWith(new WaitCommand(
                                                                                                                 0.3)))));
+                coralStationTrigger.and(intakeModeTrigger).and(intakeEmpty)
+                                .whileTrue(new LockAngleCommand(this::getPose,
+                                                new Pose2d[] { FieldConstants.CoralStation.leftCenterFace,
+                                                                FieldConstants.CoralStation.rightCenterFace },
+                                                FieldConstants.CoralStation.stationLength,
+                                                Constants.States.Intake.RADIUS_IN_METERS,
+                                                this::angleSetter,
+                                                this::manualOverrideSetter));
                 reefTrigger.and(scoreTrigger)
                                 .whileTrue(new LockAngleCommand(this::getPose, FieldConstants.Reef.centerFaces,
                                                 FieldConstants.Reef.faceLength, States.Score.RADIUS_IN_METERS,

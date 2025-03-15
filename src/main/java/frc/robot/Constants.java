@@ -119,7 +119,7 @@ public final class Constants {
         }
 
         public static class Intake {
-            public static double RADIUS_IN_METERS = 999;
+            public static double RADIUS_IN_METERS = .5;
             public static double ELEVATOR_HEIGHT = 0.3;
             public static double VELOCITY_THREASHOLD = 500;
             public static double INTAKE_THREASHOLD = 40;
