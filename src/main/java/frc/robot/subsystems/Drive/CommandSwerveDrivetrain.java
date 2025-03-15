@@ -18,6 +18,8 @@ import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.math.util.Units;
+
+import static edu.wpi.first.units.Units.Rotation;
 import static edu.wpi.first.units.Units.Second;
 import static edu.wpi.first.units.Units.Volts;
 import edu.wpi.first.wpilibj.DriverStation;
@@ -265,7 +267,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
         // SmartDashboard.putNumber("KP", m_pathThetaController.getP());
         // SmartDashboard.putNumber("KI", m_pathThetaController.getI());
 
-        // LimelightHelpers.SetRobotOrientation("", getGyroRotationInDegrees() - 45, 0, 0, 0, 0, 0);
+        LimelightHelpers.SetRobotOrientation("", this.getPose().getRotation().getDegrees(), 0, 0, 0, 0, 0);
 
         if (!m_hasAppliedOperatorPerspective || DriverStation.isDisabled()) {
             DriverStation.getAlliance().ifPresent(allianceColor -> {

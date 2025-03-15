@@ -25,7 +25,7 @@ public class LimelightSubsystem extends SubsystemBase {
     }
 
     public void updateLimelightData() {
-        boolean useMegaTag2 = false; // set to false to use MegaTag1
+        boolean useMegaTag2 = true; // set to false to use MegaTag1
         boolean doRejectUpdate = false;
 
         Vector<N3> stdDiviation = null;
