@@ -16,6 +16,37 @@ package frc.robot;
 public final class Constants {
 
     public static class Subsystems {
+        public static class Balls {
+            public static class Motors {
+                public static final int ROLLER_SPARK_MAX_CAN_ID = 0;
+                public static final int ANGLE_SPARK_MAX_CAN_ID = 0;
+            }
+            public static class Encoders{
+                public static final int DUTY_CYCLE_ENCODER_PORT = 0;
+            }
+
+            public static class Physical {
+                public static class Angle {
+                    public static double ZERO_ABSOLUTE_ANGLE = 0;
+                    public static double RESTING_ANGLE = 0;
+                }
+            }
+
+            public static class PID {
+                public static class Angle {
+                    public static final double KP = 0;
+                    public static final double KI = 0;
+                    public static final double KD = 0;
+                }
+
+                public static class Roller {
+                    public static final double KP = 5;
+                    public static final double KI = 0;
+                    public static final double KD = 0;
+                }
+            }
+        }
+
         public static class Drive {
             public static class Rotation {
                 public static double KP = 8;
@@ -131,6 +162,7 @@ public final class Constants {
         }
 
         public static class None {
+            public static final double BALLS_RESTING_ANGLE = 0;
             public static double ELEVATOR_HEIGHT = 0;
         }
     }
