@@ -8,15 +8,18 @@ import static edu.wpi.first.units.Units.RotationsPerSecond;
 
 import java.util.function.DoubleSupplier;
 
+import com.ctre.phoenix.led.CANdle;
+import com.ctre.phoenix.led.CANdle.LEDStripType;
+import com.ctre.phoenix.led.CANdleConfiguration;
+import com.ctre.phoenix6.hardware.CANdi;
+
 import choreo.auto.AutoChooser;
 import choreo.auto.AutoFactory;
-import edu.wpi.first.cameraserver.CameraServer;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.filter.SlewRateLimiter;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.units.Units;
-import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
@@ -25,8 +28,10 @@ import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import edu.wpi.first.wpilibj2.command.WaitCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
+import frc.robot.Constants.States;
 import frc.robot.commands.DriveCommand;
 import frc.robot.commands.DriveMoveToAngleIncreament;
+import frc.robot.commands.LockAngleCommand;
 import frc.robot.commands.AutoCommands.Forwards;
 import frc.robot.commands.Autos.TrajCommnd;
 import frc.robot.commands.Elevator.ElevatorMoveToHeight;
@@ -42,7 +47,6 @@ import frc.robot.subsystems.Drive.TunerConstants;
 import frc.robot.subsystems.Elevator.ElevatorSubsystem;
 import frc.robot.subsystems.Intake.IntakeState;
 import frc.robot.subsystems.Intake.IntakeSubsystem;
-import frc.robot.subsystems.Vision.LimelightHelpers;
 import frc.robot.subsystems.Vision.LimelightObserver;
 import frc.robot.subsystems.Vision.LimelightSubsystem;
 
@@ -55,10 +59,9 @@ import frc.robot.subsystems.Vision.LimelightSubsystem;
  */
 public class RobotContainer {
         private final AutoFactory autoFactory;
-
         private RobotState state = RobotState.NONE;
         private final CommandSwerveDrivetrain drivetrain = TunerConstants.createDrivetrain();
-
+        private final CANdle candle = new CANdle(0);
         private final IntakeSubsystem intakeSubsystem = new IntakeSubsystem();
         private final ElevatorSubsystem elevatorSubsystem = new ElevatorSubsystem();
         // private final ClimbDeepSubsystem climbDeepSubsystem = new
@@ -80,15 +83,15 @@ public class RobotContainer {
 
         private final Telemetry logger = new Telemetry(MAX_SPEED);
         private boolean manualOverride = true;
-        private double wantedAngle = 0;
+        private double wantedAngle = -999;
         private final Trigger coralStationTrigger = new Trigger(() -> Distance.isPointNearLinesSegment(
-                        new Pose2d().getTranslation(),
+                        getPose().getTranslation(),
                         new Pose2d[] { FieldConstants.CoralStation.leftCenterFace,
                                         FieldConstants.CoralStation.rightCenterFace },
                         FieldConstants.CoralStation.stationLength, Constants.States.Intake.RADIUS_IN_METERS) != null);
 
         private final Trigger reefTrigger = new Trigger(
-                        () -> Distance.isPointNearLinesSegment(new Pose2d().getTranslation(),
+                        () -> Distance.isPointNearLinesSegment(getPose().getTranslation(),
                                         FieldConstants.Reef.centerFaces, FieldConstants.Reef.faceLength,
                                         Constants.States.Score.RADIUS_IN_METERS) != null);
 
@@ -117,7 +120,12 @@ public class RobotContainer {
         private final Command autoCommand;
 
         public RobotContainer() {
+                CANdleConfiguration config = new CANdleConfiguration();
+                config.stripType = LEDStripType.RGB; // set the strip type to RGB
+                config.brightnessScalar = 0.5; // dim the LEDs to half brightness
+                candle.configAllSettings(config);
 
+                candle.setLEDs(255, 255, 255); // set the CANdle LEDs to white
                 autoFactory = new AutoFactory(
                                 drivetrain::getPose, // A function that returns the current robot pose
                                 drivetrain::resetOdometry, // A function that resets the current robot pose to the
@@ -166,18 +174,41 @@ public class RobotContainer {
                 IO.mechanismController.a().onTrue(new InstantCommand(() -> state = RobotState.INTAKE));
                 IO.mechanismController.b().onTrue(new InstantCommand(() -> state = RobotState.SCORE));
                 IO.mechanismController.y().onTrue(new InstantCommand(() -> state = RobotState.CLIMB));
-                IO.mechanismController.x().whileTrue(new IntakeAtPercentage(intakeSubsystem, -1));
+                IO.mechanismController.x().whileTrue(new IntakeAtPercentage(intakeSubsystem, -1)
+                                .alongWith(new InstantCommand(() -> {
+                                        intakeSubsystem.setState(IntakeState.EMPTY);
+                                        state = RobotState.NONE;
+                                })));
 
                 intakeSubsystem.setDefaultCommand(new IntakeDefault(intakeSubsystem));
 
                 elevatorSubsystem.setDefaultCommand(new ElevatorResetLimitSwitch(elevatorSubsystem));
 
-                coralStationTrigger.and(intakeModeTrigger).and(intakeEmpty).whileTrue(new IntakeCoral(intakeSubsystem)
-                                .alongWith(new ElevatorMoveToHeight(elevatorSubsystem,
-                                                Constants.States.Intake.ELEVATOR_HEIGHT).andThen(
-                                                                new InstantCommand(() -> intakeSubsystem.moveMotor(
-                                                                                Constants.States.Intake.INTAKE_PERCEHNTAGE))
-                                                                                .raceWith(new WaitCommand(0.3)))));
+                coralStationTrigger.and(intakeModeTrigger).and(intakeEmpty).whileTrue(
+                                new IntakeCoral(intakeSubsystem)
+                                                .alongWith(new ElevatorMoveToHeight(elevatorSubsystem,
+                                                                Constants.States.Intake.ELEVATOR_HEIGHT)
+                                                                .andThen(
+                                                                                new InstantCommand(
+                                                                                                () -> {
+                                                                                                        intakeSubsystem.moveMotor(
+                                                                                                                        Constants.States.Intake.INTAKE_PERCEHNTAGE);
+                                                                                                })
+                                                                                                .raceWith(new WaitCommand(
+                                                                                                                0.3)))));
+                coralStationTrigger.and(intakeModeTrigger).and(intakeEmpty)
+                                .whileTrue(new LockAngleCommand(this::getPose,
+                                                new Pose2d[] { FieldConstants.CoralStation.leftCenterFace,
+                                                                FieldConstants.CoralStation.rightCenterFace },
+                                                FieldConstants.CoralStation.stationLength,
+                                                Constants.States.Intake.RADIUS_IN_METERS,
+                                                this::angleSetter,
+                                                this::manualOverrideSetter));
+                reefTrigger.and(scoreTrigger)
+                                .whileTrue(new LockAngleCommand(this::getPose, FieldConstants.Reef.centerFaces,
+                                                FieldConstants.Reef.faceLength, States.Score.RADIUS_IN_METERS,
+                                                this::angleSetter,
+                                                this::manualOverrideSetter));
 
                 reefTrigger.and(scoreTrigger)
                                 .whileTrue(new ElevatorMoveToHeight(elevatorSubsystem,
@@ -191,44 +222,12 @@ public class RobotContainer {
                                                 .andThen(new InstantCommand(
                                                                 () -> intakeSubsystem.setState(IntakeState.EMPTY))));
 
-                // climbTrigger.whileTrue(
-                // new ElevatorMoveToHeight(elevatorSubsystem,
-                // Constants.States.Climb.ELEVATOR_HEIGHT));
-                // IO.mechanismController.x()
-                // .whileTrue(new TurnToAngle(drivetrain,
-                // edu.wpi.first.math.util.Units.degreesToRadians(0)));
-                // // intakeSubsystem.setDefaultCommand(new
-                // IntakeBasedOnStateCommand(intakeSubsystem, this::getState, () -> new
-                // Pose2d()));
-                // IO.mechanismController.leftBumper().whileTrue(new
-                // IntakeShootCommand(intakeSubsystem, this::getState, () -> new
-                // Pose2d()).andThen(new InstantCommand(()
-                // -> elevatorSubsystem.setIntendedState(ElevatorState.DOWN))));
-                //
-                // elevatorSubsystem.setDefaultCommand(new
-                // ElevatorBasedOnStateCommand(elevatorSubsystem, this::getState, () -> new
-                // Pose2d()));
-                // IO.mechanismController.leftBumper().whileTrue(new
-                // LegGoDownCommand(climbDeepSubsystem).andThen(new InstantCommand(()
-                // -> elevatorSubsystem.setIntendedState(ElevatorState.DOWN))));
-                //
-
-                // IO.mechanismController.a().whileTrue(new InstantCommand(()->
-                // elevatorSubsystem.setSetpoint(0.3)));
-
                 drivetrain.setDefaultCommand(new DriveCommand(drivetrain, xSupplier, ySupplier, rotationSupplier,
                                 () -> wantedAngle, () -> manualOverride));
 
-                IO.driverController.leftBumper()
-                                .onTrue(new DriveMoveToAngleIncreament(60,
-                                                (angle) -> wantedAngle = edu.wpi.first.math.util.Units
-                                                                .degreesToRadians(angle),
-                                                (a) -> this.manualOverride = a, drivetrain));
-                IO.driverController.rightBumper()
-                                .onTrue(new DriveMoveToAngleIncreament(-60,
-                                                (angle) -> wantedAngle = edu.wpi.first.math.util.Units
-                                                                .degreesToRadians(angle),
-                                                (a) -> this.manualOverride = a, drivetrain));
+                IO.driverController.rightBumper().onTrue(new InstantCommand(() -> manualOverride = true));
+                IO.driverController.rightBumper().onFalse(new InstantCommand(() -> manualOverride = false));
+
                 IO.driverController.b()
                                 .whileTrue(new WaitCommand(0.1)
                                                 .andThen(drivetrain.runOnce(() -> drivetrain.seedFieldCentric())));
@@ -237,10 +236,7 @@ public class RobotContainer {
                                 .whileTrue(new WaitCommand(0.1)
                                                 .andThen(new InstantCommand(
                                                                 () -> drivetrain.resetOdometry(new Pose2d()))));
-                // IO.mechanismController.x().whileTrue(new
-                // ElevatorResetLimitSwitch(elevatorSubsystem));
-                // IO.mechanismController.a().whileTrue(new
-                // ElevatorMoveToHeight(elevatorSubsystem, 0.125));
+
         }
 
         // /**
@@ -256,6 +252,10 @@ public class RobotContainer {
                 SmartDashboard.putString("robot state", String.valueOf(this.state));
                 return this.state;
 
+        }
+
+        public Pose2d getPose() {
+                return this.drivetrain.getPose();
         }
 
         public boolean getManualOverride() {
@@ -299,6 +299,27 @@ public class RobotContainer {
                 return Commands.sequence(autoFactory.resetOdometry("Line-to-Reef5"),
                                 new TrajCommnd(autoFactory, "Line-to-Reef5", drivetrain),
                                 new IntakeAtPercentage(intakeSubsystem, -1)
+                                                .raceWith(new WaitCommand(0.25))
+                                                .andThen(new InstantCommand(
+                                                                () -> intakeSubsystem.setState(IntakeState.EMPTY))),
+                                new TrajCommnd(autoFactory, "Reef5Right-RCS", drivetrain),
+                                getIntakeCommand(),
+                                new TrajCommnd(autoFactory, "RCS-Reef6Left", drivetrain),
+                                new IntakeAtPercentage(intakeSubsystem, -.5)
+                                                .raceWith(new WaitCommand(0.25))
+                                                .andThen(new InstantCommand(
+                                                                () -> intakeSubsystem.setState(IntakeState.EMPTY))),
+                                new TrajCommnd(autoFactory, "Reef6Left-RCS", drivetrain),
+                                getIntakeCommand(),
+                                new TrajCommnd(autoFactory, "RCS-Reef6Right", drivetrain),
+                                new IntakeAtPercentage(intakeSubsystem, -.5)
+                                                .raceWith(new WaitCommand(0.25))
+                                                .andThen(new InstantCommand(
+                                                                () -> intakeSubsystem.setState(IntakeState.EMPTY))),
+                                new TrajCommnd(autoFactory, "Reef6Right-RCS", drivetrain),
+                                getIntakeCommand(),
+                                new TrajCommnd(autoFactory, "RCS-Reef6Left", drivetrain),
+                                new IntakeAtPercentage(intakeSubsystem, -.5)
                                                 .raceWith(new WaitCommand(0.25))
                                                 .andThen(new InstantCommand(
                                                                 () -> intakeSubsystem.setState(IntakeState.EMPTY))));
@@ -345,19 +366,19 @@ public class RobotContainer {
 
         public Command pickupAndRizzAutoSide() {
                 return Commands.sequence(
-                                autoFactory.resetOdometry("Line-to-Reef3"), //
-                                new TrajCommnd(autoFactory, "Line-to-Reef3", drivetrain),
-                                new IntakeAtPercentage(intakeSubsystem, -1)
-                                                .raceWith(new WaitCommand(0.25))
-                                                .andThen(new InstantCommand(
-                                                                () -> intakeSubsystem.setState(IntakeState.EMPTY))),
-                                new TrajCommnd(autoFactory, "Reef3Right-LCS", drivetrain),
-                                getIntakeCommand(),
-                                new TrajCommnd(autoFactory, "LCS-Reef2Left", drivetrain),
-                                new IntakeAtPercentage(intakeSubsystem, -.5)
-                                                .raceWith(new WaitCommand(0.25))
-                                                .andThen(new InstantCommand(
-                                                                () -> intakeSubsystem.setState(IntakeState.EMPTY))),
+                                autoFactory.resetOdometry("Reef2Left-LCS"), //
+                                // new TrajCommnd(autoFactory, "Line-to-Reef3", drivetrain),
+                                // new IntakeAtPercentage(intakeSubsystem, -1)
+                                // .raceWith(new WaitCommand(0.25))
+                                // .andThen(new InstantCommand(
+                                // () -> intakeSubsystem.setState(IntakeState.EMPTY))),
+                                // new TrajCommnd(autoFactory, "Reef3Right-LCS", drivetrain),
+                                // getIntakeCommand(),
+                                // new TrajCommnd(autoFactory, "LCS-Reef2Left", drivetrain),
+                                // new IntakeAtPercentage(intakeSubsystem, -.5)
+                                // .raceWith(new WaitCommand(0.25))
+                                // .andThen(new InstantCommand(
+                                // () -> intakeSubsystem.setState(IntakeState.EMPTY))),
                                 new TrajCommnd(autoFactory, "Reef2Left-LCS", drivetrain),
                                 getIntakeCommand(),
                                 new TrajCommnd(autoFactory, "LCS-Reef2Right", drivetrain),
@@ -372,5 +393,21 @@ public class RobotContainer {
                                                 .raceWith(new WaitCommand(0.25))
                                                 .andThen(new InstantCommand(
                                                                 () -> intakeSubsystem.setState(IntakeState.EMPTY))));
+        }
+
+        public void lockAngle(Pose2d[] centers, double distance, double maxDistance) {
+                Pose2d closestCenter = Distance.isPointNearLinesSegment(getPose().getTranslation(), centers, distance,
+                                maxDistance);
+                this.wantedAngle = closestCenter.getRotation().rotateBy(Rotation2d.k180deg).getRadians();
+                this.manualOverride = true;
+
+        }
+
+        public void angleSetter(double angle) {
+                this.wantedAngle = angle;
+        }
+
+        public void manualOverrideSetter(boolean manualOverride) {
+                this.manualOverride = manualOverride;
         }
 }
