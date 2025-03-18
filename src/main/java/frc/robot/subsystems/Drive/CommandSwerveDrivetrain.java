@@ -268,7 +268,9 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
         // SmartDashboard.putNumber("KI", m_pathThetaController.getI());
 
         LimelightHelpers.SetRobotOrientation("", this.getPose().getRotation().getDegrees(), 0, 0, 0, 0, 0);
-
+        SmartDashboard.putNumber("drive x error", m_pathXController.getError());
+        SmartDashboard.putNumber("drive y error", m_pathYController.getError());
+        SmartDashboard.putNumber("drive theta error", Units.radiansToDegrees(m_pathThetaController.getError()));
         if (!m_hasAppliedOperatorPerspective || DriverStation.isDisabled()) {
             DriverStation.getAlliance().ifPresent(allianceColor -> {
                 setOperatorPerspectiveForward(

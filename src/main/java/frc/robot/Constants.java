@@ -23,7 +23,7 @@ public final class Constants {
             }
 
             public static class Position {
-                public static double KP = 1;
+                public static double KP = 2.5;
             }
         }
 
@@ -87,6 +87,24 @@ public final class Constants {
             }
         }
 
+        public static class Balls {
+            public static class Motors {
+                public static final int ANGLE_MOTOR_ID = 50;
+                public static final int INTAKE_MOTOR_ID = 51;
+            }
+
+            public static class Encoders {
+                public static final int ANGLE_ENCODER_CHANNEL1 = 1;
+                public static final int ANGLE_ENCODER_CHANNEL2 = 2;
+            }
+
+            public static class setPoints {
+                public static final double DEFAULT_POINT = 69;
+                public static final double DOWN_POINT = 69;
+                public static final double HOLDING_POINT = 69;
+            }
+        }
+
         public static class DeepCage {
 
             public static class Motors {
@@ -119,7 +137,7 @@ public final class Constants {
         }
 
         public static class Intake {
-            public static double RADIUS_IN_METERS = .5;
+            public static double RADIUS_IN_METERS = 1;
             public static double ELEVATOR_HEIGHT = 0.3;
             public static double VELOCITY_THREASHOLD = 500;
             public static double INTAKE_THREASHOLD = 40;
@@ -128,7 +146,7 @@ public final class Constants {
         }
 
         public static class Score {
-            public static double RADIUS_IN_METERS = 1;
+            public static double RADIUS_IN_METERS = 0.65;
 
             public static double ELEVATOR_HEIGHT = 0;
             public static double INTAKE_PERCNETAGE = -1;

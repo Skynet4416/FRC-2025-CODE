@@ -8,6 +8,11 @@ import static edu.wpi.first.units.Units.RotationsPerSecond;
 
 import java.util.function.DoubleSupplier;
 
+import com.ctre.phoenix.led.CANdle;
+import com.ctre.phoenix.led.CANdle.LEDStripType;
+import com.ctre.phoenix.led.CANdleConfiguration;
+import com.ctre.phoenix6.hardware.CANdi;
+
 import choreo.auto.AutoChooser;
 import choreo.auto.AutoFactory;
 import edu.wpi.first.math.MathUtil;
@@ -54,10 +59,9 @@ import frc.robot.subsystems.Vision.LimelightSubsystem;
  */
 public class RobotContainer {
         private final AutoFactory autoFactory;
-
         private RobotState state = RobotState.NONE;
         private final CommandSwerveDrivetrain drivetrain = TunerConstants.createDrivetrain();
-
+        private final CANdle candle = new CANdle(0);
         private final IntakeSubsystem intakeSubsystem = new IntakeSubsystem();
         private final ElevatorSubsystem elevatorSubsystem = new ElevatorSubsystem();
         // private final ClimbDeepSubsystem climbDeepSubsystem = new
@@ -116,7 +120,12 @@ public class RobotContainer {
         private final Command autoCommand;
 
         public RobotContainer() {
+                CANdleConfiguration config = new CANdleConfiguration();
+                config.stripType = LEDStripType.RGB; // set the strip type to RGB
+                config.brightnessScalar = 0.5; // dim the LEDs to half brightness
+                candle.configAllSettings(config);
 
+                candle.setLEDs(255, 255, 255); // set the CANdle LEDs to white
                 autoFactory = new AutoFactory(
                                 drivetrain::getPose, // A function that returns the current robot pose
                                 drivetrain::resetOdometry, // A function that resets the current robot pose to the
@@ -292,6 +301,27 @@ public class RobotContainer {
                                 new IntakeAtPercentage(intakeSubsystem, -1)
                                                 .raceWith(new WaitCommand(0.25))
                                                 .andThen(new InstantCommand(
+                                                                () -> intakeSubsystem.setState(IntakeState.EMPTY))),
+                                new TrajCommnd(autoFactory, "Reef5Right-RCS", drivetrain),
+                                getIntakeCommand(),
+                                new TrajCommnd(autoFactory, "RCS-Reef6Left", drivetrain),
+                                new IntakeAtPercentage(intakeSubsystem, -.5)
+                                                .raceWith(new WaitCommand(0.25))
+                                                .andThen(new InstantCommand(
+                                                                () -> intakeSubsystem.setState(IntakeState.EMPTY))),
+                                new TrajCommnd(autoFactory, "Reef6Left-RCS", drivetrain),
+                                getIntakeCommand(),
+                                new TrajCommnd(autoFactory, "RCS-Reef6Right", drivetrain),
+                                new IntakeAtPercentage(intakeSubsystem, -.5)
+                                                .raceWith(new WaitCommand(0.25))
+                                                .andThen(new InstantCommand(
+                                                                () -> intakeSubsystem.setState(IntakeState.EMPTY))),
+                                new TrajCommnd(autoFactory, "Reef6Right-RCS", drivetrain),
+                                getIntakeCommand(),
+                                new TrajCommnd(autoFactory, "RCS-Reef6Left", drivetrain),
+                                new IntakeAtPercentage(intakeSubsystem, -.5)
+                                                .raceWith(new WaitCommand(0.25))
+                                                .andThen(new InstantCommand(
                                                                 () -> intakeSubsystem.setState(IntakeState.EMPTY))));
         }
 
@@ -336,19 +366,19 @@ public class RobotContainer {
 
         public Command pickupAndRizzAutoSide() {
                 return Commands.sequence(
-                                autoFactory.resetOdometry("Line-to-Reef3"), //
-                                new TrajCommnd(autoFactory, "Line-to-Reef3", drivetrain),
-                                new IntakeAtPercentage(intakeSubsystem, -1)
-                                                .raceWith(new WaitCommand(0.25))
-                                                .andThen(new InstantCommand(
-                                                                () -> intakeSubsystem.setState(IntakeState.EMPTY))),
-                                new TrajCommnd(autoFactory, "Reef3Right-LCS", drivetrain),
-                                getIntakeCommand(),
-                                new TrajCommnd(autoFactory, "LCS-Reef2Left", drivetrain),
-                                new IntakeAtPercentage(intakeSubsystem, -.5)
-                                                .raceWith(new WaitCommand(0.25))
-                                                .andThen(new InstantCommand(
-                                                                () -> intakeSubsystem.setState(IntakeState.EMPTY))),
+                                autoFactory.resetOdometry("Reef2Left-LCS"), //
+                                // new TrajCommnd(autoFactory, "Line-to-Reef3", drivetrain),
+                                // new IntakeAtPercentage(intakeSubsystem, -1)
+                                // .raceWith(new WaitCommand(0.25))
+                                // .andThen(new InstantCommand(
+                                // () -> intakeSubsystem.setState(IntakeState.EMPTY))),
+                                // new TrajCommnd(autoFactory, "Reef3Right-LCS", drivetrain),
+                                // getIntakeCommand(),
+                                // new TrajCommnd(autoFactory, "LCS-Reef2Left", drivetrain),
+                                // new IntakeAtPercentage(intakeSubsystem, -.5)
+                                // .raceWith(new WaitCommand(0.25))
+                                // .andThen(new InstantCommand(
+                                // () -> intakeSubsystem.setState(IntakeState.EMPTY))),
                                 new TrajCommnd(autoFactory, "Reef2Left-LCS", drivetrain),
                                 getIntakeCommand(),
                                 new TrajCommnd(autoFactory, "LCS-Reef2Right", drivetrain),

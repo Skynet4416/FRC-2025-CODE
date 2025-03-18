@@ -6,7 +6,9 @@ import java.util.function.Supplier;
 
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj2.command.Command;
+import frc.robot.meth.Alliance;
 import frc.robot.meth.Distance;
 
 public class LockAngleCommand extends Command {
@@ -39,7 +41,7 @@ public class LockAngleCommand extends Command {
                 lineLength, maxDistance);
 
         if (closestCenter != null) {
-            Rotation2d rotation = closestCenter.getRotation().rotateBy(Rotation2d.k180deg);
+            Rotation2d rotation = closestCenter.getRotation().rotateBy(Alliance.apply(Rotation2d.k180deg));
             angleSetter.accept(rotation.getRadians());
         }
 
