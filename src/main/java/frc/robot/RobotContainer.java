@@ -34,6 +34,10 @@ import frc.robot.commands.DriveMoveToAngleIncreament;
 import frc.robot.commands.LockAngleCommand;
 import frc.robot.commands.AutoCommands.Forwards;
 import frc.robot.commands.Autos.TrajCommnd;
+import frc.robot.commands.Balls.BallsAngleToAngle;
+import frc.robot.commands.Balls.BallsKeepAtAngle;
+import frc.robot.commands.Balls.BallsRollerKeepAtPose;
+import frc.robot.commands.Balls.BallsRollerPercentage;
 import frc.robot.commands.Elevator.ElevatorMoveToHeight;
 import frc.robot.commands.Elevator.ElevatorResetLimitSwitch;
 import frc.robot.commands.Elevator.ElevatorResetLimitSwitchEnd;
@@ -41,6 +45,8 @@ import frc.robot.commands.Intake.IntakeAtPercentage;
 import frc.robot.commands.Intake.IntakeCoral;
 import frc.robot.commands.Intake.IntakeDefault;
 import frc.robot.meth.Distance;
+import frc.robot.subsystems.Balls.BallsAngleSubsystem;
+import frc.robot.subsystems.Balls.BallsRollerSubsystem;
 import frc.robot.subsystems.Drive.CommandSwerveDrivetrain;
 import frc.robot.subsystems.Drive.Telemetry;
 import frc.robot.subsystems.Drive.TunerConstants;
@@ -64,6 +70,8 @@ public class RobotContainer {
         private final CANdle candle = new CANdle(0);
         private final IntakeSubsystem intakeSubsystem = new IntakeSubsystem();
         private final ElevatorSubsystem elevatorSubsystem = new ElevatorSubsystem();
+        private final BallsAngleSubsystem ballsAngleSubsystem = new BallsAngleSubsystem();
+        private final BallsRollerSubsystem ballsRollerSubsystem = new BallsRollerSubsystem();
         // private final ClimbDeepSubsystem climbDeepSubsystem = new
         // ClimbDeepSubsystem();
         private final LimelightSubsystem limelightSubsystem = new LimelightSubsystem(
@@ -96,7 +104,7 @@ public class RobotContainer {
                                         Constants.States.Score.RADIUS_IN_METERS) != null);
 
         private final Trigger intakeModeTrigger = new Trigger(() -> this.getState() == RobotState.INTAKE);
-        private final Trigger climbTrigger = new Trigger(() -> this.getState() == RobotState.CLIMB);
+        private final Trigger ballsTrigger = new Trigger(() -> this.getState() == RobotState.BALLS);
         private final Trigger scoreTrigger = new Trigger(() -> this.getState() == RobotState.SCORE);
         private final Trigger intakeEmpty = new Trigger(() -> intakeSubsystem.getState() == IntakeState.EMPTY);
         private boolean readyToScore = false;
@@ -120,12 +128,6 @@ public class RobotContainer {
         private final Command autoCommand;
 
         public RobotContainer() {
-                CANdleConfiguration config = new CANdleConfiguration();
-                config.stripType = LEDStripType.RGB; // set the strip type to RGB
-                config.brightnessScalar = 0.5; // dim the LEDs to half brightness
-                candle.configAllSettings(config);
-
-                candle.setLEDs(255, 255, 255); // set the CANdle LEDs to white
                 autoFactory = new AutoFactory(
                                 drivetrain::getPose, // A function that returns the current robot pose
                                 drivetrain::resetOdometry, // A function that resets the current robot pose to the
@@ -170,72 +172,84 @@ public class RobotContainer {
          */
         private void configureBindings() {
                 drivetrain.registerTelemetry(logger::telemeterize);
+                ballsRollerSubsystem.setDefaultCommand(new BallsRollerKeepAtPose(ballsRollerSubsystem));
+                // IO.mechanismController.a().onTrue(new InstantCommand(() -> state =
+                // RobotState.INTAKE));
+                // IO.mechanismController.b().onTrue(new InstantCommand(() -> state =
+                // RobotState.SCORE));
+                IO.mechanismController.y().onTrue(new InstantCommand(() -> state = RobotState.BALLS));
+                // IO.mechanismController.x().whileTrue(new IntakeAtPercentage(intakeSubsystem,
+                // -1)
+                // .alongWith(new InstantCommand(() -> {
+                // intakeSubsystem.setState(IntakeState.EMPTY);
+                // state = RobotState.NONE;
+                // })));
 
-                IO.mechanismController.a().onTrue(new InstantCommand(() -> state = RobotState.INTAKE));
-                IO.mechanismController.b().onTrue(new InstantCommand(() -> state = RobotState.SCORE));
-                IO.mechanismController.y().onTrue(new InstantCommand(() -> state = RobotState.CLIMB));
-                IO.mechanismController.x().whileTrue(new IntakeAtPercentage(intakeSubsystem, -1)
-                                .alongWith(new InstantCommand(() -> {
-                                        intakeSubsystem.setState(IntakeState.EMPTY);
-                                        state = RobotState.NONE;
-                                })));
+                // intakeSubsystem.setDefaultCommand(new IntakeDefault(intakeSubsystem));
 
-                intakeSubsystem.setDefaultCommand(new IntakeDefault(intakeSubsystem));
+                // elevatorSubsystem.setDefaultCommand(new
+                // ElevatorResetLimitSwitch(elevatorSubsystem));
 
-                elevatorSubsystem.setDefaultCommand(new ElevatorResetLimitSwitch(elevatorSubsystem));
+                // coralStationTrigger.and(intakeModeTrigger).and(intakeEmpty).whileTrue(
+                // new IntakeCoral(intakeSubsystem)
+                // .alongWith(new ElevatorMoveToHeight(elevatorSubsystem,
+                // Constants.States.Intake.ELEVATOR_HEIGHT)
+                // .andThen(
+                // new InstantCommand(
+                // () -> {
+                // intakeSubsystem.moveMotor(
+                // Constants.States.Intake.INTAKE_PERCEHNTAGE);
+                // })
+                // .raceWith(new WaitCommand(
+                // 0.3)))));
+                // coralStationTrigger.and(intakeModeTrigger).and(intakeEmpty)
+                // .whileTrue(new LockAngleCommand(this::getPose,
+                // new Pose2d[] { FieldConstants.CoralStation.leftCenterFace,
+                // FieldConstants.CoralStation.rightCenterFace },
+                // FieldConstants.CoralStation.stationLength,
+                // Constants.States.Intake.RADIUS_IN_METERS,
+                // this::angleSetter,
+                // this::manualOverrideSetter));
+                // reefTrigger.and(scoreTrigger)
+                // .whileTrue(new LockAngleCommand(this::getPose,
+                // FieldConstants.Reef.centerFaces,
+                // FieldConstants.Reef.faceLength, States.Score.RADIUS_IN_METERS,
+                // this::angleSetter,
+                // this::manualOverrideSetter));
 
-                coralStationTrigger.and(intakeModeTrigger).and(intakeEmpty).whileTrue(
-                                new IntakeCoral(intakeSubsystem)
-                                                .alongWith(new ElevatorMoveToHeight(elevatorSubsystem,
-                                                                Constants.States.Intake.ELEVATOR_HEIGHT)
-                                                                .andThen(
-                                                                                new InstantCommand(
-                                                                                                () -> {
-                                                                                                        intakeSubsystem.moveMotor(
-                                                                                                                        Constants.States.Intake.INTAKE_PERCEHNTAGE);
-                                                                                                })
-                                                                                                .raceWith(new WaitCommand(
-                                                                                                                0.3)))));
-                coralStationTrigger.and(intakeModeTrigger).and(intakeEmpty)
-                                .whileTrue(new LockAngleCommand(this::getPose,
-                                                new Pose2d[] { FieldConstants.CoralStation.leftCenterFace,
-                                                                FieldConstants.CoralStation.rightCenterFace },
-                                                FieldConstants.CoralStation.stationLength,
-                                                Constants.States.Intake.RADIUS_IN_METERS,
-                                                this::angleSetter,
-                                                this::manualOverrideSetter));
-                reefTrigger.and(scoreTrigger)
-                                .whileTrue(new LockAngleCommand(this::getPose, FieldConstants.Reef.centerFaces,
-                                                FieldConstants.Reef.faceLength, States.Score.RADIUS_IN_METERS,
-                                                this::angleSetter,
-                                                this::manualOverrideSetter));
+                // reefTrigger.and(scoreTrigger)
+                // .whileTrue(new ElevatorMoveToHeight(elevatorSubsystem,
+                // Constants.States.Score.ELEVATOR_HEIGHT)
+                // .andThen(new InstantCommand(() -> readyToScore = true)));
 
-                reefTrigger.and(scoreTrigger)
-                                .whileTrue(new ElevatorMoveToHeight(elevatorSubsystem,
-                                                Constants.States.Score.ELEVATOR_HEIGHT)
-                                                .andThen(new InstantCommand(() -> readyToScore = true)));
+                // reefTrigger.and(scoreTrigger).and(readyToScoreTrigger).and(IO.mechanismController.leftBumper())
+                // .onTrue(new IntakeAtPercentage(intakeSubsystem,
+                // Constants.States.Score.INTAKE_PERCNETAGE)
+                // .raceWith(new WaitCommand(Constants.States.Score.INTAKE_TIME))
+                // .andThen(new InstantCommand(
+                // () -> intakeSubsystem.setState(IntakeState.EMPTY))));
 
-                reefTrigger.and(scoreTrigger).and(readyToScoreTrigger).and(IO.mechanismController.leftBumper())
-                                .onTrue(new IntakeAtPercentage(intakeSubsystem,
-                                                Constants.States.Score.INTAKE_PERCNETAGE)
-                                                .raceWith(new WaitCommand(Constants.States.Score.INTAKE_TIME))
-                                                .andThen(new InstantCommand(
-                                                                () -> intakeSubsystem.setState(IntakeState.EMPTY))));
+                // drivetrain.setDefaultCommand(new DriveCommand(drivetrain, xSupplier,
+                // ySupplier, rotationSupplier,
+                // () -> wantedAngle, () -> manualOverride));
 
-                drivetrain.setDefaultCommand(new DriveCommand(drivetrain, xSupplier, ySupplier, rotationSupplier,
-                                () -> wantedAngle, () -> manualOverride));
+                // IO.driverController.rightBumper().onTrue(new InstantCommand(() ->
+                // manualOverride = true));
+                // IO.driverController.rightBumper().onFalse(new InstantCommand(() ->
+                // manualOverride = false));
 
-                IO.driverController.rightBumper().onTrue(new InstantCommand(() -> manualOverride = true));
-                IO.driverController.rightBumper().onFalse(new InstantCommand(() -> manualOverride = false));
+                // IO.driverController.b()
+                // .whileTrue(new WaitCommand(0.1)
+                // .andThen(drivetrain.runOnce(() -> drivetrain.seedFieldCentric())));
 
-                IO.driverController.b()
-                                .whileTrue(new WaitCommand(0.1)
-                                                .andThen(drivetrain.runOnce(() -> drivetrain.seedFieldCentric())));
+                // IO.driverController.x()
+                // .whileTrue(new WaitCommand(0.1)
+                // .andThen(new InstantCommand(
+                // () -> drivetrain.resetOdometry(new Pose2d()))));
+                IO.mechanismController.a().whileTrue(new BallsRollerPercentage(ballsRollerSubsystem, 1));
+                IO.mechanismController.b().whileTrue(new BallsRollerPercentage(ballsRollerSubsystem, -1));
+                IO.mechanismController.x().whileTrue(new BallsAngleToAngle(ballsAngleSubsystem, 0.15));
 
-                IO.driverController.x()
-                                .whileTrue(new WaitCommand(0.1)
-                                                .andThen(new InstantCommand(
-                                                                () -> drivetrain.resetOdometry(new Pose2d()))));
 
         }
 
@@ -267,7 +281,7 @@ public class RobotContainer {
                 SmartDashboard.putBoolean("intake Mode trigger", intakeModeTrigger.getAsBoolean());
                 SmartDashboard.putBoolean("intkae empty trigger", intakeEmpty.getAsBoolean());
                 SmartDashboard.putBoolean("reef trigger", reefTrigger.getAsBoolean());
-                SmartDashboard.putBoolean("climb trigger", climbTrigger.getAsBoolean());
+                SmartDashboard.putBoolean("climb trigger", ballsTrigger.getAsBoolean());
                 SmartDashboard.putBoolean("score trigger", scoreTrigger.getAsBoolean());
                 SmartDashboard.putBoolean("ready to score trigger", readyToScoreTrigger.getAsBoolean());
                 drivetrain.periodic();

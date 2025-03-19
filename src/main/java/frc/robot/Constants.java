@@ -18,23 +18,23 @@ public final class Constants {
     public static class Subsystems {
         public static class Balls {
             public static class Motors {
-                public static final int ROLLER_SPARK_MAX_CAN_ID = 0;
-                public static final int ANGLE_SPARK_MAX_CAN_ID = 0;
+                public static final int ROLLER_SPARK_MAX_CAN_ID = 33;
+                public static final int ANGLE_SPARK_MAX_CAN_ID = 32;
             }
             public static class Encoders{
-                public static final int DUTY_CYCLE_ENCODER_PORT = 0;
+                public static final int DUTY_CYCLE_ENCODER_PORT = 9;
             }
 
             public static class Physical {
                 public static class Angle {
                     public static double ZERO_ABSOLUTE_ANGLE = 0;
-                    public static double RESTING_ANGLE = 0;
+                    public static double RESTING_ANGLE = 0.3;
                 }
             }
 
             public static class PID {
                 public static class Angle {
-                    public static final double KP = 0;
+                    public static final double KP = 15;
                     public static final double KI = 0;
                     public static final double KD = 0;
                 }
@@ -115,24 +115,6 @@ public final class Constants {
             public static class PID {
                 public static final double KP = 5;
                 public static final double KD = 0;
-            }
-        }
-
-        public static class Balls {
-            public static class Motors {
-                public static final int ANGLE_MOTOR_ID = 50;
-                public static final int INTAKE_MOTOR_ID = 51;
-            }
-
-            public static class Encoders {
-                public static final int ANGLE_ENCODER_CHANNEL1 = 1;
-                public static final int ANGLE_ENCODER_CHANNEL2 = 2;
-            }
-
-            public static class setPoints {
-                public static final double DEFAULT_POINT = 69;
-                public static final double DOWN_POINT = 69;
-                public static final double HOLDING_POINT = 69;
             }
         }
 
