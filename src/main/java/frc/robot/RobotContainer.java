@@ -3,6 +3,7 @@
 // the WPILib BSD license file in the root directory of this project.
 package frc.robot;
 
+import static edu.wpi.first.units.Units.RPM;
 import static edu.wpi.first.units.Units.RadiansPerSecond;
 import static edu.wpi.first.units.Units.RotationsPerSecond;
 
@@ -104,7 +105,8 @@ public class RobotContainer {
                                         Constants.States.Score.RADIUS_IN_METERS) != null);
 
         private final Trigger intakeModeTrigger = new Trigger(() -> this.getState() == RobotState.INTAKE);
-        private final Trigger ballsTrigger = new Trigger(() -> this.getState() == RobotState.BALLS);
+        private final Trigger intakeballsTrigger = new Trigger(() -> this.getState() == RobotState.INTAKEBALLS);
+        private final Trigger scoreBallsTrigger = new Trigger(() -> this.getState() == RobotState.SCOREBALLS);
         private final Trigger scoreTrigger = new Trigger(() -> this.getState() == RobotState.SCORE);
         private final Trigger intakeEmpty = new Trigger(() -> intakeSubsystem.getState() == IntakeState.EMPTY);
         private boolean readyToScore = false;
@@ -177,7 +179,7 @@ public class RobotContainer {
                 // RobotState.INTAKE));
                 // IO.mechanismController.b().onTrue(new InstantCommand(() -> state =
                 // RobotState.SCORE));
-                IO.mechanismController.y().onTrue(new InstantCommand(() -> state = RobotState.BALLS));
+                // IO.mechanismController.y().onTrue(new InstantCommand(() -> state = RobotState.BALLS));
                 // IO.mechanismController.x().whileTrue(new IntakeAtPercentage(intakeSubsystem,
                 // -1)
                 // .alongWith(new InstantCommand(() -> {
@@ -202,6 +204,7 @@ public class RobotContainer {
                 // })
                 // .raceWith(new WaitCommand(
                 // 0.3)))));
+
                 // coralStationTrigger.and(intakeModeTrigger).and(intakeEmpty)
                 // .whileTrue(new LockAngleCommand(this::getPose,
                 // new Pose2d[] { FieldConstants.CoralStation.leftCenterFace,
@@ -246,9 +249,12 @@ public class RobotContainer {
                 // .whileTrue(new WaitCommand(0.1)
                 // .andThen(new InstantCommand(
                 // () -> drivetrain.resetOdometry(new Pose2d()))));
-                IO.mechanismController.a().whileTrue(new BallsRollerPercentage(ballsRollerSubsystem, 1));
-                IO.mechanismController.b().whileTrue(new BallsRollerPercentage(ballsRollerSubsystem, -1));
-                IO.mechanismController.x().whileTrue(new BallsAngleToAngle(ballsAngleSubsystem, 0.15));
+                intakeballsTrigger.whileTrue(new BallsAngleToAngle(ballsAngleSubsystem, 0.15).andThen(new BallsRollerPercentage(ballsRollerSubsystem,1)));
+                scoreBallsTrigger.whileTrue(new BallsRollerPercentage(ballsRollerSubsystem,1).raceWith(new WaitCommand(0.5)).andThen(new InstantCommand(() -> state = RobotState.NONE)));
+
+                IO.mechanismController.a().whileTrue(new InstantCommand(() -> {state = RobotState.INTAKEBALLS;})).onFalse(new InstantCommand(() -> state = RobotState.NONE).alongWith(new BallsRollerPercentage(ballsRollerSubsystem,0)).andThen(new BallsAngleToAngle(ballsAngleSubsystem, Constants.Subsystems.Balls.Physical.Angle.RESTING_ANGLE)));
+                IO.mechanismController.b().whileTrue(new InstantCommand(() -> {state = RobotState.SCOREBALLS;}));
+                // IO.mechanismController.x().whileTrue(new BallsAngleToAngle(ballsAngleSubsystem, 0.15));
 
 
         }
@@ -281,7 +287,7 @@ public class RobotContainer {
                 SmartDashboard.putBoolean("intake Mode trigger", intakeModeTrigger.getAsBoolean());
                 SmartDashboard.putBoolean("intkae empty trigger", intakeEmpty.getAsBoolean());
                 SmartDashboard.putBoolean("reef trigger", reefTrigger.getAsBoolean());
-                SmartDashboard.putBoolean("climb trigger", ballsTrigger.getAsBoolean());
+                // SmartDashboard.putBoolean("climb trigger", ballsTrigger.getAsBoolean());
                 SmartDashboard.putBoolean("score trigger", scoreTrigger.getAsBoolean());
                 SmartDashboard.putBoolean("ready to score trigger", readyToScoreTrigger.getAsBoolean());
                 drivetrain.periodic();

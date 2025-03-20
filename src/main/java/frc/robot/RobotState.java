@@ -2,7 +2,8 @@ package frc.robot;
 
 public enum RobotState {
     INTAKE,
-    BALLS,
+    INTAKEBALLS,
+    SCOREBALLS,
     SCORE,
     NONE
 }
