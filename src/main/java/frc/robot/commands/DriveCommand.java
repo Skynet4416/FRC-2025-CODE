@@ -37,7 +37,11 @@ public class DriveCommand extends Command {
 
     @Override
     public void initialize() {
-        wantedAngle = Units.degreesToRadians(driveSubsystem.getGyroRotationInDegrees());
+        if (manualOverride.getAsBoolean() || angleRadiansSupplier.getAsDouble() == -999) {
+            wantedAngle = 0;
+        } else {
+            wantedAngle = angleRadiansSupplier.getAsDouble();
+        }
     }
 
     @Override

@@ -17,6 +17,7 @@ public class BallsRollerSubsystem extends SubsystemBase {
     private final SparkMax rollerSparkMax;
     private final SparkClosedLoopController rollerClosedLoopController;
     private final RelativeEncoder rollerEncoder;
+    private boolean ballsIn = false;
 
     public BallsRollerSubsystem() {
         this.rollerSparkMax = new SparkMax(Constants.Subsystems.Balls.Motors.ROLLER_SPARK_MAX_CAN_ID,
@@ -49,5 +50,17 @@ public class BallsRollerSubsystem extends SubsystemBase {
         SmartDashboard.putNumber("balls roller distance", getRollerDistance());
         SmartDashboard.putNumber("balls roller velocity", rollerEncoder.getVelocity());
 
+    }
+
+    public boolean hasBall() {
+        return this.ballsIn;
+    }
+
+    public void setBallsIn(boolean ballsIn) {
+        this.ballsIn = ballsIn;
+    }
+
+    public double getRollerVelocity() {
+        return this.rollerEncoder.getVelocity();
     }
 }

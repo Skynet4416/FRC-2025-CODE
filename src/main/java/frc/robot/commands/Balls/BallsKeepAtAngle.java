@@ -14,7 +14,7 @@ public class BallsKeepAtAngle extends Command {
 
     @Override
     public void initialize() {
-        ballsAngleSubsystem.setAnglePercentage(Constants.States.None.BALLS_RESTING_ANGLE);
+        ballsAngleSubsystem.setAngle(Constants.States.None.BALLS_RESTING_ANGLE);
     }
 
     @Override

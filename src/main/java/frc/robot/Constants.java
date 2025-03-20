@@ -21,7 +21,8 @@ public final class Constants {
                 public static final int ROLLER_SPARK_MAX_CAN_ID = 33;
                 public static final int ANGLE_SPARK_MAX_CAN_ID = 32;
             }
-            public static class Encoders{
+
+            public static class Encoders {
                 public static final int DUTY_CYCLE_ENCODER_PORT = 9;
             }
 
@@ -166,8 +167,13 @@ public final class Constants {
             public static double INTAKE_TIME = 1;
         }
 
+        public static class Balls {
+            public static final double ROLLER_THREASHOLD = 500;
+            public static double RADIUS_IN_METERS = 999;
+        }
+
         public static class None {
-            public static final double BALLS_RESTING_ANGLE = 0;
+            public static final double BALLS_RESTING_ANGLE = 0.3;
             public static double ELEVATOR_HEIGHT = 0;
         }
     }
