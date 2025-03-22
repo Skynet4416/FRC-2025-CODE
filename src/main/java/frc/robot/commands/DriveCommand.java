@@ -40,6 +40,14 @@ public class DriveCommand extends Command {
         wantedAngle = Units.degreesToRadians(driveSubsystem.getGyroRotationInDegrees());
     }
 
+    public boolean closeToZero(double value, double threashold) {
+        return Math.abs(value) < threashold;
+    }
+
+    public boolean closeToZero(double value) {
+        return closeToZero(value, 0.05);
+    }
+
     @Override
     public void execute() {
         SmartDashboard.putNumber("xSupplier", xSupplier.getAsDouble());
@@ -51,11 +59,20 @@ public class DriveCommand extends Command {
             wantedAngle = angleRadiansSupplier.getAsDouble();
         }
         SmartDashboard.putNumber("wanted angel", wantedAngle);
-
-        driveSubsystem.setControl(
-                new SwerveRequest.FieldCentric().withDriveRequestType(SwerveModule.DriveRequestType.Velocity)
-                        .withVelocityX(xSupplier.getAsDouble()).withVelocityY(ySupplier.getAsDouble())
-                        .withRotationalRate(MathUtil.clamp(driveSubsystem.calculateRotation(wantedAngle), -6.283 * 1.5,
-                                6.283 * 1.5)));
+        if (closeToZero(xSupplier.getAsDouble()) && closeToZero(ySupplier.getAsDouble())
+                && closeToZero(rotationSupplier.getAsDouble())
+                && closeToZero(driveSubsystem.getState().Speeds.vxMetersPerSecond)
+                && closeToZero(driveSubsystem.getState().Speeds.vyMetersPerSecond)
+                && closeToZero(driveSubsystem.getState().Speeds.omegaRadiansPerSecond)
+                && closeToZero(driveSubsystem.calculateRotation(wantedAngle), 0)) {
+            driveSubsystem.setControl(new SwerveRequest.SwerveDriveBrake());
+        } else {
+            driveSubsystem.setControl(
+                    new SwerveRequest.FieldCentric().withDriveRequestType(SwerveModule.DriveRequestType.Velocity)
+                            .withVelocityX(xSupplier.getAsDouble()).withVelocityY(ySupplier.getAsDouble())
+                            .withRotationalRate(
+                                    MathUtil.clamp(driveSubsystem.calculateRotation(wantedAngle), -6.283 * 1.5,
+                                            6.283 * 1.5)));
+        }
     }
 }
