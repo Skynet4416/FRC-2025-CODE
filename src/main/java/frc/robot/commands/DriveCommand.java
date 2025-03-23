@@ -63,7 +63,7 @@ public class DriveCommand extends Command {
             wantedAngle = angleRadiansSupplier.getAsDouble();
         }
         SmartDashboard.putNumber("wanted angel", wantedAngle);
-        if (closeToZero(xSupplier.getAsDouble()) && closeToZero(ySupplier.getAsDouble())
+        if (false && closeToZero(xSupplier.getAsDouble()) && closeToZero(ySupplier.getAsDouble())
                 && closeToZero(rotationSupplier.getAsDouble())
                 && closeToZero(driveSubsystem.getState().Speeds.vxMetersPerSecond)
                 && closeToZero(driveSubsystem.getState().Speeds.vyMetersPerSecond)

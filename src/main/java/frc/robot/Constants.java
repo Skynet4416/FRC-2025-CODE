@@ -169,7 +169,7 @@ public final class Constants {
 
         public static class Balls {
             public static final double ROLLER_THREASHOLD = 500;
-            public static double RADIUS_IN_METERS = 999;
+            public static double RADIUS_IN_METERS = 1;
         }
 
         public static class None {
