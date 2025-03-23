@@ -11,7 +11,6 @@ import java.util.function.DoubleSupplier;
 import com.ctre.phoenix.led.CANdle;
 import com.ctre.phoenix.led.CANdle.LEDStripType;
 import com.ctre.phoenix.led.CANdleConfiguration;
-import com.ctre.phoenix6.hardware.CANdi;
 
 import choreo.auto.AutoChooser;
 import choreo.auto.AutoFactory;
@@ -30,7 +29,6 @@ import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.Constants.States;
 import frc.robot.commands.DriveCommand;
-import frc.robot.commands.DriveMoveToAngleIncreament;
 import frc.robot.commands.LockAngleCommand;
 import frc.robot.commands.AutoCommands.Forwards;
 import frc.robot.commands.Autos.TrajCommnd;
@@ -117,7 +115,6 @@ public class RobotContainer {
                         .calculate(deadband(-IO.driverController.getRightX())
                                         * MathUtil.clamp((1 - IO.driverController.getLeftTriggerAxis()), 0.1, 1))
                         * MAX_ANGULAR_RATE;
-        private final Command autoCommand;
 
         public RobotContainer() {
                 CANdleConfiguration config = new CANdleConfiguration();
@@ -142,7 +139,6 @@ public class RobotContainer {
                 autoChooser.addCmd("middle complicated", this::pickupAndRizzAuto);
                 SmartDashboard.putData("auto", autoChooser);
                 configureBindings();
-                autoCommand = pickupAndRizzAutoSide();
         }
 
         public double deadband(double value) {

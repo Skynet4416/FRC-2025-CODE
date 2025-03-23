@@ -1,7 +1,5 @@
 package frc.robot.commands.Autos;
 
-import com.ctre.phoenix6.swerve.SwerveRequest;
-
 import choreo.Choreo;
 import choreo.auto.AutoFactory;
 import edu.wpi.first.math.geometry.Pose2d;
@@ -9,14 +7,11 @@ import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableInstance;
-import edu.wpi.first.wpilibj.smartdashboard.Field2d;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.meth.Alliance;
 import frc.robot.subsystems.Drive.CommandSwerveDrivetrain;
 
 public class TrajCommnd extends Command {
-
     private Command followCommand;
     private final NetworkTableInstance inst = NetworkTableInstance.getDefault();
     private final NetworkTable table = inst.getTable("Pose");
@@ -52,7 +47,9 @@ public class TrajCommnd extends Command {
 
     @Override
     public boolean isFinished() {
-        return followCommand.isFinished();
+        double positionTolerance = 0.05;
+        return followCommand.isFinished() && this.driveSubsystem.getState().Pose.getTranslation()
+                .getDistance(new Translation2d(this.arr[arr.length - 2], this.arr[arr.length - 1])) < positionTolerance;
     }
 
     @Override
