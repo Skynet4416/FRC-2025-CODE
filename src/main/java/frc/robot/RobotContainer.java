@@ -8,8 +8,6 @@ import static edu.wpi.first.units.Units.RotationsPerSecond;
 
 import java.util.function.DoubleSupplier;
 
-import com.ctre.phoenix.led.CANdle;
-
 import choreo.auto.AutoChooser;
 import choreo.auto.AutoFactory;
 import edu.wpi.first.math.MathUtil;
@@ -64,7 +62,6 @@ public class RobotContainer {
         private final AutoFactory autoFactory;
         private RobotState state = RobotState.NONE;
         private final CommandSwerveDrivetrain drivetrain = TunerConstants.createDrivetrain();
-        private final CANdle candle = new CANdle(0);
         private final IntakeSubsystem intakeSubsystem = new IntakeSubsystem();
         private final ElevatorSubsystem elevatorSubsystem = new ElevatorSubsystem();
         private final BallsAngleSubsystem ballsAngleSubsystem = new BallsAngleSubsystem();
@@ -264,7 +261,7 @@ public class RobotContainer {
                                         ballsRollerSubsystem.setBallsIn(true);
                                 })));
 
-                ballsModeTrigger.and(ballsFull).and(processorTrigger).and(IO.mechanismController.leftBumper())
+                ballsModeTrigger.and(processorTrigger).and(IO.mechanismController.leftBumper())
                                 .whileTrue(
                                                 new BallsRollerPercentage(ballsRollerSubsystem, -1, (inturrpted) -> {
                                                         state = RobotState.NONE;
