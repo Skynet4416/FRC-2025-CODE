@@ -8,11 +8,6 @@ import static edu.wpi.first.units.Units.RotationsPerSecond;
 
 import java.util.function.DoubleSupplier;
 
-import com.ctre.phoenix.led.CANdle;
-import com.ctre.phoenix.led.CANdle.LEDStripType;
-import com.ctre.phoenix.led.CANdleConfiguration;
-import com.ctre.phoenix6.hardware.CANdi;
-
 import choreo.auto.AutoChooser;
 import choreo.auto.AutoFactory;
 import edu.wpi.first.math.MathUtil;
@@ -30,10 +25,14 @@ import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.Constants.States;
 import frc.robot.commands.DriveCommand;
-import frc.robot.commands.DriveMoveToAngleIncreament;
 import frc.robot.commands.LockAngleCommand;
 import frc.robot.commands.AutoCommands.Forwards;
 import frc.robot.commands.Autos.TrajCommnd;
+import frc.robot.commands.Balls.BallsAngleToAngle;
+import frc.robot.commands.Balls.BallsKeepAtAngle;
+import frc.robot.commands.Balls.BallsRollerKeepAtPose;
+import frc.robot.commands.Balls.BallsRollerPercentage;
+import frc.robot.commands.Balls.IntakeBalls;
 import frc.robot.commands.Elevator.ElevatorMoveToHeight;
 import frc.robot.commands.Elevator.ElevatorResetLimitSwitch;
 import frc.robot.commands.Elevator.ElevatorResetLimitSwitchEnd;
@@ -41,6 +40,8 @@ import frc.robot.commands.Intake.IntakeAtPercentage;
 import frc.robot.commands.Intake.IntakeCoral;
 import frc.robot.commands.Intake.IntakeDefault;
 import frc.robot.meth.Distance;
+import frc.robot.subsystems.Balls.BallsAngleSubsystem;
+import frc.robot.subsystems.Balls.BallsRollerSubsystem;
 import frc.robot.subsystems.Drive.CommandSwerveDrivetrain;
 import frc.robot.subsystems.Drive.Telemetry;
 import frc.robot.subsystems.Drive.TunerConstants;
@@ -61,9 +62,10 @@ public class RobotContainer {
         private final AutoFactory autoFactory;
         private RobotState state = RobotState.NONE;
         private final CommandSwerveDrivetrain drivetrain = TunerConstants.createDrivetrain();
-        private final CANdle candle = new CANdle(0);
         private final IntakeSubsystem intakeSubsystem = new IntakeSubsystem();
         private final ElevatorSubsystem elevatorSubsystem = new ElevatorSubsystem();
+        private final BallsAngleSubsystem ballsAngleSubsystem = new BallsAngleSubsystem();
+        private final BallsRollerSubsystem ballsRollerSubsystem = new BallsRollerSubsystem();
         // private final ClimbDeepSubsystem climbDeepSubsystem = new
         // ClimbDeepSubsystem();
         private final LimelightSubsystem limelightSubsystem = new LimelightSubsystem(
@@ -96,11 +98,19 @@ public class RobotContainer {
                                         Constants.States.Score.RADIUS_IN_METERS) != null);
 
         private final Trigger intakeModeTrigger = new Trigger(() -> this.getState() == RobotState.INTAKE);
-        private final Trigger climbTrigger = new Trigger(() -> this.getState() == RobotState.CLIMB);
+        private final Trigger ballsModeTrigger = new Trigger(() -> this.getState() == RobotState.BALLS);
         private final Trigger scoreTrigger = new Trigger(() -> this.getState() == RobotState.SCORE);
         private final Trigger intakeEmpty = new Trigger(() -> intakeSubsystem.getState() == IntakeState.EMPTY);
         private boolean readyToScore = false;
         private final Trigger readyToScoreTrigger = new Trigger(() -> readyToScore);
+
+        private final Trigger ballsEmpty = new Trigger(() -> !ballsRollerSubsystem.hasBall());
+        private final Trigger ballsFull = new Trigger(() -> ballsRollerSubsystem.hasBall());
+        // private final Trigger processorTrigger = new Trigger(() ->
+        // Distance.isPointNearLineSegment(
+        // getPose().getTranslation(), FieldConstants.Processor.centerFace,
+        // FieldConstants.Processor.faceLength, States.Balls.RADIUS_IN_METERS));
+        private final Trigger processorTrigger = new Trigger(() -> true);
         private final SlewRateLimiter slewRateLimiterx = new SlewRateLimiter(6);
         private final SlewRateLimiter slewRateLimitery = new SlewRateLimiter(6);
         private final SlewRateLimiter slewRateLimiterRotation = new SlewRateLimiter(10);
@@ -120,12 +130,6 @@ public class RobotContainer {
         private final Command autoCommand;
 
         public RobotContainer() {
-                CANdleConfiguration config = new CANdleConfiguration();
-                config.stripType = LEDStripType.RGB; // set the strip type to RGB
-                config.brightnessScalar = 0.5; // dim the LEDs to half brightness
-                candle.configAllSettings(config);
-
-                candle.setLEDs(255, 255, 255); // set the CANdle LEDs to white
                 autoFactory = new AutoFactory(
                                 drivetrain::getPose, // A function that returns the current robot pose
                                 drivetrain::resetOdometry, // A function that resets the current robot pose to the
@@ -170,11 +174,12 @@ public class RobotContainer {
          */
         private void configureBindings() {
                 drivetrain.registerTelemetry(logger::telemeterize);
-
+                ballsRollerSubsystem.setDefaultCommand(new BallsRollerKeepAtPose(ballsRollerSubsystem));
                 IO.mechanismController.a().onTrue(new InstantCommand(() -> state = RobotState.INTAKE));
                 IO.mechanismController.b().onTrue(new InstantCommand(() -> state = RobotState.SCORE));
-                IO.mechanismController.y().onTrue(new InstantCommand(() -> state = RobotState.CLIMB));
-                IO.mechanismController.x().whileTrue(new IntakeAtPercentage(intakeSubsystem, -1)
+                IO.mechanismController.y().onTrue(new InstantCommand(() -> state = RobotState.BALLS));
+                IO.mechanismController.x().whileTrue(new IntakeAtPercentage(intakeSubsystem,
+                                -1)
                                 .alongWith(new InstantCommand(() -> {
                                         intakeSubsystem.setState(IntakeState.EMPTY);
                                         state = RobotState.NONE;
@@ -196,6 +201,7 @@ public class RobotContainer {
                                                                                                 })
                                                                                                 .raceWith(new WaitCommand(
                                                                                                                 0.3)))));
+
                 coralStationTrigger.and(intakeModeTrigger).and(intakeEmpty)
                                 .whileTrue(new LockAngleCommand(this::getPose,
                                                 new Pose2d[] { FieldConstants.CoralStation.leftCenterFace,
@@ -205,7 +211,8 @@ public class RobotContainer {
                                                 this::angleSetter,
                                                 this::manualOverrideSetter));
                 reefTrigger.and(scoreTrigger)
-                                .whileTrue(new LockAngleCommand(this::getPose, FieldConstants.Reef.centerFaces,
+                                .whileTrue(new LockAngleCommand(this::getPose,
+                                                FieldConstants.Reef.centerFaces,
                                                 FieldConstants.Reef.faceLength, States.Score.RADIUS_IN_METERS,
                                                 this::angleSetter,
                                                 this::manualOverrideSetter));
@@ -220,9 +227,13 @@ public class RobotContainer {
                                                 Constants.States.Score.INTAKE_PERCNETAGE)
                                                 .raceWith(new WaitCommand(Constants.States.Score.INTAKE_TIME))
                                                 .andThen(new InstantCommand(
-                                                                () -> intakeSubsystem.setState(IntakeState.EMPTY))));
+                                                                () -> {
+                                                                        intakeSubsystem.setState(IntakeState.EMPTY);
+                                                                        state = RobotState.NONE;
+                                                                })));
 
-                drivetrain.setDefaultCommand(new DriveCommand(drivetrain, xSupplier, ySupplier, rotationSupplier,
+                drivetrain.setDefaultCommand(new DriveCommand(drivetrain, xSupplier,
+                                ySupplier, rotationSupplier,
                                 () -> wantedAngle, () -> manualOverride));
 
                 IO.driverController.rightBumper().onTrue(new InstantCommand(() -> manualOverride = true));
@@ -236,11 +247,37 @@ public class RobotContainer {
                                 .whileTrue(new WaitCommand(0.1)
                                                 .andThen(new InstantCommand(
                                                                 () -> drivetrain.resetOdometry(new Pose2d()))));
+                ballsModeTrigger.and(ballsFull).and(processorTrigger)
+                                .whileTrue(new LockAngleCommand(this::getPose,
+                                                new Pose2d[] { FieldConstants.Processor.centerFace },
+                                                FieldConstants.Processor.faceLength, States.Balls.RADIUS_IN_METERS,
+                                                this::angleSetter,
+                                                this::manualOverrideSetter));
+
+                ballsModeTrigger.and(ballsEmpty).whileTrue(new BallsAngleToAngle(ballsAngleSubsystem, 0.15)
+                                .alongWith(new IntakeBalls(ballsRollerSubsystem))
+                                .andThen(new InstantCommand(() -> {
+
+                                        ballsRollerSubsystem.setBallsIn(true);
+                                })));
+
+                ballsModeTrigger.and(processorTrigger).and(IO.mechanismController.leftBumper())
+                                .whileTrue(
+                                                new BallsRollerPercentage(ballsRollerSubsystem, -1, (inturrpted) -> {
+                                                        state = RobotState.NONE;
+                                                        ballsRollerSubsystem.setBallsIn(
+                                                                        false);
+                                                })
+                                                                .raceWith(new WaitCommand(0.5)));
+
+                this.ballsAngleSubsystem.setDefaultCommand(new BallsKeepAtAngle(ballsAngleSubsystem));
+                this.ballsRollerSubsystem.setDefaultCommand(new BallsRollerKeepAtPose(ballsRollerSubsystem));
 
         }
 
         // /**
-        // * Use this to pass the autonomous command to the main {@link Robot} class.
+        // *
+
         // *
         // * @return the command to run in autonomous
         // */
@@ -267,9 +304,12 @@ public class RobotContainer {
                 SmartDashboard.putBoolean("intake Mode trigger", intakeModeTrigger.getAsBoolean());
                 SmartDashboard.putBoolean("intkae empty trigger", intakeEmpty.getAsBoolean());
                 SmartDashboard.putBoolean("reef trigger", reefTrigger.getAsBoolean());
-                SmartDashboard.putBoolean("climb trigger", climbTrigger.getAsBoolean());
                 SmartDashboard.putBoolean("score trigger", scoreTrigger.getAsBoolean());
                 SmartDashboard.putBoolean("ready to score trigger", readyToScoreTrigger.getAsBoolean());
+                SmartDashboard.putBoolean("balls Trigger", ballsModeTrigger.getAsBoolean());
+                SmartDashboard.putBoolean("balls Empty", ballsEmpty.getAsBoolean());
+                SmartDashboard.putBoolean("balls full", ballsFull.getAsBoolean());
+                SmartDashboard.putBoolean("processor trigger", processorTrigger.getAsBoolean());
                 drivetrain.periodic();
         }
 
