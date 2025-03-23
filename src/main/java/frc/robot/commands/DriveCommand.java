@@ -38,7 +38,7 @@ public class DriveCommand extends Command {
     @Override
     public void initialize() {
         if (manualOverride.getAsBoolean() || angleRadiansSupplier.getAsDouble() == -999) {
-            wantedAngle = 0;
+            wantedAngle = this.driveSubsystem.getState().Pose.getRotation().getRadians();
         } else {
             wantedAngle = angleRadiansSupplier.getAsDouble();
         }
