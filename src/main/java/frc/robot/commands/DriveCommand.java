@@ -49,7 +49,7 @@ public class DriveCommand extends Command {
     }
 
     public boolean closeToZero(double value) {
-        return closeToZero(value, 0.05);
+        return closeToZero(value, 0.1);
     }
 
     @Override
@@ -63,12 +63,25 @@ public class DriveCommand extends Command {
             wantedAngle = angleRadiansSupplier.getAsDouble();
         }
         SmartDashboard.putNumber("wanted angel", wantedAngle);
-        if (false && closeToZero(xSupplier.getAsDouble()) && closeToZero(ySupplier.getAsDouble())
-                && closeToZero(rotationSupplier.getAsDouble())
-                && closeToZero(driveSubsystem.getState().Speeds.vxMetersPerSecond)
-                && closeToZero(driveSubsystem.getState().Speeds.vyMetersPerSecond)
-                && closeToZero(driveSubsystem.getState().Speeds.omegaRadiansPerSecond)
-                && closeToZero(driveSubsystem.calculateRotation(wantedAngle), 0)) {
+
+        boolean xSuppliersLock = closeToZero(xSupplier.getAsDouble());
+        SmartDashboard.putBoolean("x supplier lock", xSuppliersLock);
+        boolean ySuppliersLock = closeToZero(ySupplier.getAsDouble());
+        SmartDashboard.putBoolean("y supplier lock", ySuppliersLock);
+        boolean rotationSupplierLock = closeToZero(rotationSupplier.getAsDouble());
+        SmartDashboard.putBoolean("r supplier lock", rotationSupplierLock);
+
+        boolean vxLock = closeToZero(driveSubsystem.getState().Speeds.vxMetersPerSecond);
+        SmartDashboard.putBoolean("vx lock", vxLock);
+        boolean vyLock = closeToZero(driveSubsystem.getState().Speeds.vyMetersPerSecond);
+        SmartDashboard.putBoolean("vy lock", vyLock);
+        boolean vrLock = closeToZero(driveSubsystem.getState().Speeds.omegaRadiansPerSecond,0.5);
+        SmartDashboard.putBoolean("vr lock", vrLock);
+
+        boolean x = xSuppliersLock && ySuppliersLock && rotationSupplierLock && vxLock && vyLock && vrLock;
+        SmartDashboard.putBoolean("swerve lock", x);
+        SmartDashboard.putNumber("vr value", Math.abs(driveSubsystem.getState().Speeds.omegaRadiansPerSecond - 0.5));
+        if (x) {
             driveSubsystem.setControl(new SwerveRequest.SwerveDriveBrake());
         } else {
             driveSubsystem.setControl(
