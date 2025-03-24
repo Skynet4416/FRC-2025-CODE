@@ -16,4 +16,9 @@ public class IntakeDefault extends Command {
         intakeSubsystem.setDistance(intakeSubsystem.getDistance());
     }
 
+    @Override
+    public void end(boolean interrupted) {
+        intakeSubsystem.moveMotor(0);
+    }
+
 }
