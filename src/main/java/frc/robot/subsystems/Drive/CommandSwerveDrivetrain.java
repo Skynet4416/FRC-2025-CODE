@@ -18,6 +18,8 @@ import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.math.util.Units;
+
+import static edu.wpi.first.units.Units.Rotation;
 import static edu.wpi.first.units.Units.Second;
 import static edu.wpi.first.units.Units.Volts;
 import edu.wpi.first.wpilibj.DriverStation;
@@ -265,8 +267,10 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
         // SmartDashboard.putNumber("KP", m_pathThetaController.getP());
         // SmartDashboard.putNumber("KI", m_pathThetaController.getI());
 
-        // LimelightHelpers.SetRobotOrientation("", getGyroRotationInDegrees() - 45, 0, 0, 0, 0, 0);
-
+        LimelightHelpers.SetRobotOrientation("", this.getPose().getRotation().getDegrees(), 0, 0, 0, 0, 0);
+        SmartDashboard.putNumber("drive x error", m_pathXController.getError());
+        SmartDashboard.putNumber("drive y error", m_pathYController.getError());
+        SmartDashboard.putNumber("drive theta error", Units.radiansToDegrees(m_pathThetaController.getError()));
         if (!m_hasAppliedOperatorPerspective || DriverStation.isDisabled()) {
             DriverStation.getAlliance().ifPresent(allianceColor -> {
                 setOperatorPerspectiveForward(
@@ -344,7 +348,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
     }
 
     public double calculateRotation(double angleInRadians) {
-        return m_pathThetaController.calculate(Units.degreesToRadians(getGyroRotationInDegrees()), angleInRadians);
+        return m_pathThetaController.calculate(getPose().getRotation().getRadians(), angleInRadians);
     }
 
     // public void configureAutoBuilder() {

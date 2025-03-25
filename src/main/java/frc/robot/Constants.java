@@ -16,6 +16,38 @@ package frc.robot;
 public final class Constants {
 
     public static class Subsystems {
+        public static class Balls {
+            public static class Motors {
+                public static final int ROLLER_SPARK_MAX_CAN_ID = 33;
+                public static final int ANGLE_SPARK_MAX_CAN_ID = 32;
+            }
+
+            public static class Encoders {
+                public static final int DUTY_CYCLE_ENCODER_PORT = 9;
+            }
+
+            public static class Physical {
+                public static class Angle {
+                    public static double ZERO_ABSOLUTE_ANGLE = 0;
+                    public static double RESTING_ANGLE = 0.3;
+                }
+            }
+
+            public static class PID {
+                public static class Angle {
+                    public static final double KP = 15;
+                    public static final double KI = 0;
+                    public static final double KD = 0;
+                }
+
+                public static class Roller {
+                    public static final double KP = 5;
+                    public static final double KI = 0;
+                    public static final double KD = 0;
+                }
+            }
+        }
+
         public static class Drive {
             public static class Rotation {
                 public static double KP = 8;
@@ -23,7 +55,7 @@ public final class Constants {
             }
 
             public static class Position {
-                public static double KP = 1;
+                public static double KP = 2.5;
             }
         }
 
@@ -80,6 +112,11 @@ public final class Constants {
                 public static final double DECELERATION_THRESHOLD = -80; // how many rpm declerates in one iteration
                 public static final double INTAKE_VELOCIRTY_THREASHOLD = 500;
             }
+
+            public static class PID {
+                public static final double KP = 5;
+                public static final double KD = 0;
+            }
         }
 
         public static class DeepCage {
@@ -114,7 +151,7 @@ public final class Constants {
         }
 
         public static class Intake {
-            public static double RADIUS_IN_METERS = 500000;
+            public static double RADIUS_IN_METERS = 1;
             public static double ELEVATOR_HEIGHT = 0.3;
             public static double VELOCITY_THREASHOLD = 500;
             public static double INTAKE_THREASHOLD = 40;
@@ -123,14 +160,20 @@ public final class Constants {
         }
 
         public static class Score {
-            public static double RADIUS_IN_METERS = 10000000;
+            public static double RADIUS_IN_METERS = 0.65;
 
             public static double ELEVATOR_HEIGHT = 0;
             public static double INTAKE_PERCNETAGE = -1;
             public static double INTAKE_TIME = 1;
         }
 
+        public static class Balls {
+            public static final double ROLLER_THREASHOLD = 500;
+            public static double RADIUS_IN_METERS = 1;
+        }
+
         public static class None {
+            public static final double BALLS_RESTING_ANGLE = 0.3;
             public static double ELEVATOR_HEIGHT = 0;
         }
     }
