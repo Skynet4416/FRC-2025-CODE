@@ -320,7 +320,13 @@ public class RobotContainer {
 
         public Command getIntakeCommand() {
                 return new IntakeCoral(intakeSubsystem).deadlineFor(new ElevatorMoveToHeight(elevatorSubsystem,
-                                Constants.States.Intake.ELEVATOR_HEIGHT)).raceWith(new WaitCommand(3))
+                                Constants.States.Intake.ELEVATOR_HEIGHT)).raceWith(new WaitCommand(3)).andThen(new InstantCommand(
+                                        () -> {
+                                                intakeSubsystem.moveMotor(
+                                                                Constants.States.Intake.INTAKE_PERCEHNTAGE);
+                                        })
+                                        .raceWith(new WaitCommand(
+                                                        0.3)))
                                 .andThen(new ElevatorResetLimitSwitchEnd(
                                                 elevatorSubsystem));
 
