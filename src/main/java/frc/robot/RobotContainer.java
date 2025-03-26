@@ -71,10 +71,10 @@ public class RobotContainer {
         private final LimelightSubsystem limelightSubsystem = new LimelightSubsystem(
                         new LimelightObserver[] { drivetrain });
         private final double MAX_SPEED = TunerConstants.kSpeedAt12Volts.in(Units.MetersPerSecond); // kSpeedAt12Volts
-                                                                                                   // desired
+        // desired
         // top speed
         private final double MAX_ANGULAR_RATE = RotationsPerSecond.of(0.75).in(RadiansPerSecond); // 3/4 of a rotation
-                                                                                                  // per
+        // per
         // second max angular
         // velocity
 
@@ -131,7 +131,7 @@ public class RobotContainer {
                 autoFactory = new AutoFactory(
                                 drivetrain::getPose, // A function that returns the current robot pose
                                 drivetrain::resetOdometry, // A function that resets the current robot pose to the
-                                                           // provided Pose2d
+                                // provided Pose2d
                                 drivetrain::followTrajectory, // The drive subsystem trajectory follower
                                 true, // If alliance flipping should be enabled
                                 drivetrain // The drive subsystem
@@ -254,6 +254,8 @@ public class RobotContainer {
 
                 ballsModeTrigger.and(ballsEmpty).whileTrue(new BallsAngleToAngle(ballsAngleSubsystem, 0.15)
                                 .alongWith(new IntakeBalls(ballsRollerSubsystem))
+                                .andThen(new BallsRollerPercentage(ballsRollerSubsystem, 1,
+                                                (x) -> ballsRollerSubsystem.setRollerPercentage(0)).withTimeout(0.2))
                                 .andThen(new InstantCommand(() -> {
 
                                         ballsRollerSubsystem.setBallsIn(true);
