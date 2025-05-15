@@ -263,12 +263,12 @@ public class RobotContainer {
 
                 ballsModeTrigger.and(IO.mechanismController.leftBumper())
                                 .whileTrue(
-                                                new BallsRollerPercentage(ballsRollerSubsystem, -1, (inturrpted) -> {
+                                                new BallsRollerPercentage(ballsRollerSubsystem, -.3, (inturrpted) -> {
                                                         state = RobotState.NONE;
                                                         ballsRollerSubsystem.setBallsIn(
                                                                         false);
                                                 })
-                                                                .raceWith(new WaitCommand(0.5)));
+                                                                .raceWith(new WaitCommand(0.65)));
 
                 this.ballsAngleSubsystem.setDefaultCommand(new BallsKeepAtAngle(ballsAngleSubsystem));
                 this.ballsRollerSubsystem.setDefaultCommand(new BallsRollerKeepAtPose(ballsRollerSubsystem));
