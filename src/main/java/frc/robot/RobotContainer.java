@@ -70,7 +70,8 @@ public class RobotContainer {
         // ClimbDeepSubsystem();
         private final LimelightSubsystem limelightSubsystem = new LimelightSubsystem(
                         new LimelightObserver[] { drivetrain });
-        private final double MAX_SPEED = TunerConstants.kSpeedAt12Volts.in(Units.MetersPerSecond); // kSpeedAt12Volts
+        //Low max speed for demo
+        private final double MAX_SPEED = TunerConstants.kSpeedAt12Volts.in(Units.MetersPerSecond) / 10; // kSpeedAt12Volts
         // desired
         // top speed
         private final double MAX_ANGULAR_RATE = RotationsPerSecond.of(0.75).in(RadiansPerSecond); // 3/4 of a rotation
