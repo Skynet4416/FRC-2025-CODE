@@ -100,6 +100,8 @@ public class RobotContainer {
         private final Trigger intakeModeTrigger = new Trigger(() -> this.getState() == RobotState.INTAKE);
         private final Trigger ballsModeTrigger = new Trigger(() -> this.getState() == RobotState.BALLS);
         private final Trigger scoreTrigger = new Trigger(() -> this.getState() == RobotState.SCORE);
+        private final Trigger scoreHighTrigger = new Trigger(() -> this.getState() == RobotState.SCORE_HIGH);
+
         private final Trigger intakeEmpty = new Trigger(() -> intakeSubsystem.getState() == IntakeState.EMPTY);
         private boolean readyToScore = false;
         private final Trigger readyToScoreTrigger = new Trigger(() -> readyToScore);
@@ -175,6 +177,7 @@ public class RobotContainer {
                 ballsRollerSubsystem.setDefaultCommand(new BallsRollerKeepAtPose(ballsRollerSubsystem));
                 IO.mechanismController.a().onTrue(new InstantCommand(() -> state = RobotState.INTAKE));
                 IO.mechanismController.b().onTrue(new InstantCommand(() -> state = RobotState.SCORE));
+                IO.mechanismController.povUp().onTrue(new InstantCommand(() -> state = RobotState.SCORE_HIGH));
                 IO.mechanismController.y().onTrue(new InstantCommand(() -> state = RobotState.BALLS));
                 IO.mechanismController.x().whileTrue(new IntakeAtPercentage(intakeSubsystem,
                                 -1)
@@ -208,7 +211,7 @@ public class RobotContainer {
                                                 Constants.States.Intake.RADIUS_IN_METERS,
                                                 this::angleSetter,
                                                 this::manualOverrideSetter));
-                reefTrigger.and(scoreTrigger)
+                reefTrigger.and(scoreTrigger.or(scoreHighTrigger))
                                 .whileTrue(new LockAngleCommand(this::getPose,
                                                 FieldConstants.Reef.centerFaces,
                                                 FieldConstants.Reef.faceLength, States.Score.RADIUS_IN_METERS,
@@ -228,6 +231,24 @@ public class RobotContainer {
                                                                 () -> {
                                                                         intakeSubsystem.setState(IntakeState.EMPTY);
                                                                         state = RobotState.NONE;
+                                                                        readyToScore = false;
+                                                                })));
+
+                reefTrigger.and(scoreHighTrigger)                                
+                        .whileTrue(new ElevatorMoveToHeight(elevatorSubsystem,
+                                        Constants.States.ScoreHigh.ELEVATOR_HEIGHT)
+                                        .andThen(new InstantCommand(() -> readyToScore = true)));
+
+                
+                reefTrigger.and(scoreHighTrigger).and(readyToScoreTrigger).and(IO.mechanismController.leftBumper())
+                                .onTrue(new IntakeAtPercentage(intakeSubsystem, 
+                                                Constants.States.ScoreHigh.INTAKE_PERCNETAGE)
+                                                .raceWith(new WaitCommand(Constants.States.ScoreHigh.INTAKE_TIME))
+                                                .andThen(new InstantCommand(
+                                                                () -> {
+                                                                        intakeSubsystem.setState(IntakeState.EMPTY);
+                                                                        state = RobotState.NONE;
+                                                                        readyToScore = false;
                                                                 })));
 
                 drivetrain.setDefaultCommand(new DriveCommand(drivetrain, xSupplier,

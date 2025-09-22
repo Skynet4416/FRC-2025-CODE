@@ -167,6 +167,14 @@ public final class Constants {
             public static double INTAKE_TIME = 1;
         }
 
+        public static class ScoreHigh{
+            // TODO: change ELEVATOR_HEIGHT to the calibrated value
+            public static double ELEVATOR_HEIGHT = 0.05;
+            public static double INTAKE_PERCNETAGE = -1;
+            public static double INTAKE_TIME = 1;
+
+        }
+
         public static class Balls {
             public static final double ROLLER_THREASHOLD = 500;
             public static double RADIUS_IN_METERS = 1;
