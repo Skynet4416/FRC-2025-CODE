@@ -19,6 +19,7 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
+import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import edu.wpi.first.wpilibj2.command.WaitCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
@@ -36,6 +37,7 @@ import frc.robot.commands.Balls.IntakeBalls;
 import frc.robot.commands.Elevator.ElevatorMoveToHeight;
 import frc.robot.commands.Elevator.ElevatorResetLimitSwitch;
 import frc.robot.commands.Elevator.ElevatorResetLimitSwitchEnd;
+import frc.robot.commands.Elevator.ElevatorStayAtHeight;
 import frc.robot.commands.Intake.IntakeAtPercentage;
 import frc.robot.commands.Intake.IntakeCoral;
 import frc.robot.commands.Intake.IntakeDefault;
@@ -219,9 +221,9 @@ public class RobotContainer {
                                                 this::manualOverrideSetter));
 
                 reefTrigger.and(scoreTrigger)
-                                .whileTrue(new ElevatorMoveToHeight(elevatorSubsystem,
+                                .whileTrue(new ElevatorStayAtHeight(elevatorSubsystem,
                                                 Constants.States.Score.ELEVATOR_HEIGHT)
-                                                .andThen(new InstantCommand(() -> readyToScore = true)));
+                                               .alongWith(new RunCommand(() -> readyToScore = this.elevatorSubsystem.elevatorAtSetpoint(Constants.States.ScoreHigh.ELEVATOR_HEIGHT))));                                
 
                 reefTrigger.and(scoreTrigger).and(readyToScoreTrigger).and(IO.mechanismController.leftBumper())
                                 .onTrue(new IntakeAtPercentage(intakeSubsystem,
@@ -323,9 +325,10 @@ public class RobotContainer {
         public void containerTrigger() {
                 SmartDashboard.putBoolean("coral station trigger", coralStationTrigger.getAsBoolean());
                 SmartDashboard.putBoolean("intake Mode trigger", intakeModeTrigger.getAsBoolean());
-                SmartDashboard.putBoolean("intkae empty trigger", intakeEmpty.getAsBoolean());
+                SmartDashboard.putBoolean("intake empty trigger", intakeEmpty.getAsBoolean());
                 SmartDashboard.putBoolean("reef trigger", reefTrigger.getAsBoolean());
                 SmartDashboard.putBoolean("score trigger", scoreTrigger.getAsBoolean());
+                SmartDashboard.putBoolean("score high trigger", scoreHighTrigger.getAsBoolean());
                 SmartDashboard.putBoolean("ready to score trigger", readyToScoreTrigger.getAsBoolean());
                 SmartDashboard.putBoolean("balls Trigger", ballsModeTrigger.getAsBoolean());
                 SmartDashboard.putBoolean("balls Empty", ballsEmpty.getAsBoolean());
