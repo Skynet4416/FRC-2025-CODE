@@ -5,6 +5,7 @@
 package frc.robot.commands.Elevator;
 
 import edu.wpi.first.wpilibj2.command.Command;
+import frc.robot.Constants;
 import frc.robot.Constants.Subsystems.Elevator;
 import frc.robot.subsystems.Elevator.ElevatorSubsystem;
 
@@ -17,10 +18,13 @@ public class ElevatorMoveToHeight extends Command {
         this.elevatorSetPointInMeters = heightInMeters;
         addRequirements(elevatorSubsystem);
     }
+    @Override
+    public void initialize() {
+        this.elevatorSubsystem.setSetpoint(elevatorSetPointInMeters);
+    }
 
     @Override
     public void execute() {
-        elevatorSubsystem.setSetpoint(elevatorSetPointInMeters);
     }
 
     @Override
