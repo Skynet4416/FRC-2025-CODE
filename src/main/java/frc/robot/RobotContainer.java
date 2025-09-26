@@ -8,6 +8,8 @@ import static edu.wpi.first.units.Units.RotationsPerSecond;
 
 import java.util.function.DoubleSupplier;
 
+import com.therekrab.autopilot.APTarget;
+
 import choreo.auto.AutoChooser;
 import choreo.auto.AutoFactory;
 import edu.wpi.first.math.MathUtil;
@@ -27,6 +29,7 @@ import frc.robot.Constants.States;
 import frc.robot.commands.DriveCommand;
 import frc.robot.commands.LockAngleCommand;
 import frc.robot.commands.AutoCommands.Forwards;
+import frc.robot.commands.Autopilot.AlignCommand;
 import frc.robot.commands.Autos.TrajCommnd;
 import frc.robot.commands.Balls.BallsAngleToAngle;
 import frc.robot.commands.Balls.BallsKeepAtAngle;
@@ -39,6 +42,7 @@ import frc.robot.commands.Elevator.ElevatorResetLimitSwitchEnd;
 import frc.robot.commands.Intake.IntakeAtPercentage;
 import frc.robot.commands.Intake.IntakeCoral;
 import frc.robot.commands.Intake.IntakeDefault;
+import frc.robot.meth.Alliance;
 import frc.robot.meth.Distance;
 import frc.robot.subsystems.Balls.BallsAngleSubsystem;
 import frc.robot.subsystems.Balls.BallsRollerSubsystem;
@@ -182,6 +186,13 @@ public class RobotContainer {
                                         intakeSubsystem.setState(IntakeState.EMPTY);
                                         state = RobotState.NONE;
                                 })));
+
+                IO.driverController.povDown().onTrue(
+                        new AlignCommand(
+                                new APTarget(Alliance.apply(FieldConstants.CoralStation.leftCenterFace)),
+                                drivetrain
+                        )
+                        );
 
                 intakeSubsystem.setDefaultCommand(new IntakeDefault(intakeSubsystem));
 
