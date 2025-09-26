@@ -221,9 +221,9 @@ public class RobotContainer {
                                                 this::manualOverrideSetter));
 
                 reefTrigger.and(scoreTrigger)
-                                .whileTrue(new ElevatorStayAtHeight(elevatorSubsystem,
+                                .whileTrue(new ElevatorMoveToHeight(elevatorSubsystem,
                                                 Constants.States.Score.ELEVATOR_HEIGHT)
-                                               .alongWith(new RunCommand(() -> readyToScore = this.elevatorSubsystem.elevatorAtSetpoint(Constants.States.ScoreHigh.ELEVATOR_HEIGHT))));                                
+                                               .andThen(new InstantCommand(() -> readyToScore = true)));
 
                 reefTrigger.and(scoreTrigger).and(readyToScoreTrigger).and(IO.mechanismController.leftBumper())
                                 .onTrue(new IntakeAtPercentage(intakeSubsystem,
@@ -237,9 +237,9 @@ public class RobotContainer {
                                                                 })));
 
                 reefTrigger.and(scoreHighTrigger)                                
-                        .whileTrue(new ElevatorMoveToHeight(elevatorSubsystem,
+                        .whileTrue(new ElevatorStayAtHeight(elevatorSubsystem,
                                         Constants.States.ScoreHigh.ELEVATOR_HEIGHT)
-                                        .andThen(new InstantCommand(() -> readyToScore = true)));
+                                        .alongWith(new RunCommand(() -> readyToScore = this.elevatorSubsystem.elevatorAtSetpoint(Constants.States.ScoreHigh.ELEVATOR_HEIGHT))));                                
 
                 
                 reefTrigger.and(scoreHighTrigger).and(readyToScoreTrigger).and(IO.mechanismController.leftBumper())
