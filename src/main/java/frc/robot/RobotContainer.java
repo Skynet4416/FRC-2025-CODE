@@ -187,11 +187,16 @@ public class RobotContainer {
                                         state = RobotState.NONE;
                                 })));
 
-                IO.driverController.povDown().onTrue(
-                        new AlignCommand(
-                                new APTarget(Alliance.apply(FieldConstants.CoralStation.leftCenterFace)),
-                                drivetrain
-                        )
+                        IO.mechanismController.povDown().onTrue(
+                                new AlignCommand(
+                                        new APTarget(
+                                                new Pose2d(
+                                                Alliance.apply(FieldConstants.CoralStation.leftCenterFace).getTranslation(),
+                                                Alliance.apply(FieldConstants.CoralStation.leftCenterFace).getRotation().plus(Rotation2d.fromDegrees(180))
+                                                )
+                                        ),
+                                        drivetrain
+                                )
                         );
 
                 intakeSubsystem.setDefaultCommand(new IntakeDefault(intakeSubsystem));
