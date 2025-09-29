@@ -16,6 +16,7 @@ import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.filter.SlewRateLimiter;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.units.Units;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -105,6 +106,7 @@ public class RobotContainer {
         private final Trigger ballsModeTrigger = new Trigger(() -> this.getState() == RobotState.BALLS);
         private final Trigger scoreTrigger = new Trigger(() -> this.getState() == RobotState.SCORE);
         private final Trigger intakeEmpty = new Trigger(() -> intakeSubsystem.getState() == IntakeState.EMPTY);
+        public final Trigger intakeFullTrigger = new Trigger(() -> intakeSubsystem.getState() == IntakeState.FULL); 
         private boolean readyToScore = false;
         private final Trigger readyToScoreTrigger = new Trigger(() -> readyToScore);
 
@@ -187,17 +189,6 @@ public class RobotContainer {
                                         state = RobotState.NONE;
                                 })));
 
-                        IO.mechanismController.povDown().onTrue(
-                                new AlignCommand(
-                                        new APTarget(
-                                                new Pose2d(
-                                                Alliance.apply(FieldConstants.CoralStation.leftCenterFace).getTranslation(),
-                                                Alliance.apply(FieldConstants.CoralStation.leftCenterFace).getRotation().plus(Rotation2d.fromDegrees(180))
-                                                )
-                                        ),
-                                        drivetrain
-                                )
-                        );
 
                 intakeSubsystem.setDefaultCommand(new IntakeDefault(intakeSubsystem));
 
@@ -249,9 +240,10 @@ public class RobotContainer {
                 drivetrain.setDefaultCommand(new DriveCommand(drivetrain, xSupplier,
                                 ySupplier, rotationSupplier,
                                 () -> wantedAngle, () -> manualOverride));
-
-                IO.driverController.rightBumper().onTrue(new InstantCommand(() -> manualOverride = true));
-                IO.driverController.rightBumper().onFalse(new InstantCommand(() -> manualOverride = false));
+                
+                //Changed manual override to the A button
+                IO.driverController.a().onTrue(new InstantCommand(() -> manualOverride = true));
+                IO.driverController.a().onFalse(new InstantCommand(() -> manualOverride = false));
 
                 IO.driverController.b()
                                 .whileTrue(new WaitCommand(0.1)
@@ -261,6 +253,95 @@ public class RobotContainer {
                                 .whileTrue(new WaitCommand(0.1)
                                                 .andThen(new InstantCommand(
                                                                 () -> drivetrain.resetOdometry(new Pose2d()))));
+           
+                //If there's no coral and LB is pressed go to left coral station
+                IO.driverController.leftBumper().and(intakeFullTrigger).onTrue(
+                        new AlignCommand(
+                                new APTarget(
+                                        new Pose2d(
+                                        Alliance.apply(FieldConstants.CoralStation.leftCenterFace).getTranslation(),
+                                        Alliance.apply(FieldConstants.CoralStation.leftCenterFace).getRotation().plus(Rotation2d.fromDegrees(180))
+                                        )
+                                ),
+                                drivetrain
+                        )
+                );
+
+                //If there's no coral and RB is pressed go to right coral station
+                IO.driverController.rightBumper().and(intakeFullTrigger).onTrue(
+                        new AlignCommand(
+                                new APTarget(
+                                        new Pose2d(
+                                        Alliance.apply(FieldConstants.CoralStation.rightCenterFace).getTranslation(),
+                                        Alliance.apply(FieldConstants.CoralStation.rightCenterFace).getRotation().plus(Rotation2d.fromDegrees(180))
+                                        )
+                                ),
+                                drivetrain
+                        )
+                );
+                       
+                //If there is a coral and RB is pressed go to right side of the closest reef face
+                IO.driverController.rightBumper().and(intakeFullTrigger).onTrue(
+                        new AlignCommand(
+                                new APTarget(
+                                        new Pose2d(
+                                        Alliance.apply(FieldConstants.CoralStation.rightCenterFace).getTranslation(),
+                                        Alliance.apply(FieldConstants.CoralStation.rightCenterFace).getRotation().plus(Rotation2d.fromDegrees(180))
+                                        )
+                                ),
+                                drivetrain
+                        )
+                );
+
+                //AI CODE:
+                // If NEAR a Reef and LB is pressed, go to the LEFT side of the closest Reef face
+                IO.driverController.leftBumper().and(intakeFullTrigger).and(reefTrigger).onTrue(
+                        new InstantCommand(() -> {
+                                Pose2d closestCenter = Distance.isPointNearLinesSegment(
+                                        getPose().getTranslation(),
+                                        FieldConstants.Reef.centerFaces,
+                                        FieldConstants.Reef.faceLength,
+                                        100);
+                                if (closestCenter != null) {
+                                        // Calculate the target point on the left half of the face by transforming
+                                        // along the face's local Y-axis.
+                                        Transform2d toLeftHalf = new Transform2d(0, FieldConstants.Reef.faceLength / 4.0, new Rotation2d());
+                                        Pose2d targetPoint = closestCenter.transformBy(toLeftHalf);
+                                        
+                                        // Final pose: at the target point, facing 180 degrees away from the face's normal
+                                        Pose2d finalTarget = new Pose2d(
+                                                targetPoint.getTranslation(),
+                                                closestCenter.getRotation().plus(Rotation2d.fromDegrees(180)));
+                                        
+                                        // Schedule the command, applying the alliance transformation
+                                        new AlignCommand(new APTarget(Alliance.apply(finalTarget)), drivetrain).schedule();
+                                }
+                        })
+                );
+
+                // If NEAR a Reef and RB is pressed, align to the RIGHT side of the closest Reef face
+                IO.driverController.rightBumper().and(intakeFullTrigger).and(reefTrigger).onTrue(
+                        new InstantCommand(() -> {
+                                Pose2d closestCenter = Distance.isPointNearLinesSegment(
+                                        getPose().getTranslation(),
+                                        FieldConstants.Reef.centerFaces,
+                                        FieldConstants.Reef.faceLength,
+                                        100);
+                                if (closestCenter != null) {
+                                        // Calculate the target point on the right half of the face
+                                        Transform2d toRightHalf = new Transform2d(0, -FieldConstants.Reef.faceLength / 4.0, new Rotation2d());
+                                        Pose2d targetPoint = closestCenter.transformBy(toRightHalf);
+
+                                        // Final pose: at the target point, facing 180 degrees away from the face's normal
+                                        Pose2d finalTarget = new Pose2d(
+                                                targetPoint.getTranslation(),
+                                                closestCenter.getRotation().plus(Rotation2d.fromDegrees(180)));
+                                        
+                                        // Schedule the command, applying the alliance transformation
+                                        new AlignCommand(new APTarget(Alliance.apply(finalTarget)), drivetrain).schedule();
+                                }
+                        })
+                );
                 ballsModeTrigger.and(ballsFull).and(processorTrigger)
                                 .whileTrue(new LockAngleCommand(this::getPose,
                                                 new Pose2d[] { FieldConstants.Processor.centerFace },
@@ -318,7 +399,7 @@ public class RobotContainer {
         public void containerTrigger() {
                 SmartDashboard.putBoolean("coral station trigger", coralStationTrigger.getAsBoolean());
                 SmartDashboard.putBoolean("intake Mode trigger", intakeModeTrigger.getAsBoolean());
-                SmartDashboard.putBoolean("intkae empty trigger", intakeEmpty.getAsBoolean());
+                SmartDashboard.putBoolean("intake empty trigger", intakeEmpty.getAsBoolean());
                 SmartDashboard.putBoolean("reef trigger", reefTrigger.getAsBoolean());
                 SmartDashboard.putBoolean("score trigger", scoreTrigger.getAsBoolean());
                 SmartDashboard.putBoolean("ready to score trigger", readyToScoreTrigger.getAsBoolean());
