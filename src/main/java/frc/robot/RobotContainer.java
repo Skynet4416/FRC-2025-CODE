@@ -268,7 +268,7 @@ public class RobotContainer {
                 );
 
                 //If there's no coral and RB is pressed go to right coral station
-                IO.driverController.rightBumper().and(intakeFullTrigger).onTrue(
+                IO.driverController.rightBumper().and(intakeEmpty).onTrue(
                         new AlignCommand(
                                 new APTarget(
                                         new Pose2d(
@@ -281,7 +281,7 @@ public class RobotContainer {
                 );
                        
                 //If there is a coral and RB is pressed go to right side of the closest reef face
-                IO.driverController.rightBumper().and(intakeFullTrigger).onTrue(
+                IO.driverController.rightBumper().and(intakeEmpty).onTrue(
                         new AlignCommand(
                                 new APTarget(
                                         new Pose2d(
