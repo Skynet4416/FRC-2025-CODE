@@ -22,8 +22,8 @@ public class AlignCommand extends Command {
     private final SwerveRequest.FieldCentricFacingAngle request = new SwerveRequest.FieldCentricFacingAngle()
         .withForwardPerspective(ForwardPerspectiveValue.BlueAlliance)
         .withDriveRequestType(DriveRequestType.Velocity)
-        .withHeadingPID(2.5, 0, 0); /* tune this for your robot! */
-  
+        .withHeadingPID(3, 0, 0);
+        
   
     public AlignCommand(APTarget target, CommandSwerveDrivetrain drivetrain) {
       this.target = target;
@@ -36,6 +36,7 @@ public class AlignCommand extends Command {
       /* no-op */
     }
   
+
     @Override
     public void execute() {
       ChassisSpeeds fieldRelativeSpeeds = this.drivetrain.getState().Speeds;

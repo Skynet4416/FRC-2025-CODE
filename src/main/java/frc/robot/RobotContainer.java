@@ -255,7 +255,7 @@ public class RobotContainer {
                                                                 () -> drivetrain.resetOdometry(new Pose2d()))));
            
                 //If there's no coral and LB is pressed go to left coral station
-                IO.driverController.leftBumper().and(intakeFullTrigger).onTrue(
+                IO.driverController.leftBumper().and(intakeEmpty).whileTrue(
                         new AlignCommand(
                                 new APTarget(
                                         new Pose2d(
@@ -268,7 +268,7 @@ public class RobotContainer {
                 );
 
                 //If there's no coral and RB is pressed go to right coral station
-                IO.driverController.rightBumper().and(intakeEmpty).onTrue(
+                IO.driverController.rightBumper().and(intakeEmpty).whileTrue(
                         new AlignCommand(
                                 new APTarget(
                                         new Pose2d(
@@ -279,23 +279,22 @@ public class RobotContainer {
                                 drivetrain
                         )
                 );
-                       
                 //If there is a coral and RB is pressed go to right side of the closest reef face
-                IO.driverController.rightBumper().and(intakeEmpty).onTrue(
+                IO.driverController.rightBumper().and(intakeEmpty).whileTrue(
                         new AlignCommand(
                                 new APTarget(
                                         new Pose2d(
                                         Alliance.apply(FieldConstants.CoralStation.rightCenterFace).getTranslation(),
                                         Alliance.apply(FieldConstants.CoralStation.rightCenterFace).getRotation().plus(Rotation2d.fromDegrees(180))
                                         )
-                                ),
+                                ).withVelocity(0),
                                 drivetrain
                         )
                 );
-
+                /*
                 //AI CODE:
                 // If NEAR a Reef and LB is pressed, go to the LEFT side of the closest Reef face
-                IO.driverController.leftBumper().and(intakeFullTrigger).onTrue(
+                IO.driverController.leftBumper().and(intakeFullTrigger).whileTrue(
                         new InstantCommand(() -> {
                                 Pose2d closestCenter = Distance.isPointNearLinesSegment(
                                         getPose().getTranslation(),
@@ -320,7 +319,7 @@ public class RobotContainer {
                 );
 
                 // If NEAR a Reef and RB is pressed, align to the RIGHT side of the closest Reef face
-                IO.driverController.rightBumper().and(intakeFullTrigger).onTrue(
+                IO.driverController.rightBumper().and(intakeFullTrigger).whileTrue(
                         new InstantCommand(() -> {
                                 Pose2d closestCenter = Distance.isPointNearLinesSegment(
                                         getPose().getTranslation(),
@@ -342,6 +341,7 @@ public class RobotContainer {
                                 }
                         })
                 );
+                 */
                 ballsModeTrigger.and(ballsFull).and(processorTrigger)
                                 .whileTrue(new LockAngleCommand(this::getPose,
                                                 new Pose2d[] { FieldConstants.Processor.centerFace },
