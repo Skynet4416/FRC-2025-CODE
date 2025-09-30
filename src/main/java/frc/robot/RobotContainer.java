@@ -45,8 +45,6 @@ import frc.robot.meth.Distance;
 import frc.robot.subsystems.Balls.BallsAngleSubsystem;
 import frc.robot.subsystems.Balls.BallsRollerSubsystem;
 import frc.robot.subsystems.Drive.CommandSwerveDrivetrain;
-import frc.robot.subsystems.Drive.MapleSimSwerve;
-import frc.robot.subsystems.Drive.SimDriveCommand;
 import frc.robot.subsystems.Drive.Telemetry;
 import frc.robot.subsystems.Drive.TunerConstants;
 import frc.robot.subsystems.Elevator.ElevatorSubsystem;
@@ -68,8 +66,6 @@ public class RobotContainer {
         private final ElevatorSubsystem elevatorSubsystem = new ElevatorSubsystem();
         private final BallsAngleSubsystem ballsAngleSubsystem = new BallsAngleSubsystem();
         private final BallsRollerSubsystem ballsRollerSubsystem = new BallsRollerSubsystem();
-
-        private final MapleSimSwerve simDrivetrain = new MapleSimSwerve();
 
         // private final ClimbDeepSubsystem climbDeepSubsystem = new
         // ClimbDeepSubsystem();
@@ -237,9 +233,6 @@ public class RobotContainer {
                 drivetrain.setDefaultCommand(new DriveCommand(drivetrain, xSupplier,
                                 ySupplier, rotationSupplier,
                                 () -> wantedAngle, () -> manualOverride));
-                simDrivetrain.setDefaultCommand(
-                                new SimDriveCommand(simDrivetrain, xSupplier, ySupplier, rotationSupplier,
-                                                () -> wantedAngle, () -> manualOverride));
 
                 IO.driverController.rightBumper().onTrue(new InstantCommand(() -> manualOverride = true));
                 IO.driverController.rightBumper().onFalse(new InstantCommand(() -> manualOverride = false));
