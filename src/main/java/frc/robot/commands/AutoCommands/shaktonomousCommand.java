@@ -3,14 +3,12 @@ package frc.robot.commands.AutoCommands;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Pose2d;
-import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.meth.Alliance;
 import frc.robot.subsystems.Drive.CommandSwerveDrivetrain;
 import frc.robot.subsystems.Vision.LimelightHelpers;
-import com.ctre.phoenix6.swerve.SwerveRequest;
 
 public class shaktonomousCommand extends Command {
     private final CommandSwerveDrivetrain drive;
@@ -71,7 +69,8 @@ public class shaktonomousCommand extends Command {
 
         double xCorrection = MathUtil.clamp(xPID.calculate(robotpose.getX(), target.getX()), -1, 1);
         double yCorrection = MathUtil.clamp(yPID.calculate(robotpose.getY(), target.getY()), -1, 1);
-        double rotationCorrection = MathUtil.clamp(rotationPID.calculate(robotpose.getRotation().getDegrees(), target.getRotation().getDegrees()), -1, 1);
+        // double rotationCorrection = MathUtil.clamp(rotationPID.calculate(robotpose.getRotation().getDegrees(), target.getRotation().getDegrees()), -1, 1);
+        
         // Debug PID outputs
         SmartDashboard.putNumber("X Correction", xCorrection);
         SmartDashboard.putNumber("Y Correction", yCorrection);

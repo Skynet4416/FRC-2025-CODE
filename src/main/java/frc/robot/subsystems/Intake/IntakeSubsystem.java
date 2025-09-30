@@ -22,11 +22,10 @@ public class IntakeSubsystem extends SubsystemBase {
     private final RelativeEncoder lowerIntakeFlexEncoder;
     private final SparkClosedLoopController upperClosedLoppController;
 
-    private IntakeState intakeState = IntakeState.EMPTY; // TODO: remove this
+    private IntakeState intakeState = IntakeState.EMPTY;
     private IntakeState intendedState = intakeState;
     private boolean reachedVelocity = false;
     private double prevVelocityUp = 0;
-    private double prevVelocityDown = 0;
 
     public IntakeSubsystem() {
         upperIntakeSparkFlex = new SparkFlex(Intake.Motors.UPPER_MASTER_SPARK_FLEX_ID, MotorType.kBrushless);

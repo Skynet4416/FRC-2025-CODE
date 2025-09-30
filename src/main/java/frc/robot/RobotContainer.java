@@ -48,8 +48,6 @@ import frc.robot.subsystems.Drive.TunerConstants;
 import frc.robot.subsystems.Elevator.ElevatorSubsystem;
 import frc.robot.subsystems.Intake.IntakeState;
 import frc.robot.subsystems.Intake.IntakeSubsystem;
-import frc.robot.subsystems.Vision.LimelightObserver;
-import frc.robot.subsystems.Vision.LimelightSubsystem;
 
 /**
  * This class is where the bulk of the robot should be declared. Since
@@ -68,8 +66,9 @@ public class RobotContainer {
         private final BallsRollerSubsystem ballsRollerSubsystem = new BallsRollerSubsystem();
         // private final ClimbDeepSubsystem climbDeepSubsystem = new
         // ClimbDeepSubsystem();
-        private final LimelightSubsystem limelightSubsystem = new LimelightSubsystem(
-                        new LimelightObserver[] { drivetrain });
+
+        // private final LimelightSubsystem limelightSubsystem = new LimelightSubsystem(
+        //                 new LimelightObserver[] { drivetrain });
         private final double MAX_SPEED = TunerConstants.kSpeedAt12Volts.in(Units.MetersPerSecond); // kSpeedAt12Volts
         // desired
         // top speed
@@ -125,7 +124,6 @@ public class RobotContainer {
                         .calculate(deadband(-IO.driverController.getRightX())
                                         * MathUtil.clamp((1 - IO.driverController.getLeftTriggerAxis()), 0.1, 1))
                         * MAX_ANGULAR_RATE;
-        private final Command autoCommand;
 
         public RobotContainer() {
                 autoFactory = new AutoFactory(
@@ -144,7 +142,6 @@ public class RobotContainer {
                 autoChooser.addCmd("middle complicated", this::pickupAndRizzAuto);
                 SmartDashboard.putData("auto", autoChooser);
                 configureBindings();
-                autoCommand = pickupAndRizzAutoSide();
         }
 
         public double deadband(double value) {

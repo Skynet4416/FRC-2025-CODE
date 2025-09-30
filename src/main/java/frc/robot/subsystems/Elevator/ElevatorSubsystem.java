@@ -28,7 +28,6 @@ public class ElevatorSubsystem extends SubsystemBase {
     private final DigitalInput hallEffect;
 
     private SparkMaxConfig leaderConfig = new SparkMaxConfig();
-    private boolean resetedEncoder = false;
 
     public ElevatorSubsystem() {
         hallEffect = new DigitalInput(Elevator.Sensors.HALL_EFFECT_PORT);
@@ -87,7 +86,6 @@ public class ElevatorSubsystem extends SubsystemBase {
 
         if (elevatorDown() && masterEncoder.getVelocity() <= 0) {
             masterEncoder.setPosition(0);
-            resetedEncoder = true;
         }
 
         SmartDashboard.putNumber("elevator current", motorLeader.getOutputCurrent());

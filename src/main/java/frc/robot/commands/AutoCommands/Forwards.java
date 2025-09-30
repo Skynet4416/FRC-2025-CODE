@@ -1,16 +1,10 @@
 package frc.robot.commands.AutoCommands;
 
-import edu.wpi.first.math.MathUtil;
-import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Pose2d;
-import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
-import frc.robot.meth.Alliance;
 import frc.robot.subsystems.Drive.CommandSwerveDrivetrain;
 import frc.robot.subsystems.Vision.LimelightHelpers;
-import com.ctre.phoenix6.swerve.SwerveRequest;
 
 public class Forwards extends Command {
     private final CommandSwerveDrivetrain drive;
