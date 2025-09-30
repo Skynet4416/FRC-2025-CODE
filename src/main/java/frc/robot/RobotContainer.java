@@ -242,8 +242,8 @@ public class RobotContainer {
                                 () -> wantedAngle, () -> manualOverride));
                 
                 //Changed manual override to the A button
-                IO.driverController.a().onTrue(new InstantCommand(() -> manualOverride = true));
-                IO.driverController.a().onFalse(new InstantCommand(() -> manualOverride = false));
+                IO.driverController.povDown().onTrue(new InstantCommand(() -> manualOverride = true));
+                IO.driverController.povDown().onFalse(new InstantCommand(() -> manualOverride = false));
 
                 IO.driverController.b()
                                 .whileTrue(new WaitCommand(0.1)
