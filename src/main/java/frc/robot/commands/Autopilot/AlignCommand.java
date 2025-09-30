@@ -47,10 +47,14 @@ public class AlignCommand extends Command {
     );
       APResult out = AutopilotConstants.AUTOPILOT.calculate(pose, robotRelativeSpeeds, this.target);
   
+      double maxTurnSpeed = Math.toRadians(360.0); // 360 degrees per second
+
       drivetrain.setControl(request
           .withVelocityX(out.vx())
           .withVelocityY(out.vy())
-          .withTargetDirection(out.targetAngle()));
+          .withTargetDirection(out.targetAngle())
+          .withMaxAbsRotationalRate(maxTurnSpeed));
+        
     }
   
     @Override
