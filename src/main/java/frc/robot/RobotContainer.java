@@ -279,18 +279,6 @@ public class RobotContainer {
                                 drivetrain
                         )
                 );
-                //If there is a coral and RB is pressed go to right side of the closest reef face
-                IO.driverController.rightBumper().and(intakeEmpty).whileTrue(
-                        new AlignCommand(
-                                new APTarget(
-                                        new Pose2d(
-                                        Alliance.apply(FieldConstants.CoralStation.rightCenterFace).getTranslation(),
-                                        Alliance.apply(FieldConstants.CoralStation.rightCenterFace).getRotation().plus(Rotation2d.fromDegrees(180))
-                                        )
-                                ).withVelocity(0),
-                                drivetrain
-                        )
-                );
                 /*
                 //AI CODE:
                 // If NEAR a Reef and LB is pressed, go to the LEFT side of the closest Reef face
