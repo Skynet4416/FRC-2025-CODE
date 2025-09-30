@@ -295,7 +295,7 @@ public class RobotContainer {
 
                 //AI CODE:
                 // If NEAR a Reef and LB is pressed, go to the LEFT side of the closest Reef face
-                IO.driverController.leftBumper().and(intakeFullTrigger).and(reefTrigger).onTrue(
+                IO.driverController.leftBumper().and(intakeFullTrigger).onTrue(
                         new InstantCommand(() -> {
                                 Pose2d closestCenter = Distance.isPointNearLinesSegment(
                                         getPose().getTranslation(),
@@ -320,7 +320,7 @@ public class RobotContainer {
                 );
 
                 // If NEAR a Reef and RB is pressed, align to the RIGHT side of the closest Reef face
-                IO.driverController.rightBumper().and(intakeFullTrigger).and(reefTrigger).onTrue(
+                IO.driverController.rightBumper().and(intakeFullTrigger).onTrue(
                         new InstantCommand(() -> {
                                 Pose2d closestCenter = Distance.isPointNearLinesSegment(
                                         getPose().getTranslation(),
