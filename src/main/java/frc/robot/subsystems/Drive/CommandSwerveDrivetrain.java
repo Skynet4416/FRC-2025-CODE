@@ -290,8 +290,6 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
                 m_hasAppliedOperatorPerspective = true;
             });
         }
-        
-        mapleSimSwerveDrivetrain.update();
     }
 
     private MapleSimSwerveDrivetrain mapleSimSwerveDrivetrain = null;
