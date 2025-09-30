@@ -7,7 +7,7 @@ import static edu.wpi.first.units.Units.RadiansPerSecond;
 import static edu.wpi.first.units.Units.RotationsPerSecond;
 
 import java.util.function.DoubleSupplier;
-
+import java.util.Set;
 import com.therekrab.autopilot.APTarget;
 
 import choreo.auto.AutoChooser;
@@ -279,57 +279,35 @@ public class RobotContainer {
                                 drivetrain
                         )
                 );
-                /*
-                //AI CODE:
-                // If NEAR a Reef and LB is pressed, go to the LEFT side of the closest Reef face
-                IO.driverController.leftBumper().and(intakeFullTrigger).whileTrue(
-                        new InstantCommand(() -> {
-                                Pose2d closestCenter = Distance.isPointNearLinesSegment(
-                                        getPose().getTranslation(),
-                                        FieldConstants.Reef.centerFaces,
-                                        FieldConstants.Reef.faceLength,
-                                        100);
-                                if (closestCenter != null) {
-                                        // Calculate the target point on the left half of the face by transforming
-                                        // along the face's local Y-axis.
-                                        Transform2d toLeftHalf = new Transform2d(0, FieldConstants.Reef.faceLength / 4.0, new Rotation2d());
-                                        Pose2d targetPoint = closestCenter.transformBy(toLeftHalf);
-                                        
-                                        // Final pose: at the target point, facing 180 degrees away from the face's normal
-                                        Pose2d finalTarget = new Pose2d(
-                                                targetPoint.getTranslation(),
-                                                closestCenter.getRotation().plus(Rotation2d.fromDegrees(180)));
-                                        
-                                        // Schedule the command, applying the alliance transformation
-                                        new AlignCommand(new APTarget(Alliance.apply(finalTarget)), drivetrain).schedule();
-                                }
-                        })
-                );
+        
+        //IDAN - I probably fixed this so you can uncomment and test
+        /*
+        // Go to to the LEFT side of the closest Reef face
+        IO.driverController.leftBumper().and(intakeFullTrigger).whileTrue(
+        Commands.defer(() -> {
+                Pose2d targetPose = getLeftReefTarget();
+                if (targetPose != null) {
+                return new AlignCommand(new APTarget(targetPose), drivetrain);
+                } else {
+                return Commands.none();
+                }
+        }, Set.of(drivetrain))
+        );
 
-                // If NEAR a Reef and RB is pressed, align to the RIGHT side of the closest Reef face
-                IO.driverController.rightBumper().and(intakeFullTrigger).whileTrue(
-                        new InstantCommand(() -> {
-                                Pose2d closestCenter = Distance.isPointNearLinesSegment(
-                                        getPose().getTranslation(),
-                                        FieldConstants.Reef.centerFaces,
-                                        FieldConstants.Reef.faceLength,
-                                        100);
-                                if (closestCenter != null) {
-                                        // Calculate the target point on the right half of the face
-                                        Transform2d toRightHalf = new Transform2d(0, -FieldConstants.Reef.faceLength / 4.0, new Rotation2d());
-                                        Pose2d targetPoint = closestCenter.transformBy(toRightHalf);
+        // Go to to the RIGHT side of the closest Reef face
+        IO.driverController.rightBumper().and(intakeFullTrigger).whileTrue(
+        Commands.defer(() -> {
+                Pose2d targetPose = getRightReefTarget();
+                if (targetPose != null) {
+                return new AlignCommand(new APTarget(targetPose), drivetrain);
+                } else {
+                return Commands.none();
+                }
+        }, Set.of(drivetrain))
+        );
+        */
 
-                                        // Final pose: at the target point, facing 180 degrees away from the face's normal
-                                        Pose2d finalTarget = new Pose2d(
-                                                targetPoint.getTranslation(),
-                                                closestCenter.getRotation().plus(Rotation2d.fromDegrees(180)));
-                                        
-                                        // Schedule the command, applying the alliance transformation
-                                        new AlignCommand(new APTarget(Alliance.apply(finalTarget)), drivetrain).schedule();
-                                }
-                        })
-                );
-                 */
+
                 ballsModeTrigger.and(ballsFull).and(processorTrigger)
                                 .whileTrue(new LockAngleCommand(this::getPose,
                                                 new Pose2d[] { FieldConstants.Processor.centerFace },
@@ -359,6 +337,8 @@ public class RobotContainer {
                 this.ballsRollerSubsystem.setDefaultCommand(new BallsRollerKeepAtPose(ballsRollerSubsystem));
 
         }
+
+
 
         // /**
         // *
@@ -541,4 +521,56 @@ public class RobotContainer {
         public void manualOverrideSetter(boolean manualOverride) {
                 this.manualOverride = manualOverride;
         }
+
+        // Replace your previous Reef Target functions with these
+
+/**
+ * Finds the closest Reef face and calculates the target pose for the LEFT side.
+ * @return The target Pose2d, or null if no Reef is found.
+ */
+public Pose2d getLeftReefTarget() {
+        Pose2d closestCenter = Distance.isPointNearLinesSegment(
+                getPose().getTranslation(),
+                FieldConstants.Reef.centerFaces,
+                FieldConstants.Reef.faceLength,
+                100);
+        
+        if (closestCenter != null) {
+            Transform2d toLeftHalf = new Transform2d(0, FieldConstants.Reef.faceLength / 4.0, new Rotation2d());
+            Pose2d targetPoint = closestCenter.transformBy(toLeftHalf);
+            
+            Pose2d finalTarget = new Pose2d(
+                    targetPoint.getTranslation(),
+                    closestCenter.getRotation().plus(Rotation2d.fromDegrees(180)));
+            
+            return Alliance.apply(finalTarget);
+        }
+    
+        return null; // Return null if no Reef was found
+    }
+    
+    /**
+     * Finds the closest Reef face and calculates the target pose for the RIGHT side.
+     * @return The target Pose2d, or null if no Reef is found.
+     */
+    public Pose2d getRightReefTarget() {
+        Pose2d closestCenter = Distance.isPointNearLinesSegment(
+                getPose().getTranslation(),
+                FieldConstants.Reef.centerFaces,
+                FieldConstants.Reef.faceLength,
+                100); 
+        
+        if (closestCenter != null) {
+            Transform2d toRightHalf = new Transform2d(0, -FieldConstants.Reef.faceLength / 4.0, new Rotation2d());
+            Pose2d targetPoint = closestCenter.transformBy(toRightHalf);
+    
+            Pose2d finalTarget = new Pose2d(
+                    targetPoint.getTranslation(),
+                    closestCenter.getRotation().plus(Rotation2d.fromDegrees(180)));
+            
+            return Alliance.apply(finalTarget);
+        }
+        
+        return null; // Return null if no Reef was found
+    }
 }
