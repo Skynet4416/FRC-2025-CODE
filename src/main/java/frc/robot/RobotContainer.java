@@ -8,6 +8,8 @@ import static edu.wpi.first.units.Units.RotationsPerSecond;
 
 import java.util.function.DoubleSupplier;
 
+import com.ctre.phoenix6.swerve.SimSwerveDrivetrain;
+
 import choreo.auto.AutoChooser;
 import choreo.auto.AutoFactory;
 import edu.wpi.first.math.MathUtil;
@@ -43,6 +45,8 @@ import frc.robot.meth.Distance;
 import frc.robot.subsystems.Balls.BallsAngleSubsystem;
 import frc.robot.subsystems.Balls.BallsRollerSubsystem;
 import frc.robot.subsystems.Drive.CommandSwerveDrivetrain;
+import frc.robot.subsystems.Drive.MapleSimSwerve;
+import frc.robot.subsystems.Drive.SimDriveCommand;
 import frc.robot.subsystems.Drive.Telemetry;
 import frc.robot.subsystems.Drive.TunerConstants;
 import frc.robot.subsystems.Elevator.ElevatorSubsystem;
@@ -64,11 +68,14 @@ public class RobotContainer {
         private final ElevatorSubsystem elevatorSubsystem = new ElevatorSubsystem();
         private final BallsAngleSubsystem ballsAngleSubsystem = new BallsAngleSubsystem();
         private final BallsRollerSubsystem ballsRollerSubsystem = new BallsRollerSubsystem();
+
+        private final MapleSimSwerve simDrivetrain = new MapleSimSwerve();
+
         // private final ClimbDeepSubsystem climbDeepSubsystem = new
         // ClimbDeepSubsystem();
 
         // private final LimelightSubsystem limelightSubsystem = new LimelightSubsystem(
-        //                 new LimelightObserver[] { drivetrain });
+        // new LimelightObserver[] { drivetrain });
         private final double MAX_SPEED = TunerConstants.kSpeedAt12Volts.in(Units.MetersPerSecond); // kSpeedAt12Volts
         // desired
         // top speed
@@ -230,6 +237,9 @@ public class RobotContainer {
                 drivetrain.setDefaultCommand(new DriveCommand(drivetrain, xSupplier,
                                 ySupplier, rotationSupplier,
                                 () -> wantedAngle, () -> manualOverride));
+                simDrivetrain.setDefaultCommand(
+                                new SimDriveCommand(simDrivetrain, xSupplier, ySupplier, rotationSupplier,
+                                                () -> wantedAngle, () -> manualOverride));
 
                 IO.driverController.rightBumper().onTrue(new InstantCommand(() -> manualOverride = true));
                 IO.driverController.rightBumper().onFalse(new InstantCommand(() -> manualOverride = false));
@@ -317,13 +327,14 @@ public class RobotContainer {
 
         public Command getIntakeCommand() {
                 return new IntakeCoral(intakeSubsystem).deadlineFor(new ElevatorMoveToHeight(elevatorSubsystem,
-                                Constants.States.Intake.ELEVATOR_HEIGHT)).raceWith(new WaitCommand(3)).andThen(new InstantCommand(
-                                        () -> {
-                                                intakeSubsystem.moveMotor(
-                                                                Constants.States.Intake.INTAKE_PERCEHNTAGE);
-                                        })
-                                        .raceWith(new WaitCommand(
-                                                        0.3)))
+                                Constants.States.Intake.ELEVATOR_HEIGHT)).raceWith(new WaitCommand(3))
+                                .andThen(new InstantCommand(
+                                                () -> {
+                                                        intakeSubsystem.moveMotor(
+                                                                        Constants.States.Intake.INTAKE_PERCEHNTAGE);
+                                                })
+                                                .raceWith(new WaitCommand(
+                                                                0.3)))
                                 .andThen(new ElevatorResetLimitSwitchEnd(
                                                 elevatorSubsystem));
 
