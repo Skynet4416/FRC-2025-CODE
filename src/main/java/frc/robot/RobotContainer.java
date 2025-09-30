@@ -180,6 +180,7 @@ public class RobotContainer {
                 IO.mechanismController.a().onTrue(new InstantCommand(() -> state = RobotState.INTAKE));
                 IO.mechanismController.b().onTrue(new InstantCommand(() -> state = RobotState.SCORE));
                 IO.mechanismController.povUp().onTrue(new InstantCommand(() -> state = RobotState.SCORE_HIGH));
+                IO.mechanismController.povDown().onTrue(new InstantCommand(() -> state = RobotState.SCORE));
                 IO.mechanismController.y().onTrue(new InstantCommand(() -> state = RobotState.BALLS));
                 IO.mechanismController.x().whileTrue(new IntakeAtPercentage(intakeSubsystem,
                                 -1)
