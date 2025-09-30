@@ -239,11 +239,9 @@ public class RobotContainer {
 
                 reefTrigger.and(scoreHighTrigger)                                
                         .whileTrue(new ElevatorStayAtHeight(elevatorSubsystem,
-                                        Constants.States.ScoreHigh.ELEVATOR_HEIGHT)
-                                        .alongWith(new RunCommand(() -> readyToScore = this.elevatorSubsystem.elevatorAtSetpoint(Constants.States.ScoreHigh.ELEVATOR_HEIGHT))));                                
-
+                                        Constants.States.ScoreHigh.ELEVATOR_HEIGHT));
                 
-                reefTrigger.and(scoreHighTrigger).and(readyToScoreTrigger).and(IO.mechanismController.leftBumper())
+                reefTrigger.and(scoreHighTrigger).and(IO.mechanismController.leftBumper())
                                 .onTrue(new IntakeAtPercentage(intakeSubsystem, 
                                                 Constants.States.ScoreHigh.INTAKE_PERCNETAGE)
                                                 .raceWith(new WaitCommand(Constants.States.ScoreHigh.INTAKE_TIME))
