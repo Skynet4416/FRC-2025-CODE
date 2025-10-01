@@ -22,7 +22,7 @@ public class AlignCommand extends Command {
     private final SwerveRequest.FieldCentricFacingAngle request = new SwerveRequest.FieldCentricFacingAngle()
         .withForwardPerspective(ForwardPerspectiveValue.BlueAlliance)
         .withDriveRequestType(DriveRequestType.Velocity)
-        .withHeadingPID(3, 0, 0);
+        .withHeadingPID(0.5, 0, 0.05); //not tuned
         
   
     public AlignCommand(APTarget target, CommandSwerveDrivetrain drivetrain) {
