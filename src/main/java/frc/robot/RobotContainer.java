@@ -241,7 +241,7 @@ public class RobotContainer {
                                 ySupplier, rotationSupplier,
                                 () -> wantedAngle, () -> manualOverride));
                 
-                //Changed manual override to the A button
+                //Changed manual override to the Povdown button
                 IO.driverController.povDown().onTrue(new InstantCommand(() -> manualOverride = true));
                 IO.driverController.povDown().onFalse(new InstantCommand(() -> manualOverride = false));
 

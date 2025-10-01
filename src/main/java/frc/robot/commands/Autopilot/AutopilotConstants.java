@@ -13,8 +13,8 @@ public final class AutopilotConstants{
     private static final APConstraints CONSTRAINTS = new APConstraints()
         // TODO: calibrate these values
         .withAcceleration(10)
-        .withVelocity(1)
-        .withJerk(3);
+        .withVelocity(10)
+        .withJerk(5);
         
         
 
