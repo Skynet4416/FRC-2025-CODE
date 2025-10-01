@@ -149,7 +149,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
     public CommandSwerveDrivetrain(
             SwerveDrivetrainConstants drivetrainConstants,
             SwerveModuleConstants<?, ?, ?>... modules) {
-        super(drivetrainConstants, modules);
+        super(drivetrainConstants, MapleSimSwerveDrivetrain.regulateModuleConstantsForSimulation(modules));
         m_pathThetaController.enableContinuousInput(-Math.PI, Math.PI);
         m_pathThetaController.setTolerance(Units.degreesToRadians(1.5));
         if (Utils.isSimulation()) {
@@ -297,11 +297,11 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
     private void startSimThread() {
         mapleSimSwerveDrivetrain = new MapleSimSwerveDrivetrain(
                 Seconds.of(kSimLoopPeriod),
-                Pounds.of(115), // robot weight
-                Inches.of(26), Inches.of(26),
+                Pounds.of(100), // robot weight
+                Inches.of(24), Inches.of(24),
                 DCMotor.getKrakenX60(1), // drive motor type
                 DCMotor.getFalcon500(1), // steer motor type
-                COTS.WHEELS.VEX_GRIP_V2.cof,
+                COTS.WHEELS.BLUE_NITRILE_TREAD.cof,
                 getModuleLocations(),
                 getPigeon2(),
                 getModules(),

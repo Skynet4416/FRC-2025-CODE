@@ -158,7 +158,8 @@ public class MapleSimSwerveDrivetrain {
                 SwerveModule<TalonFX, TalonFX, CANcoder> module) {
             this.moduleConstant = moduleConstant;
             this.moduleSimulation = moduleSimulation;
-            moduleSimulation.useDriveMotorController(new TalonFXMotorControllerSim(module.getDriveMotor()));
+            moduleSimulation.useDriveMotorController(new
+            TalonFXMotorControllerSim(module.getDriveMotor()));
             moduleSimulation.useSteerMotorController(
                     new TalonFXMotorControllerWithRemoteCanCoderSim(module.getSteerMotor(), module.getEncoder()));
         }
@@ -276,14 +277,14 @@ public class MapleSimSwerveDrivetrain {
                 .withEncoderInverted(false)
                 // Adjust steer motor PID gains for simulation
                 .withSteerMotorGains(new Slot0Configs()
-                        .withKP(70)
+                        .withKP(100)
                         .withKI(0)
                         .withKD(4.5)
                         .withKS(0)
                         .withKV(1.91)
                         .withKA(0)
                         .withStaticFeedforwardSign(StaticFeedforwardSignValue.UseClosedLoopSign))
-                .withSteerMotorGearRatio(16.0)
+                .withSteerMotorGearRatio(150/7.0)
                 // Adjust friction voltages
                 .withDriveFrictionVoltage(Volts.of(0.1))
                 .withSteerFrictionVoltage(Volts.of(0.05))
