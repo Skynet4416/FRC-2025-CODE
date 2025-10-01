@@ -49,7 +49,7 @@ public class AlignCommand extends Command {
       Pose2d correctedPose = new Pose2d(pose.getTranslation(),correctedRotation);
 
       ChassisSpeeds robotRelativeSpeeds = ChassisSpeeds.fromFieldRelativeSpeeds(
-        fieldRelativeSpeeds, pose.getRotation()
+        fieldRelativeSpeeds, correctedRotation
     );
       APResult out = AutopilotConstants.AUTOPILOT.calculate(correctedPose, robotRelativeSpeeds, this.target);
   
