@@ -13,13 +13,14 @@ public final class AutopilotConstants{
     private static final APConstraints CONSTRAINTS = new APConstraints()
         // TODO: calibrate these values
         .withAcceleration(10)
-        .withVelocity(5)
-        .withJerk(5);
+        .withVelocity(1)
+        .withJerk(3);
+        
         
 
     private static final APProfile PROFILE = new APProfile(CONSTRAINTS)
         // TODO: calibrate these values
-        .withErrorXY(Centimeters.of(3))
+        .withErrorXY(Centimeters.of(10))
         .withErrorTheta(Degrees.of(5));
         //.withBeelineRadius(Centimeters.of(8));
 

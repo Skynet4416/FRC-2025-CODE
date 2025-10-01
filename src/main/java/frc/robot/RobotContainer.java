@@ -281,7 +281,7 @@ public class RobotContainer {
                 );
         
         //IDAN - I probably fixed this so you can uncomment and test
-        /*
+        
         // Go to to the LEFT side of the closest Reef face
         IO.driverController.leftBumper().and(intakeFullTrigger).whileTrue(
         Commands.defer(() -> {
@@ -305,7 +305,7 @@ public class RobotContainer {
                 }
         }, Set.of(drivetrain))
         );
-        */
+        
 
 
                 ballsModeTrigger.and(ballsFull).and(processorTrigger)
