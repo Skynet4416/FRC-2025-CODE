@@ -7,6 +7,8 @@ import static edu.wpi.first.units.Units.RadiansPerSecond;
 import static edu.wpi.first.units.Units.RotationsPerSecond;
 
 import java.util.function.DoubleSupplier;
+import java.util.Set;
+import com.therekrab.autopilot.APTarget;
 
 import com.ctre.phoenix6.swerve.SimSwerveDrivetrain;
 
@@ -16,6 +18,7 @@ import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.filter.SlewRateLimiter;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.units.Units;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -29,6 +32,7 @@ import frc.robot.Constants.States;
 import frc.robot.commands.DriveCommand;
 import frc.robot.commands.LockAngleCommand;
 import frc.robot.commands.AutoCommands.Forwards;
+import frc.robot.commands.Autopilot.AlignCommand;
 import frc.robot.commands.Autos.TrajCommnd;
 import frc.robot.commands.Balls.BallsAngleToAngle;
 import frc.robot.commands.Balls.BallsKeepAtAngle;
@@ -41,6 +45,7 @@ import frc.robot.commands.Elevator.ElevatorResetLimitSwitchEnd;
 import frc.robot.commands.Intake.IntakeAtPercentage;
 import frc.robot.commands.Intake.IntakeCoral;
 import frc.robot.commands.Intake.IntakeDefault;
+import frc.robot.meth.Alliance;
 import frc.robot.meth.Distance;
 import frc.robot.subsystems.Balls.BallsAngleSubsystem;
 import frc.robot.subsystems.Balls.BallsRollerSubsystem;
@@ -103,6 +108,7 @@ public class RobotContainer {
         private final Trigger ballsModeTrigger = new Trigger(() -> this.getState() == RobotState.BALLS);
         private final Trigger scoreTrigger = new Trigger(() -> this.getState() == RobotState.SCORE);
         private final Trigger intakeEmpty = new Trigger(() -> intakeSubsystem.getState() == IntakeState.EMPTY);
+        public final Trigger intakeFullTrigger = new Trigger(() -> intakeSubsystem.getState() == IntakeState.FULL); 
         private boolean readyToScore = false;
         private final Trigger readyToScoreTrigger = new Trigger(() -> readyToScore);
 
@@ -183,6 +189,7 @@ public class RobotContainer {
                                         state = RobotState.NONE;
                                 })));
 
+
                 intakeSubsystem.setDefaultCommand(new IntakeDefault(intakeSubsystem));
 
                 elevatorSubsystem.setDefaultCommand(new ElevatorResetLimitSwitch(elevatorSubsystem));
@@ -233,9 +240,10 @@ public class RobotContainer {
                 drivetrain.setDefaultCommand(new DriveCommand(drivetrain, xSupplier,
                                 ySupplier, rotationSupplier,
                                 () -> wantedAngle, () -> manualOverride));
-
-                IO.driverController.rightBumper().onTrue(new InstantCommand(() -> manualOverride = true));
-                IO.driverController.rightBumper().onFalse(new InstantCommand(() -> manualOverride = false));
+                
+                //Changed manual override to the Povdown button
+                IO.driverController.povDown().onTrue(new InstantCommand(() -> manualOverride = true));
+                IO.driverController.povDown().onFalse(new InstantCommand(() -> manualOverride = false));
 
                 IO.driverController.b()
                                 .whileTrue(new WaitCommand(0.1)
@@ -245,6 +253,61 @@ public class RobotContainer {
                                 .whileTrue(new WaitCommand(0.1)
                                                 .andThen(new InstantCommand(
                                                                 () -> drivetrain.resetOdometry(new Pose2d()))));
+           
+                //If there's no coral and LB is pressed go to left coral station
+                IO.driverController.leftBumper().and(intakeEmpty).whileTrue(
+                        new AlignCommand(
+                                new APTarget(
+                                        new Pose2d(
+                                        Alliance.apply(FieldConstants.CoralStation.leftCenterFace).getTranslation(),
+                                        Alliance.apply(FieldConstants.CoralStation.leftCenterFace).getRotation().plus(Rotation2d.fromDegrees(180))
+                                        )
+                                ),
+                                drivetrain
+                        )
+                );
+
+                //If there's no coral and RB is pressed go to right coral station
+                IO.driverController.rightBumper().and(intakeEmpty).whileTrue(
+                        new AlignCommand(
+                                new APTarget(
+                                        new Pose2d(
+                                        Alliance.apply(FieldConstants.CoralStation.rightCenterFace).getTranslation(),
+                                        Alliance.apply(FieldConstants.CoralStation.rightCenterFace).getRotation().plus(Rotation2d.fromDegrees(180))
+                                        )
+                                ),
+                                drivetrain
+                        )
+                );
+        
+        //IDAN - I probably fixed this so you can uncomment and test
+        
+        // Go to to the LEFT side of the closest Reef face
+        IO.driverController.leftBumper().and(intakeFullTrigger).whileTrue(
+        Commands.defer(() -> {
+                Pose2d targetPose = getLeftReefTarget();
+                if (targetPose != null) {
+                return new AlignCommand(new APTarget(targetPose), drivetrain);
+                } else {
+                return Commands.none();
+                }
+        }, Set.of(drivetrain))
+        );
+
+        // Go to to the RIGHT side of the closest Reef face
+        IO.driverController.rightBumper().and(intakeFullTrigger).whileTrue(
+        Commands.defer(() -> {
+                Pose2d targetPose = getRightReefTarget();
+                if (targetPose != null) {
+                return new AlignCommand(new APTarget(targetPose), drivetrain);
+                } else {
+                return Commands.none();
+                }
+        }, Set.of(drivetrain))
+        );
+        
+
+
                 ballsModeTrigger.and(ballsFull).and(processorTrigger)
                                 .whileTrue(new LockAngleCommand(this::getPose,
                                                 new Pose2d[] { FieldConstants.Processor.centerFace },
@@ -275,6 +338,8 @@ public class RobotContainer {
 
         }
 
+
+
         // /**
         // *
 
@@ -302,7 +367,7 @@ public class RobotContainer {
         public void containerTrigger() {
                 SmartDashboard.putBoolean("coral station trigger", coralStationTrigger.getAsBoolean());
                 SmartDashboard.putBoolean("intake Mode trigger", intakeModeTrigger.getAsBoolean());
-                SmartDashboard.putBoolean("intkae empty trigger", intakeEmpty.getAsBoolean());
+                SmartDashboard.putBoolean("intake empty trigger", intakeEmpty.getAsBoolean());
                 SmartDashboard.putBoolean("reef trigger", reefTrigger.getAsBoolean());
                 SmartDashboard.putBoolean("score trigger", scoreTrigger.getAsBoolean());
                 SmartDashboard.putBoolean("ready to score trigger", readyToScoreTrigger.getAsBoolean());
@@ -457,4 +522,56 @@ public class RobotContainer {
         public void manualOverrideSetter(boolean manualOverride) {
                 this.manualOverride = manualOverride;
         }
+
+        // Replace your previous Reef Target functions with these
+
+/**
+ * Finds the closest Reef face and calculates the target pose for the LEFT side.
+ * @return The target Pose2d, or null if no Reef is found.
+ */
+public Pose2d getLeftReefTarget() {
+        Pose2d closestCenter = Distance.isPointNearLinesSegment(
+                getPose().getTranslation(),
+                FieldConstants.Reef.centerFaces,
+                FieldConstants.Reef.faceLength,
+                100);
+        
+        if (closestCenter != null) {
+            Transform2d toLeftHalf = new Transform2d(0, FieldConstants.Reef.faceLength / 4.0, new Rotation2d());
+            Pose2d targetPoint = closestCenter.transformBy(toLeftHalf);
+            
+            Pose2d finalTarget = new Pose2d(
+                    targetPoint.getTranslation(),
+                    closestCenter.getRotation().plus(Rotation2d.fromDegrees(180)));
+            
+            return Alliance.apply(finalTarget);
+        }
+    
+        return null; // Return null if no Reef was found
+    }
+    
+    /**
+     * Finds the closest Reef face and calculates the target pose for the RIGHT side.
+     * @return The target Pose2d, or null if no Reef is found.
+     */
+    public Pose2d getRightReefTarget() {
+        Pose2d closestCenter = Distance.isPointNearLinesSegment(
+                getPose().getTranslation(),
+                FieldConstants.Reef.centerFaces,
+                FieldConstants.Reef.faceLength,
+                100); 
+        
+        if (closestCenter != null) {
+            Transform2d toRightHalf = new Transform2d(0, -FieldConstants.Reef.faceLength / 4.0, new Rotation2d());
+            Pose2d targetPoint = closestCenter.transformBy(toRightHalf);
+    
+            Pose2d finalTarget = new Pose2d(
+                    targetPoint.getTranslation(),
+                    closestCenter.getRotation().plus(Rotation2d.fromDegrees(180)));
+            
+            return Alliance.apply(finalTarget);
+        }
+        
+        return null; // Return null if no Reef was found
+    }
 }
