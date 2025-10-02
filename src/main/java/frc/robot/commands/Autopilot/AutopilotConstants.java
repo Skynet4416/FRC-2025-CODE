@@ -32,15 +32,16 @@ public final class AutopilotConstants{
     
     public static class Targets{
         public static class CoralStation{
-            //Coral Station Targets (Change based on the alliance to the other side of the field)
+            //Coral Station Targets
             public static final Pose2d LEFT_CORAL_STATION = new Pose2d(
-                                        Alliance.apply(FieldConstants.CoralStation.leftCenterFace).getTranslation(),
-                                        Alliance.apply(FieldConstants.CoralStation.leftCenterFace).getRotation()
+                                        FieldConstants.CoralStation.leftCenterFace.getTranslation(),
+                                        FieldConstants.CoralStation.leftCenterFace.getRotation()
                                                 .plus(Rotation2d.fromDegrees(180)));
 
+                                                
             public static final Pose2d RIGHT_CORAL_STATION = new Pose2d(
-                Alliance.apply(FieldConstants.CoralStation.rightCenterFace).getTranslation(),
-                Alliance.apply(FieldConstants.CoralStation.rightCenterFace).getRotation()
+                FieldConstants.CoralStation.rightCenterFace.getTranslation(),
+                FieldConstants.CoralStation.rightCenterFace.getRotation()
                         .plus(Rotation2d.fromDegrees(180)));
         }
         public static class Reef{
@@ -82,7 +83,7 @@ public final class AutopilotConstants{
                             targetPoint.getTranslation(),
                             closestCenter.getRotation().plus(Rotation2d.fromDegrees(180)));
 
-                    return Alliance.apply(finalTarget);
+                    return finalTarget;
                 }
 
                 return null; // Return null if no Reef was found
@@ -110,7 +111,7 @@ public final class AutopilotConstants{
                             targetPoint.getTranslation(),
                             closestCenter.getRotation().plus(Rotation2d.fromDegrees(180)));
 
-                    return Alliance.apply(finalTarget);
+                    return finalTarget;
                 }
 
                 return null; // Return null if no Reef was found
