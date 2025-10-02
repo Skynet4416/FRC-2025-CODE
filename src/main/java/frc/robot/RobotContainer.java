@@ -33,6 +33,7 @@ import frc.robot.commands.DriveCommand;
 import frc.robot.commands.LockAngleCommand;
 import frc.robot.commands.AutoCommands.Forwards;
 import frc.robot.commands.Autopilot.AlignCommand;
+import frc.robot.commands.Autopilot.AutopilotConstants;
 import frc.robot.commands.Autos.TrajCommnd;
 import frc.robot.commands.Balls.BallsAngleToAngle;
 import frc.robot.commands.Balls.BallsKeepAtAngle;
@@ -256,28 +257,23 @@ public class RobotContainer {
         // If there's no coral and LB is pressed go to left coral station
         IO.driverController.leftBumper().and(intakeEmpty).whileTrue(
                 new AlignCommand(
-                        new Pose2d(
-                                Alliance.apply(FieldConstants.CoralStation.leftCenterFace).getTranslation(),
-                                Alliance.apply(FieldConstants.CoralStation.leftCenterFace).getRotation()
-                                        .plus(Rotation2d.fromDegrees(180))),
+                        AutopilotConstants.Targets.CoralStation.LEFT_CORAL_STATION,
                         drivetrain
 
                 ));
 
+
         // If there's no coral and RB is pressed go to right coral station
         IO.driverController.rightBumper().and(intakeEmpty).whileTrue(
                 new AlignCommand(
-                                new Pose2d(
-                                        Alliance.apply(FieldConstants.CoralStation.rightCenterFace).getTranslation(),
-                                        Alliance.apply(FieldConstants.CoralStation.rightCenterFace).getRotation()
-                                                .plus(Rotation2d.fromDegrees(180))),
+                                AutopilotConstants.Targets.CoralStation.RIGHT_CORAL_STATION,
                         drivetrain));
 
 
         // Go to to the LEFT side of the closest Reef face
         IO.driverController.leftBumper().and(intakeFullTrigger).whileTrue(
                 Commands.defer(() -> {
-                    Pose2d targetPose = getLeftReefTarget();
+                    Pose2d targetPose = AutopilotConstants.Targets.Reef.getLeftReefTarget(getPose());
                     if (targetPose != null) {
                         return new AlignCommand(targetPose,drivetrain);
                     } else {
@@ -288,7 +284,7 @@ public class RobotContainer {
         // Go to to the RIGHT side of the closest Reef face
         IO.driverController.rightBumper().and(intakeFullTrigger).whileTrue(
                 Commands.defer(() -> {
-                    Pose2d targetPose = getRightReefTarget();
+                    Pose2d targetPose = AutopilotConstants.Targets.Reef.getRightReefTarget(getPose());
                     if (targetPose != null) {
                         return new AlignCommand(targetPose,drivetrain);
                     } else {
@@ -509,60 +505,6 @@ public class RobotContainer {
         this.manualOverride = manualOverride;
     }
 
-    // Replace your previous Reef Target functions with these
 
-    /**
-     * Finds the closest Reef face and calculates the target pose for the LEFT side.
-     * 
-     * @return The target Pose2d, or null if no Reef is found.
-     */
-    public Pose2d getLeftReefTarget() {
-        Pose2d closestCenter = Distance.isPointNearLinesSegment(
-                getPose().getTranslation(),
-                FieldConstants.Reef.centerFaces,
-                FieldConstants.Reef.faceLength,
-                100);
-
-        if (closestCenter != null) {
-            // Use a negative Y value to transform to the left
-            Transform2d toLeftHalf = new Transform2d(0, -FieldConstants.Reef.faceLength / 4.0, new Rotation2d());
-            Pose2d targetPoint = closestCenter.transformBy(toLeftHalf);
-
-            Pose2d finalTarget = new Pose2d(
-                    targetPoint.getTranslation(),
-                    closestCenter.getRotation().plus(Rotation2d.fromDegrees(180)));
-
-            return Alliance.apply(finalTarget);
-        }
-
-        return null; // Return null if no Reef was found
-    }
-
-    /**
-     * Finds the closest Reef face and calculates the target pose for the RIGHT
-     * side.
-     * 
-     * @return The target Pose2d, or null if no Reef is found.
-     */
-    public Pose2d getRightReefTarget() {
-        Pose2d closestCenter = Distance.isPointNearLinesSegment(
-                getPose().getTranslation(),
-                FieldConstants.Reef.centerFaces,
-                FieldConstants.Reef.faceLength,
-                100);
-
-        if (closestCenter != null) {
-            // Use a positive Y value to transform to the right
-            Transform2d toRightHalf = new Transform2d(0, FieldConstants.Reef.faceLength / 4.0, new Rotation2d());
-            Pose2d targetPoint = closestCenter.transformBy(toRightHalf);
-
-            Pose2d finalTarget = new Pose2d(
-                    targetPoint.getTranslation(),
-                    closestCenter.getRotation().plus(Rotation2d.fromDegrees(180)));
-
-            return Alliance.apply(finalTarget);
-        }
-
-        return null; // Return null if no Reef was found
-    }
+ 
 }
