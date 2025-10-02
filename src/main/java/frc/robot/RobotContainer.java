@@ -257,7 +257,7 @@ public class RobotContainer {
         // If there's no coral and LB is pressed go to left coral station
         IO.driverController.leftBumper().and(intakeEmpty).whileTrue(
                 new AlignCommand(
-                        AutopilotConstants.Targets.CoralStation.LEFT_CORAL_STATION,
+                        Alliance.apply(AutopilotConstants.Targets.CoralStation.LEFT_CORAL_STATION),
                         drivetrain
 
                 ));
@@ -266,14 +266,14 @@ public class RobotContainer {
         // If there's no coral and RB is pressed go to right coral station
         IO.driverController.rightBumper().and(intakeEmpty).whileTrue(
                 new AlignCommand(
-                                AutopilotConstants.Targets.CoralStation.RIGHT_CORAL_STATION,
+                        Alliance.apply(AutopilotConstants.Targets.CoralStation.RIGHT_CORAL_STATION),
                         drivetrain));
 
 
         // Go to to the LEFT side of the closest Reef face
         IO.driverController.leftBumper().and(intakeFullTrigger).whileTrue(
                 Commands.defer(() -> {
-                    Pose2d targetPose = AutopilotConstants.Targets.Reef.getLeftReefTarget(getPose());
+                    Pose2d targetPose = Alliance.apply(AutopilotConstants.Targets.Reef.getLeftReefTarget(getPose()));
                     if (targetPose != null) {
                         return new AlignCommand(targetPose,drivetrain);
                     } else {
@@ -284,7 +284,7 @@ public class RobotContainer {
         // Go to to the RIGHT side of the closest Reef face
         IO.driverController.rightBumper().and(intakeFullTrigger).whileTrue(
                 Commands.defer(() -> {
-                    Pose2d targetPose = AutopilotConstants.Targets.Reef.getRightReefTarget(getPose());
+                    Pose2d targetPose = Alliance.apply(AutopilotConstants.Targets.Reef.getRightReefTarget(getPose()));
                     if (targetPose != null) {
                         return new AlignCommand(targetPose,drivetrain);
                     } else {
