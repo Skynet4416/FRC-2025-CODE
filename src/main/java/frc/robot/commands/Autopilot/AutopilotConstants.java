@@ -7,6 +7,7 @@ import com.therekrab.autopilot.Autopilot;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Transform2d;
+import edu.wpi.first.math.geometry.Translation2d;
 import frc.robot.FieldConstants;
 import frc.robot.meth.Alliance;
 import frc.robot.meth.Distance;
@@ -29,7 +30,9 @@ public final class AutopilotConstants{
 
     public static final Autopilot AUTOPILOT = new Autopilot(PROFILE);
     
-    
+    //How much back to move the target - (MA constants are set for the middle of the game pieces) - currently set as about minus half of the robots length
+    public static final double BACKWARDS_OFFSET = -0.3362;
+
     public static class Targets{
         public static class CoralStation{
             //Coral Station Targets
