@@ -16,6 +16,7 @@ import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.Constants;
+import frc.robot.meth.Distance;
 import frc.robot.subsystems.Drive.CommandSwerveDrivetrain;
 
 
@@ -28,30 +29,27 @@ public class AlignCommand extends Command {
         .withDriveRequestType(DriveRequestType.Velocity);
         
   
-    public AlignCommand(APTarget target, CommandSwerveDrivetrain drivetrain) {
-      this.target = target;
+    public AlignCommand(Pose2d targetPose, CommandSwerveDrivetrain drivetrain) {
+      this.target = new APTarget(Distance.moveTargetBack(targetPose)).withEntryAngle(targetPose.getRotation());
       this.drivetrain = drivetrain;
       addRequirements(drivetrain);
     }
   
     @Override
     public void initialize() {
+       double[] targetPosArr = {target.getReference().getX(),target.getReference().getY(),target.getReference().getRotation().getDegrees()};
+       SmartDashboard.putNumberArray("Current target (AUTOPILOT)",targetPosArr);
       /* no-op */
     }
   
 
     @Override
     public void execute() {
-      ChassisSpeeds fieldRelativeSpeeds = this.drivetrain.getState().Speeds;
+      ChassisSpeeds robotRelativeSpeeds = this.drivetrain.getState().Speeds;
       Pose2d pose = drivetrain.getPose();
 
-      Rotation2d correctedRotation = new Rotation2d(-pose.getRotation().getRadians());
-      Pose2d correctedPose = new Pose2d(pose.getTranslation(),correctedRotation);
 
-      ChassisSpeeds robotRelativeSpeeds = ChassisSpeeds.fromFieldRelativeSpeeds(
-        fieldRelativeSpeeds, pose.getRotation()
-    );
-      APResult out = AutopilotConstants.AUTOPILOT.calculate(correctedPose, robotRelativeSpeeds, this.target);
+      APResult out = AutopilotConstants.AUTOPILOT.calculate(pose, robotRelativeSpeeds, this.target);
   
       double maxTurnSpeed = Math.toRadians(360.0); // 360 degrees per second
 
