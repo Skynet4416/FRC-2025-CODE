@@ -264,10 +264,6 @@ public class RobotContainer {
 
                 ));
 
-        // FOR TESTING REMOVE THIS PART IF FOUND IN COMP CODE
-        IO.driverController.y().onTrue(new InstantCommand(
-                () -> intakeSubsystem.setState(IntakeState.FULL)));
-
         // If there's no coral and RB is pressed go to right coral station
         IO.driverController.rightBumper().and(intakeEmpty).whileTrue(
                 new AlignCommand(
