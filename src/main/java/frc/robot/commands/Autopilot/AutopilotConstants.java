@@ -30,7 +30,7 @@ public final class AutopilotConstants{
 
     public static final Autopilot AUTOPILOT = new Autopilot(PROFILE);
     
-    //How much back to move the target - (MA constants are set for the middle of the game pieces) - currently set as about minus half of the robots length
+    //How much back to move ALL targets - (MA constants are set for the middle of the game pieces) - currently set as about minus half of the robots length
     public static final double BACKWARDS_OFFSET = -0.3362;
 
     public static class Targets{
