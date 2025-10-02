@@ -2,6 +2,7 @@ package frc.robot.meth;
 
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.geometry.Translation2d;
 
 import static frc.robot.meth.Alliance.apply;
@@ -96,5 +97,19 @@ public class Distance {
             }
         }
         return minDistance < maxDistance ? minDistancePoint : null;
+    }
+    public static Pose2d moveTargetBack(Pose2d target) {
+        // Create a translation that moves backwards relative to the target's orientation.
+        // A negative X value moves "backwards" along the direction the pose is facing.
+        Translation2d relativeTranslation = new Translation2d(-0.3362, 0.0);
+
+        // Rotate this relative movement by the target's angle to get the movement in the field frame.
+        Translation2d fieldTranslation = relativeTranslation.rotateBy(target.getRotation());
+
+        // Add the calculated movement to the target's current position.
+        Translation2d newPosition = target.getTranslation().plus(fieldTranslation);
+
+        // Create a new Pose2d with the new position but keeping the original rotation.
+        return new Pose2d(newPosition, target.getRotation());
     }
 }
