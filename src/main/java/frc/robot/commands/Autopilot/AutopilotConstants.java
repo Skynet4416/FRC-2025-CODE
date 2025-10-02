@@ -35,15 +35,22 @@ public final class AutopilotConstants{
 
     public static class Targets{
         public static class CoralStation{
-            //Coral Station Targets
+                // This defines a horizontal offset, in meters, from the center of the targeted coral station face.
+            // It allows for fine-tuning the robot's final alignment.
+            //  - A POSITIVE value shifts the target point OUTWARD (away from the field centerline).
+            //  - A NEGATIVE value shifts the target point INWARD (toward the field centerline).
+            static final double OFFSET_FROM_CENTER_IN_METERS = 0;
             public static final Pose2d LEFT_CORAL_STATION = new Pose2d(
-                                        FieldConstants.CoralStation.leftCenterFace.getTranslation(),
-                                        FieldConstants.CoralStation.leftCenterFace.getRotation()
-                                                .plus(Rotation2d.fromDegrees(180)));
+                FieldConstants.CoralStation.leftCenterFace
+                        .transformBy(new Transform2d(0, -OFFSET_FROM_CENTER_IN_METERS, new Rotation2d()))
+                        .getTranslation(),
+                FieldConstants.CoralStation.leftCenterFace.getRotation()
+                        .plus(Rotation2d.fromDegrees(180)));
 
-                                                
-            public static final Pose2d RIGHT_CORAL_STATION = new Pose2d(
-                FieldConstants.CoralStation.rightCenterFace.getTranslation(),
+        public static final Pose2d RIGHT_CORAL_STATION = new Pose2d(
+                FieldConstants.CoralStation.rightCenterFace
+                        .transformBy(new Transform2d(0, OFFSET_FROM_CENTER_IN_METERS, new Rotation2d()))
+                        .getTranslation(),
                 FieldConstants.CoralStation.rightCenterFace.getRotation()
                         .plus(Rotation2d.fromDegrees(180)));
         }
@@ -64,7 +71,8 @@ public final class AutopilotConstants{
         // - When targeting the RIGHT reef face (e.g., in getRight... commands):
         //   - POSITIVE (robot moves right) -> moves OUTWARD away from the reef's centerline.
         //   - NEGATIVE (robot moves left)  -> moves INWARD toward the reef's centerline.
-            static final double offsetFromHalfCenter = 0;
+            static final double OFFSET_FROM_HALF_CENTER_IN_METERS = 0;
+
 
             /**
              * Finds the closest Reef face and calculates the target pose for the LEFT side.
@@ -79,7 +87,7 @@ public final class AutopilotConstants{
                         100);
 
                 if (closestCenter != null) {
-                    Transform2d toLeftHalf = new Transform2d(0, -(FieldConstants.Reef.faceLength / 4.0 + offsetFromHalfCenter), new Rotation2d());
+                    Transform2d toLeftHalf = new Transform2d(0, -(FieldConstants.Reef.faceLength / 4.0 + OFFSET_FROM_HALF_CENTER_IN_METERS), new Rotation2d());
                     Pose2d targetPoint = closestCenter.transformBy(toLeftHalf);
 
                     Pose2d finalTarget = new Pose2d(
@@ -107,7 +115,7 @@ public final class AutopilotConstants{
 
                 if (closestCenter != null) {
                     // Use a positive Y value to transform to the right
-                    Transform2d toRightHalf = new Transform2d(0, FieldConstants.Reef.faceLength / 4.0 + offsetFromHalfCenter, new Rotation2d());
+                    Transform2d toRightHalf = new Transform2d(0, FieldConstants.Reef.faceLength / 4.0 + OFFSET_FROM_HALF_CENTER_IN_METERS, new Rotation2d());
                     Pose2d targetPoint = closestCenter.transformBy(toRightHalf);
 
                     Pose2d finalTarget = new Pose2d(
