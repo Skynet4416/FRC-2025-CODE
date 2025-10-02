@@ -7,10 +7,6 @@ import static edu.wpi.first.units.Units.RadiansPerSecond;
 import static edu.wpi.first.units.Units.RotationsPerSecond;
 
 import java.util.function.DoubleSupplier;
-import java.util.Set;
-import com.therekrab.autopilot.APTarget;
-
-import com.ctre.phoenix6.swerve.SimSwerveDrivetrain;
 
 import choreo.auto.AutoChooser;
 import choreo.auto.AutoFactory;
@@ -18,7 +14,6 @@ import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.filter.SlewRateLimiter;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.units.Units;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -32,8 +27,6 @@ import frc.robot.Constants.States;
 import frc.robot.commands.DriveCommand;
 import frc.robot.commands.LockAngleCommand;
 import frc.robot.commands.AutoCommands.Forwards;
-import frc.robot.commands.Autopilot.AlignCommand;
-import frc.robot.commands.Autopilot.AutopilotConstants;
 import frc.robot.commands.Autos.TrajCommnd;
 import frc.robot.commands.Balls.BallsAngleToAngle;
 import frc.robot.commands.Balls.BallsKeepAtAngle;
@@ -46,7 +39,6 @@ import frc.robot.commands.Elevator.ElevatorResetLimitSwitchEnd;
 import frc.robot.commands.Intake.IntakeAtPercentage;
 import frc.robot.commands.Intake.IntakeCoral;
 import frc.robot.commands.Intake.IntakeDefault;
-import frc.robot.meth.Alliance;
 import frc.robot.meth.Distance;
 import frc.robot.subsystems.Balls.BallsAngleSubsystem;
 import frc.robot.subsystems.Balls.BallsRollerSubsystem;
@@ -56,6 +48,8 @@ import frc.robot.subsystems.Drive.TunerConstants;
 import frc.robot.subsystems.Elevator.ElevatorSubsystem;
 import frc.robot.subsystems.Intake.IntakeState;
 import frc.robot.subsystems.Intake.IntakeSubsystem;
+import frc.robot.subsystems.Vision.LimelightObserver;
+import frc.robot.subsystems.Vision.LimelightSubsystem;
 
 /**
  * This class is where the bulk of the robot should be declared. Since
@@ -65,446 +59,401 @@ import frc.robot.subsystems.Intake.IntakeSubsystem;
  * commands, and trigger mappings) should be declared here.
  */
 public class RobotContainer {
-    private final AutoFactory autoFactory;
-    private RobotState state = RobotState.NONE;
-    private final CommandSwerveDrivetrain drivetrain = TunerConstants.createDrivetrain();
-    private final IntakeSubsystem intakeSubsystem = new IntakeSubsystem();
-    private final ElevatorSubsystem elevatorSubsystem = new ElevatorSubsystem();
-    private final BallsAngleSubsystem ballsAngleSubsystem = new BallsAngleSubsystem();
-    private final BallsRollerSubsystem ballsRollerSubsystem = new BallsRollerSubsystem();
+        private final AutoFactory autoFactory;
+        private RobotState state = RobotState.NONE;
+        private final CommandSwerveDrivetrain drivetrain = TunerConstants.createDrivetrain();
+        private final IntakeSubsystem intakeSubsystem = new IntakeSubsystem();
+        private final ElevatorSubsystem elevatorSubsystem = new ElevatorSubsystem();
+        private final BallsAngleSubsystem ballsAngleSubsystem = new BallsAngleSubsystem();
+        private final BallsRollerSubsystem ballsRollerSubsystem = new BallsRollerSubsystem();
+        // private final ClimbDeepSubsystem climbDeepSubsystem = new
+        // ClimbDeepSubsystem();
+        private final LimelightSubsystem limelightSubsystem = new LimelightSubsystem(
+                        new LimelightObserver[] { drivetrain });
+        private final double MAX_SPEED = TunerConstants.kSpeedAt12Volts.in(Units.MetersPerSecond); // kSpeedAt12Volts
+        // desired
+        // top speed
+        private final double MAX_ANGULAR_RATE = RotationsPerSecond.of(0.75).in(RadiansPerSecond); // 3/4 of a rotation
+        // per
+        // second max angular
+        // velocity
 
-    // private final ClimbDeepSubsystem climbDeepSubsystem = new
-    // ClimbDeepSubsystem();
+        // private final AutoFactory autoFactory;
+        // private final Autos autoRoutines;
+        private final AutoChooser autoChooser = new AutoChooser();
+        // public final CommandSwerveDrivetrain drivetrain;
 
-    // private final LimelightSubsystem limelightSubsystem = new LimelightSubsystem(
-    // new LimelightObserver[] { drivetrain });
-    private final double MAX_SPEED = TunerConstants.kSpeedAt12Volts.in(Units.MetersPerSecond); // kSpeedAt12Volts
-    // desired
-    // top speed
-    private final double MAX_ANGULAR_RATE = RotationsPerSecond.of(0.75).in(RadiansPerSecond); // 3/4 of a rotation
-    // per
-    // second max angular
-    // velocity
+        private final Telemetry logger = new Telemetry(MAX_SPEED);
+        private boolean manualOverride = true;
+        private double wantedAngle = -999;
+        private final Trigger coralStationTrigger = new Trigger(() -> Distance.isPointNearLinesSegment(
+                        getPose().getTranslation(),
+                        new Pose2d[] { FieldConstants.CoralStation.leftCenterFace,
+                                        FieldConstants.CoralStation.rightCenterFace },
+                        FieldConstants.CoralStation.stationLength, Constants.States.Intake.RADIUS_IN_METERS) != null);
 
-    // private final AutoFactory autoFactory;
-    // private final Autos autoRoutines;
-    private final AutoChooser autoChooser = new AutoChooser();
-    // public final CommandSwerveDrivetrain drivetrain;
+        private final Trigger reefTrigger = new Trigger(
+                        () -> Distance.isPointNearLinesSegment(getPose().getTranslation(),
+                                        FieldConstants.Reef.centerFaces, FieldConstants.Reef.faceLength,
+                                        Constants.States.Score.RADIUS_IN_METERS) != null);
 
-    private final Telemetry logger = new Telemetry(MAX_SPEED);
-    private boolean manualOverride = true;
-    private double wantedAngle = -999;
-    private final Trigger coralStationTrigger = new Trigger(() -> Distance.isPointNearLinesSegment(
-            getPose().getTranslation(),
-            new Pose2d[] { FieldConstants.CoralStation.leftCenterFace,
-                    FieldConstants.CoralStation.rightCenterFace },
-            FieldConstants.CoralStation.stationLength, Constants.States.Intake.RADIUS_IN_METERS) != null);
+        private final Trigger intakeModeTrigger = new Trigger(() -> this.getState() == RobotState.INTAKE);
+        private final Trigger ballsModeTrigger = new Trigger(() -> this.getState() == RobotState.BALLS);
+        private final Trigger scoreTrigger = new Trigger(() -> this.getState() == RobotState.SCORE);
+        private final Trigger intakeEmpty = new Trigger(() -> intakeSubsystem.getState() == IntakeState.EMPTY);
+        private boolean readyToScore = false;
+        private final Trigger readyToScoreTrigger = new Trigger(() -> readyToScore);
 
-    private final Trigger reefTrigger = new Trigger(
-            () -> Distance.isPointNearLinesSegment(getPose().getTranslation(),
-                    FieldConstants.Reef.centerFaces, FieldConstants.Reef.faceLength,
-                    Constants.States.Score.RADIUS_IN_METERS) != null);
+        private final Trigger ballsEmpty = new Trigger(() -> !ballsRollerSubsystem.hasBall());
+        private final Trigger ballsFull = new Trigger(() -> ballsRollerSubsystem.hasBall());
+        private final Trigger processorTrigger = new Trigger(() -> Distance.isPointNearLineSegment(
+                        getPose().getTranslation(), FieldConstants.Processor.centerFace,
+                        FieldConstants.Processor.faceLength, States.Balls.RADIUS_IN_METERS));
+        private final SlewRateLimiter slewRateLimiterx = new SlewRateLimiter(6);
+        private final SlewRateLimiter slewRateLimitery = new SlewRateLimiter(6);
+        private final SlewRateLimiter slewRateLimiterRotation = new SlewRateLimiter(10);
 
-    private final Trigger intakeModeTrigger = new Trigger(() -> this.getState() == RobotState.INTAKE);
-    private final Trigger ballsModeTrigger = new Trigger(() -> this.getState() == RobotState.BALLS);
-    private final Trigger scoreTrigger = new Trigger(() -> this.getState() == RobotState.SCORE);
-    private final Trigger intakeEmpty = new Trigger(() -> intakeSubsystem.getState() == IntakeState.EMPTY);
-    public final Trigger intakeFullTrigger = new Trigger(() -> intakeSubsystem.getState() == IntakeState.FULL);
-    private boolean readyToScore = false;
-    private final Trigger readyToScoreTrigger = new Trigger(() -> readyToScore);
+        private final DoubleSupplier xSupplier = () -> slewRateLimiterx
+                        .calculate(deadband(-IO.driverController.getLeftY())
+                                        * MathUtil.clamp((1 - IO.driverController.getRightTriggerAxis()), 0.1, 1)
+                                        * MAX_SPEED);
+        private final DoubleSupplier ySupplier = () -> slewRateLimitery
+                        .calculate(deadband(-IO.driverController.getLeftX())
+                                        * MathUtil.clamp((1 - IO.driverController.getRightTriggerAxis()), 0.1, 1)
+                                        * MAX_SPEED);
+        private final DoubleSupplier rotationSupplier = () -> slewRateLimiterRotation
+                        .calculate(deadband(-IO.driverController.getRightX())
+                                        * MathUtil.clamp((1 - IO.driverController.getLeftTriggerAxis()), 0.1, 1))
+                        * MAX_ANGULAR_RATE;
+        private final Command autoCommand;
 
-    private final Trigger ballsEmpty = new Trigger(() -> !ballsRollerSubsystem.hasBall());
-    private final Trigger ballsFull = new Trigger(() -> ballsRollerSubsystem.hasBall());
-    private final Trigger processorTrigger = new Trigger(() -> Distance.isPointNearLineSegment(
-            getPose().getTranslation(), FieldConstants.Processor.centerFace,
-            FieldConstants.Processor.faceLength, States.Balls.RADIUS_IN_METERS));
-    private final SlewRateLimiter slewRateLimiterx = new SlewRateLimiter(6);
-    private final SlewRateLimiter slewRateLimitery = new SlewRateLimiter(6);
-    private final SlewRateLimiter slewRateLimiterRotation = new SlewRateLimiter(10);
+        public RobotContainer() {
+                autoFactory = new AutoFactory(
+                                drivetrain::getPose, // A function that returns the current robot pose
+                                drivetrain::resetOdometry, // A function that resets the current robot pose to the
+                                // provided Pose2d
+                                drivetrain::followTrajectory, // The drive subsystem trajectory follower
+                                true, // If alliance flipping should be enabled
+                                drivetrain // The drive subsystem
+                );
 
-    private final DoubleSupplier xSupplier = () -> slewRateLimiterx
-            .calculate(deadband(-IO.driverController.getLeftY())
-                    * MathUtil.clamp((1 - IO.driverController.getRightTriggerAxis()), 0.1, 1)
-                    * MAX_SPEED);
-    private final DoubleSupplier ySupplier = () -> slewRateLimitery
-            .calculate(deadband(-IO.driverController.getLeftX())
-                    * MathUtil.clamp((1 - IO.driverController.getRightTriggerAxis()), 0.1, 1)
-                    * MAX_SPEED);
-    private final DoubleSupplier rotationSupplier = () -> slewRateLimiterRotation
-            .calculate(deadband(-IO.driverController.getRightX())
-                    * MathUtil.clamp((1 - IO.driverController.getLeftTriggerAxis()), 0.1, 1))
-            * MAX_ANGULAR_RATE;
-
-    public RobotContainer() {
-        autoFactory = new AutoFactory(
-                drivetrain::getPose, // A function that returns the current robot pose
-                drivetrain::resetOdometry, // A function that resets the current robot pose to the
-                // provided Pose2d
-                drivetrain::followTrajectory, // The drive subsystem trajectory follower
-                true, // If alliance flipping should be enabled
-                drivetrain // The drive subsystem
-        );
-
-        autoChooser.addCmd("left", this::pickupAndRizzAutoSide);
-        autoChooser.addCmd("middle", this::middleCommand);
-        autoChooser.addCmd("right", this::rightCommand);
-        autoChooser.addCmd("forward", this::forward);
-        autoChooser.addCmd("middle complicated", this::pickupAndRizzAuto);
-        SmartDashboard.putData("auto", autoChooser);
-        configureBindings();
-    }
-
-    public double deadband(double value) {
-        if (Math.abs(value) > 0.1) {
-            return value;
+                autoChooser.addCmd("left", this::pickupAndRizzAutoSide);
+                autoChooser.addCmd("middle", this::middleCommand);
+                autoChooser.addCmd("right", this::rightCommand);
+                autoChooser.addCmd("forward", this::forward);
+                autoChooser.addCmd("middle complicated", this::pickupAndRizzAuto);
+                SmartDashboard.putData("auto", autoChooser);
+                configureBindings();
+                autoCommand = pickupAndRizzAutoSide();
         }
 
-        return 0;
-    }
+        public double deadband(double value) {
+                if (Math.abs(value) > 0.1) {
+                        return value;
+                }
 
-    /**
-     * Use this method to define your trigger->command mappings. Triggers can be
-     * created via the
-     * {@link Trigger#Trigger(java.util.function.BooleanSupplier)} constructor
-     * with an arbitrary predicate, or via the named factories in {@link
-     * edu.wpi.first.wpilibj2.command.button.CommandGenericHID}'s subclasses for
-     * null null null null null null null null null null null null null null
-     * null null {@link
-     * CommandXboxController
-     * Xbox}/{@link edu.wpi.first.wpilibj2.command.button.CommandPS4Controller
-     * PS4} controllers or null null null null null null null null null null
-     * null null null null null null
-     * {@link edu.wpi.first.wpilibj2.command.button.CommandJoystick Flight
-     * joysticks}.
-     */
-    private void configureBindings() {
-        drivetrain.registerTelemetry(logger::telemeterize);
-        ballsRollerSubsystem.setDefaultCommand(new BallsRollerKeepAtPose(ballsRollerSubsystem));
-        IO.mechanismController.a().onTrue(new InstantCommand(() -> state = RobotState.INTAKE));
-        IO.mechanismController.b().onTrue(new InstantCommand(() -> state = RobotState.SCORE));
-        IO.mechanismController.y().onTrue(new InstantCommand(() -> state = RobotState.BALLS));
-        IO.mechanismController.x().whileTrue(new IntakeAtPercentage(intakeSubsystem,
-                -1)
-                .alongWith(new InstantCommand(() -> {
-                    intakeSubsystem.setState(IntakeState.EMPTY);
-                    state = RobotState.NONE;
-                })));
+                return 0;
+        }
 
-        intakeSubsystem.setDefaultCommand(new IntakeDefault(intakeSubsystem));
-
-        elevatorSubsystem.setDefaultCommand(new ElevatorResetLimitSwitch(elevatorSubsystem));
-
-        coralStationTrigger.and(intakeModeTrigger).and(intakeEmpty).whileTrue(
-                new IntakeCoral(intakeSubsystem)
-                        .alongWith(new ElevatorMoveToHeight(elevatorSubsystem,
-                                Constants.States.Intake.ELEVATOR_HEIGHT)
-                                .andThen(
-                                        new InstantCommand(
-                                                () -> {
-                                                    intakeSubsystem.moveMotor(
-                                                            Constants.States.Intake.INTAKE_PERCEHNTAGE);
-                                                })
-                                                .raceWith(new WaitCommand(
-                                                        0.3)))));
-
-        coralStationTrigger.and(intakeModeTrigger).and(intakeEmpty)
-                .whileTrue(new LockAngleCommand(this::getPose,
-                        new Pose2d[] { FieldConstants.CoralStation.leftCenterFace,
-                                FieldConstants.CoralStation.rightCenterFace },
-                        FieldConstants.CoralStation.stationLength,
-                        Constants.States.Intake.RADIUS_IN_METERS,
-                        this::angleSetter,
-                        this::manualOverrideSetter));
-        reefTrigger.and(scoreTrigger)
-                .whileTrue(new LockAngleCommand(this::getPose,
-                        FieldConstants.Reef.centerFaces,
-                        FieldConstants.Reef.faceLength, States.Score.RADIUS_IN_METERS,
-                        this::angleSetter,
-                        this::manualOverrideSetter));
-
-        reefTrigger.and(scoreTrigger)
-                .whileTrue(new ElevatorMoveToHeight(elevatorSubsystem,
-                        Constants.States.Score.ELEVATOR_HEIGHT)
-                        .andThen(new InstantCommand(() -> readyToScore = true)));
-
-        reefTrigger.and(scoreTrigger).and(readyToScoreTrigger).and(IO.mechanismController.leftBumper())
-                .onTrue(new IntakeAtPercentage(intakeSubsystem,
-                        Constants.States.Score.INTAKE_PERCNETAGE)
-                        .raceWith(new WaitCommand(Constants.States.Score.INTAKE_TIME))
-                        .andThen(new InstantCommand(
-                                () -> {
-                                    intakeSubsystem.setState(IntakeState.EMPTY);
-                                    state = RobotState.NONE;
+        /**
+         * Use this method to define your trigger->command mappings. Triggers can be
+         * created via the
+         * {@link Trigger#Trigger(java.util.function.BooleanSupplier)} constructor
+         * with an arbitrary predicate, or via the named factories in {@link
+         * edu.wpi.first.wpilibj2.command.button.CommandGenericHID}'s subclasses for
+         * null null null null null null null null null null null null null null
+         * null null {@link
+         * CommandXboxController
+         * Xbox}/{@link edu.wpi.first.wpilibj2.command.button.CommandPS4Controller
+         * PS4} controllers or null null null null null null null null null null
+         * null null null null null null
+         * {@link edu.wpi.first.wpilibj2.command.button.CommandJoystick Flight
+         * joysticks}.
+         */
+        private void configureBindings() {
+                drivetrain.registerTelemetry(logger::telemeterize);
+                ballsRollerSubsystem.setDefaultCommand(new BallsRollerKeepAtPose(ballsRollerSubsystem));
+                IO.mechanismController.a().onTrue(new InstantCommand(() -> state = RobotState.INTAKE));
+                IO.mechanismController.b().onTrue(new InstantCommand(() -> state = RobotState.SCORE));
+                IO.mechanismController.y().onTrue(new InstantCommand(() -> state = RobotState.BALLS));
+                IO.mechanismController.x().whileTrue(new IntakeAtPercentage(intakeSubsystem,
+                                -1)
+                                .alongWith(new InstantCommand(() -> {
+                                        intakeSubsystem.setState(IntakeState.EMPTY);
+                                        state = RobotState.NONE;
                                 })));
 
-        drivetrain.setDefaultCommand(new DriveCommand(drivetrain, xSupplier,
-                ySupplier, rotationSupplier,
-                () -> wantedAngle, () -> manualOverride));
+                intakeSubsystem.setDefaultCommand(new IntakeDefault(intakeSubsystem));
 
-        // Changed manual override to the Povdown button
-        IO.driverController.povDown().onTrue(new InstantCommand(() -> manualOverride = true));
-        IO.driverController.povDown().onFalse(new InstantCommand(() -> manualOverride = false));
+                elevatorSubsystem.setDefaultCommand(new ElevatorResetLimitSwitch(elevatorSubsystem));
 
-        IO.driverController.b()
-                .whileTrue(new WaitCommand(0.1)
-                        .andThen(drivetrain.runOnce(() -> drivetrain.seedFieldCentric())));
+                coralStationTrigger.and(intakeModeTrigger).and(intakeEmpty).whileTrue(
+                                new IntakeCoral(intakeSubsystem)
+                                                .alongWith(new ElevatorMoveToHeight(elevatorSubsystem,
+                                                                Constants.States.Intake.ELEVATOR_HEIGHT)
+                                                                .andThen(
+                                                                                new InstantCommand(
+                                                                                                () -> {
+                                                                                                        intakeSubsystem.moveMotor(
+                                                                                                                        Constants.States.Intake.INTAKE_PERCEHNTAGE);
+                                                                                                })
+                                                                                                .raceWith(new WaitCommand(
+                                                                                                                0.3)))));
 
-        IO.driverController.x()
-                .whileTrue(new WaitCommand(0.1)
-                        .andThen(new InstantCommand(
-                                () -> drivetrain.resetOdometry(new Pose2d()))));
+                coralStationTrigger.and(intakeModeTrigger).and(intakeEmpty)
+                                .whileTrue(new LockAngleCommand(this::getPose,
+                                                new Pose2d[] { FieldConstants.CoralStation.leftCenterFace,
+                                                                FieldConstants.CoralStation.rightCenterFace },
+                                                FieldConstants.CoralStation.stationLength,
+                                                Constants.States.Intake.RADIUS_IN_METERS,
+                                                this::angleSetter,
+                                                this::manualOverrideSetter));
+                reefTrigger.and(scoreTrigger)
+                                .whileTrue(new LockAngleCommand(this::getPose,
+                                                FieldConstants.Reef.centerFaces,
+                                                FieldConstants.Reef.faceLength, States.Score.RADIUS_IN_METERS,
+                                                this::angleSetter,
+                                                this::manualOverrideSetter));
 
-        // If there's no coral and LB is pressed go to left coral station
-        IO.driverController.leftBumper().and(intakeEmpty).whileTrue(
-                new AlignCommand(
-                        Alliance.apply(AutopilotConstants.Targets.CoralStation.LEFT_CORAL_STATION),
-                        drivetrain
+                reefTrigger.and(scoreTrigger)
+                                .whileTrue(new ElevatorMoveToHeight(elevatorSubsystem,
+                                                Constants.States.Score.ELEVATOR_HEIGHT)
+                                                .andThen(new InstantCommand(() -> readyToScore = true)));
 
-                ));
+                reefTrigger.and(scoreTrigger).and(readyToScoreTrigger).and(IO.mechanismController.leftBumper())
+                                .onTrue(new IntakeAtPercentage(intakeSubsystem,
+                                                Constants.States.Score.INTAKE_PERCNETAGE)
+                                                .raceWith(new WaitCommand(Constants.States.Score.INTAKE_TIME))
+                                                .andThen(new InstantCommand(
+                                                                () -> {
+                                                                        intakeSubsystem.setState(IntakeState.EMPTY);
+                                                                        state = RobotState.NONE;
+                                                                })));
 
+                drivetrain.setDefaultCommand(new DriveCommand(drivetrain, xSupplier,
+                                ySupplier, rotationSupplier,
+                                () -> wantedAngle, () -> manualOverride));
 
-        // If there's no coral and RB is pressed go to right coral station
-        IO.driverController.rightBumper().and(intakeEmpty).whileTrue(
-                new AlignCommand(
-                        Alliance.apply(AutopilotConstants.Targets.CoralStation.RIGHT_CORAL_STATION),
-                        drivetrain));
+                IO.driverController.rightBumper().onTrue(new InstantCommand(() -> manualOverride = true));
+                IO.driverController.rightBumper().onFalse(new InstantCommand(() -> manualOverride = false));
 
+                IO.driverController.b()
+                                .whileTrue(new WaitCommand(0.1)
+                                                .andThen(drivetrain.runOnce(() -> drivetrain.seedFieldCentric())));
 
-        // Go to to the LEFT side of the closest Reef face
-        IO.driverController.leftBumper().and(intakeFullTrigger).whileTrue(
-                Commands.defer(() -> {
-                    Pose2d targetPose = Alliance.apply(AutopilotConstants.Targets.Reef.getLeftReefTarget(getPose()));
-                    if (targetPose != null) {
-                        return new AlignCommand(targetPose,drivetrain);
-                    } else {
-                        return Commands.none();
-                    }
-                }, Set.of(drivetrain)));
+                IO.driverController.x()
+                                .whileTrue(new WaitCommand(0.1)
+                                                .andThen(new InstantCommand(
+                                                                () -> drivetrain.resetOdometry(new Pose2d()))));
+                ballsModeTrigger.and(ballsFull).and(processorTrigger)
+                                .whileTrue(new LockAngleCommand(this::getPose,
+                                                new Pose2d[] { FieldConstants.Processor.centerFace },
+                                                FieldConstants.Processor.faceLength, States.Balls.RADIUS_IN_METERS,
+                                                this::angleSetter,
+                                                this::manualOverrideSetter));
 
-        // Go to to the RIGHT side of the closest Reef face
-        IO.driverController.rightBumper().and(intakeFullTrigger).whileTrue(
-                Commands.defer(() -> {
-                    Pose2d targetPose = Alliance.apply(AutopilotConstants.Targets.Reef.getRightReefTarget(getPose()));
-                    if (targetPose != null) {
-                        return new AlignCommand(targetPose,drivetrain);
-                    } else {
-                        return Commands.none();
-                    }
-                }, Set.of(drivetrain)));
+                ballsModeTrigger.and(ballsEmpty).whileTrue(new BallsAngleToAngle(ballsAngleSubsystem, 0.15)
+                                .alongWith(new IntakeBalls(ballsRollerSubsystem))
+                                .andThen(new BallsRollerPercentage(ballsRollerSubsystem, 1,
+                                                (x) -> ballsRollerSubsystem.setRollerPercentage(0)).withTimeout(0.2))
+                                .andThen(new InstantCommand(() -> {
 
-        ballsModeTrigger.and(ballsFull).and(processorTrigger)
-                .whileTrue(new LockAngleCommand(this::getPose,
-                        new Pose2d[] { FieldConstants.Processor.centerFace },
-                        FieldConstants.Processor.faceLength, States.Balls.RADIUS_IN_METERS,
-                        this::angleSetter,
-                        this::manualOverrideSetter));
+                                        ballsRollerSubsystem.setBallsIn(true);
+                                })));
 
-        ballsModeTrigger.and(ballsEmpty).whileTrue(new BallsAngleToAngle(ballsAngleSubsystem, 0.15)
-                .alongWith(new IntakeBalls(ballsRollerSubsystem))
-                .andThen(new BallsRollerPercentage(ballsRollerSubsystem, 1,
-                        (x) -> ballsRollerSubsystem.setRollerPercentage(0)).withTimeout(0.2))
-                .andThen(new InstantCommand(() -> {
+                ballsModeTrigger.and(IO.mechanismController.leftBumper())
+                                .whileTrue(
+                                                new BallsRollerPercentage(ballsRollerSubsystem, -.3, (inturrpted) -> {
+                                                        state = RobotState.NONE;
+                                                        ballsRollerSubsystem.setBallsIn(
+                                                                        false);
+                                                })
+                                                                .raceWith(new WaitCommand(0.65)));
 
-                    ballsRollerSubsystem.setBallsIn(true);
-                })));
+                this.ballsAngleSubsystem.setDefaultCommand(new BallsKeepAtAngle(ballsAngleSubsystem));
+                this.ballsRollerSubsystem.setDefaultCommand(new BallsRollerKeepAtPose(ballsRollerSubsystem));
 
-        ballsModeTrigger.and(IO.mechanismController.leftBumper())
-                .whileTrue(
-                        new BallsRollerPercentage(ballsRollerSubsystem, -.3, (inturrpted) -> {
-                            state = RobotState.NONE;
-                            ballsRollerSubsystem.setBallsIn(
-                                    false);
-                        })
-                                .raceWith(new WaitCommand(0.65)));
+        }
 
-        this.ballsAngleSubsystem.setDefaultCommand(new BallsKeepAtAngle(ballsAngleSubsystem));
-        this.ballsRollerSubsystem.setDefaultCommand(new BallsRollerKeepAtPose(ballsRollerSubsystem));
+        // /**
+        // *
 
-    }
+        // *
+        // * @return the command to run in autonomous
+        // */
+        public Command getAutonomousCommand() {
+                return autoChooser.selectedCommand();
+        }
 
-    // /**
-    // *
+        public RobotState getState() {
+                SmartDashboard.putString("robot state", String.valueOf(this.state));
+                return this.state;
 
-    // *
-    // * @return the command to run in autonomous
-    // */
-    public Command getAutonomousCommand() {
-        return autoChooser.selectedCommand();
-    }
+        }
 
-    public RobotState getState() {
-        SmartDashboard.putString("robot state", String.valueOf(this.state));
-        return this.state;
+        public Pose2d getPose() {
+                return this.drivetrain.getPose();
+        }
 
-    }
+        public boolean getManualOverride() {
+                return this.manualOverride;
+        }
 
-    public Pose2d getPose() {
-        return this.drivetrain.getPose();
-    }
+        public void containerTrigger() {
+                SmartDashboard.putBoolean("coral station trigger", coralStationTrigger.getAsBoolean());
+                SmartDashboard.putBoolean("intake Mode trigger", intakeModeTrigger.getAsBoolean());
+                SmartDashboard.putBoolean("intkae empty trigger", intakeEmpty.getAsBoolean());
+                SmartDashboard.putBoolean("reef trigger", reefTrigger.getAsBoolean());
+                SmartDashboard.putBoolean("score trigger", scoreTrigger.getAsBoolean());
+                SmartDashboard.putBoolean("ready to score trigger", readyToScoreTrigger.getAsBoolean());
+                SmartDashboard.putBoolean("balls Trigger", ballsModeTrigger.getAsBoolean());
+                SmartDashboard.putBoolean("balls Empty", ballsEmpty.getAsBoolean());
+                SmartDashboard.putBoolean("balls full", ballsFull.getAsBoolean());
+                SmartDashboard.putBoolean("processor trigger", processorTrigger.getAsBoolean());
+                drivetrain.periodic();
+        }
 
-    public boolean getManualOverride() {
-        return this.manualOverride;
-    }
+        // shaki ops
+        public CommandSwerveDrivetrain getDrive() {
+                return drivetrain;
+        }
 
-    public void containerTrigger() {
-        SmartDashboard.putBoolean("coral station trigger", coralStationTrigger.getAsBoolean());
-        SmartDashboard.putBoolean("intake Mode trigger", intakeModeTrigger.getAsBoolean());
-        SmartDashboard.putBoolean("intake empty trigger", intakeEmpty.getAsBoolean());
-        SmartDashboard.putBoolean("reef trigger", reefTrigger.getAsBoolean());
-        SmartDashboard.putBoolean("score trigger", scoreTrigger.getAsBoolean());
-        SmartDashboard.putBoolean("ready to score trigger", readyToScoreTrigger.getAsBoolean());
-        SmartDashboard.putBoolean("balls Trigger", ballsModeTrigger.getAsBoolean());
-        SmartDashboard.putBoolean("balls Empty", ballsEmpty.getAsBoolean());
-        SmartDashboard.putBoolean("balls full", ballsFull.getAsBoolean());
-        SmartDashboard.putBoolean("processor trigger", processorTrigger.getAsBoolean());
-        drivetrain.periodic();
-    }
+        public Command getIntakeCommand() {
+                return new IntakeCoral(intakeSubsystem).deadlineFor(new ElevatorMoveToHeight(elevatorSubsystem,
+                                Constants.States.Intake.ELEVATOR_HEIGHT)).raceWith(new WaitCommand(3)).andThen(new InstantCommand(
+                                        () -> {
+                                                intakeSubsystem.moveMotor(
+                                                                Constants.States.Intake.INTAKE_PERCEHNTAGE);
+                                        })
+                                        .raceWith(new WaitCommand(
+                                                        0.3)))
+                                .andThen(new ElevatorResetLimitSwitchEnd(
+                                                elevatorSubsystem));
 
-    // shaki ops
-    public CommandSwerveDrivetrain getDrive() {
-        return drivetrain;
-    }
+        }
 
-    public Command getIntakeCommand() {
-        return new IntakeCoral(intakeSubsystem).deadlineFor(new ElevatorMoveToHeight(elevatorSubsystem,
-                Constants.States.Intake.ELEVATOR_HEIGHT)).raceWith(new WaitCommand(3))
-                .andThen(new InstantCommand(
-                        () -> {
-                            intakeSubsystem.moveMotor(
-                                    Constants.States.Intake.INTAKE_PERCEHNTAGE);
-                        })
-                        .raceWith(new WaitCommand(
-                                0.3)))
-                .andThen(new ElevatorResetLimitSwitchEnd(
-                        elevatorSubsystem));
+        public Command middleCommand() {
+                return Commands.sequence(autoFactory.resetOdometry("Line-to-Reef4"), //
+                                new TrajCommnd(autoFactory, "Line-to-Reef4", drivetrain),
+                                new IntakeAtPercentage(intakeSubsystem, -1)
+                                                .raceWith(new WaitCommand(0.25))
+                                                .andThen(new InstantCommand(
+                                                                () -> intakeSubsystem.setState(IntakeState.EMPTY))));
+        }
 
-    }
+        public Command rightCommand() {
+                return Commands.sequence(autoFactory.resetOdometry("Line-to-Reef5"),
+                                new TrajCommnd(autoFactory, "Line-to-Reef5", drivetrain),
+                                new IntakeAtPercentage(intakeSubsystem, -1)
+                                                .raceWith(new WaitCommand(0.5))
+                                                .andThen(new InstantCommand(
+                                                                () -> intakeSubsystem.setState(IntakeState.EMPTY))),
+                                new TrajCommnd(autoFactory, "Reef5Right-RCS", drivetrain),
+                                getIntakeCommand(),
+                                new TrajCommnd(autoFactory, "RCS-Reef6Left", drivetrain),
+                                new IntakeAtPercentage(intakeSubsystem, -.5)
+                                                .raceWith(new WaitCommand(0.25))
+                                                .andThen(new InstantCommand(
+                                                                () -> intakeSubsystem.setState(IntakeState.EMPTY))),
+                                new TrajCommnd(autoFactory, "Reef6Left-RCS", drivetrain),
+                                getIntakeCommand(),
+                                new TrajCommnd(autoFactory, "RCS-Reef6Right", drivetrain),
+                                new IntakeAtPercentage(intakeSubsystem, -.5)
+                                                .raceWith(new WaitCommand(0.25))
+                                                .andThen(new InstantCommand(
+                                                                () -> intakeSubsystem.setState(IntakeState.EMPTY))),
+                                new TrajCommnd(autoFactory, "Reef6Right-RCS", drivetrain),
+                                getIntakeCommand(),
+                                new TrajCommnd(autoFactory, "RCS-Reef6Left", drivetrain),
+                                new IntakeAtPercentage(intakeSubsystem, -.5)
+                                                .raceWith(new WaitCommand(0.25))
+                                                .andThen(new InstantCommand(
+                                                                () -> intakeSubsystem.setState(IntakeState.EMPTY))));
+        }
 
-    public Command middleCommand() {
-        return Commands.sequence(autoFactory.resetOdometry("Line-to-Reef4"), //
-                new TrajCommnd(autoFactory, "Line-to-Reef4", drivetrain),
-                new IntakeAtPercentage(intakeSubsystem, -1)
-                        .raceWith(new WaitCommand(0.25))
-                        .andThen(new InstantCommand(
-                                () -> intakeSubsystem.setState(IntakeState.EMPTY))));
-    }
+        public Command forward() {
+                return new SequentialCommandGroup(
+                                new Forwards(drivetrain).raceWith(new WaitCommand(6)),
+                                new IntakeAtPercentage(intakeSubsystem, -1)
+                                                .raceWith(new WaitCommand(Constants.States.Score.INTAKE_TIME * 2)),
+                                new InstantCommand(() -> intakeSubsystem.setState(IntakeState.EMPTY)));
+        }
 
-    public Command rightCommand() {
-        return Commands.sequence(autoFactory.resetOdometry("Line-to-Reef5"),
-                new TrajCommnd(autoFactory, "Line-to-Reef5", drivetrain),
-                new IntakeAtPercentage(intakeSubsystem, -1)
-                        .raceWith(new WaitCommand(0.5))
-                        .andThen(new InstantCommand(
-                                () -> intakeSubsystem.setState(IntakeState.EMPTY))),
-                new TrajCommnd(autoFactory, "Reef5Right-RCS", drivetrain),
-                getIntakeCommand(),
-                new TrajCommnd(autoFactory, "RCS-Reef6Left", drivetrain),
-                new IntakeAtPercentage(intakeSubsystem, -.5)
-                        .raceWith(new WaitCommand(0.25))
-                        .andThen(new InstantCommand(
-                                () -> intakeSubsystem.setState(IntakeState.EMPTY))),
-                new TrajCommnd(autoFactory, "Reef6Left-RCS", drivetrain),
-                getIntakeCommand(),
-                new TrajCommnd(autoFactory, "RCS-Reef6Right", drivetrain),
-                new IntakeAtPercentage(intakeSubsystem, -.5)
-                        .raceWith(new WaitCommand(0.25))
-                        .andThen(new InstantCommand(
-                                () -> intakeSubsystem.setState(IntakeState.EMPTY))),
-                new TrajCommnd(autoFactory, "Reef6Right-RCS", drivetrain),
-                getIntakeCommand(),
-                new TrajCommnd(autoFactory, "RCS-Reef6Left", drivetrain),
-                new IntakeAtPercentage(intakeSubsystem, -.5)
-                        .raceWith(new WaitCommand(0.25))
-                        .andThen(new InstantCommand(
-                                () -> intakeSubsystem.setState(IntakeState.EMPTY))));
-    }
+        public Command pickupAndRizzAuto() {
+                return Commands.sequence(
+                                autoFactory.resetOdometry("Line-to-Reef4"), //
+                                new TrajCommnd(autoFactory, "Line-to-Reef4", drivetrain),
+                                new IntakeAtPercentage(intakeSubsystem, -1)
+                                                .raceWith(new WaitCommand(0.25))
+                                                .andThen(new InstantCommand(
+                                                                () -> intakeSubsystem.setState(IntakeState.EMPTY))),
+                                new TrajCommnd(autoFactory, "Reef4Right-LCS", drivetrain),
+                                getIntakeCommand(),
+                                new TrajCommnd(autoFactory, "LCS-Reef2Left", drivetrain),
+                                new IntakeAtPercentage(intakeSubsystem, -.5)
+                                                .raceWith(new WaitCommand(0.25))
+                                                .andThen(new InstantCommand(
+                                                                () -> intakeSubsystem.setState(IntakeState.EMPTY))),
+                                new TrajCommnd(autoFactory, "Reef2Left-LCS", drivetrain),
+                                getIntakeCommand(),
+                                new TrajCommnd(autoFactory, "LCS-Reef2Right", drivetrain),
+                                new IntakeAtPercentage(intakeSubsystem, -.5)
+                                                .raceWith(new WaitCommand(0.25))
+                                                .andThen(new InstantCommand(
+                                                                () -> intakeSubsystem.setState(IntakeState.EMPTY))),
+                                new TrajCommnd(autoFactory, "Reef2Right-LCS", drivetrain),
+                                getIntakeCommand(),
+                                new TrajCommnd(autoFactory, "LCS-Reef2Left", drivetrain),
+                                new IntakeAtPercentage(intakeSubsystem, -.5)
+                                                .raceWith(new WaitCommand(0.25))
+                                                .andThen(new InstantCommand(
+                                                                () -> intakeSubsystem.setState(IntakeState.EMPTY))));
+        }
 
-    public Command forward() {
-        return new SequentialCommandGroup(
-                new Forwards(drivetrain).raceWith(new WaitCommand(6)),
-                new IntakeAtPercentage(intakeSubsystem, -1)
-                        .raceWith(new WaitCommand(Constants.States.Score.INTAKE_TIME * 2)),
-                new InstantCommand(() -> intakeSubsystem.setState(IntakeState.EMPTY)));
-    }
+        public Command pickupAndRizzAutoSide() {
+                return Commands.sequence(
+                                autoFactory.resetOdometry("Line-to-Reef3"),
+                                new TrajCommnd(autoFactory, "Line-to-Reef3", drivetrain),
+                                new IntakeAtPercentage(intakeSubsystem, -1)
+                                                .raceWith(new WaitCommand(0.25))
+                                                .andThen(new InstantCommand(
+                                                                () -> intakeSubsystem.setState(IntakeState.EMPTY))),
+                                new TrajCommnd(autoFactory, "Reef3Right-LCS", drivetrain),
+                                getIntakeCommand(),
+                                new TrajCommnd(autoFactory, "LCS-Reef2Left", drivetrain),
+                                new IntakeAtPercentage(intakeSubsystem, -.5)
+                                                .raceWith(new WaitCommand(0.25))
+                                                .andThen(new InstantCommand(
+                                                                () -> intakeSubsystem.setState(IntakeState.EMPTY))),
+                                new TrajCommnd(autoFactory, "Reef2Left-LCS", drivetrain),
+                                getIntakeCommand(),
+                                new TrajCommnd(autoFactory, "LCS-Reef2Right", drivetrain),
+                                new IntakeAtPercentage(intakeSubsystem, -.5)
+                                                .raceWith(new WaitCommand(0.25))
+                                                .andThen(new InstantCommand(
+                                                                () -> intakeSubsystem.setState(IntakeState.EMPTY))),
+                                new TrajCommnd(autoFactory, "Reef2Right-LCS", drivetrain),
+                                getIntakeCommand(),
+                                new TrajCommnd(autoFactory, "LCS-Reef2Left", drivetrain),
+                                new IntakeAtPercentage(intakeSubsystem, -.5)
+                                                .raceWith(new WaitCommand(0.25))
+                                                .andThen(new InstantCommand(
+                                                                () -> intakeSubsystem.setState(IntakeState.EMPTY))));
+        }
 
-    public Command pickupAndRizzAuto() {
-        return Commands.sequence(
-                autoFactory.resetOdometry("Line-to-Reef4"), //
-                new TrajCommnd(autoFactory, "Line-to-Reef4", drivetrain),
-                new IntakeAtPercentage(intakeSubsystem, -1)
-                        .raceWith(new WaitCommand(0.25))
-                        .andThen(new InstantCommand(
-                                () -> intakeSubsystem.setState(IntakeState.EMPTY))),
-                new TrajCommnd(autoFactory, "Reef4Right-LCS", drivetrain),
-                getIntakeCommand(),
-                new TrajCommnd(autoFactory, "LCS-Reef2Left", drivetrain),
-                new IntakeAtPercentage(intakeSubsystem, -.5)
-                        .raceWith(new WaitCommand(0.25))
-                        .andThen(new InstantCommand(
-                                () -> intakeSubsystem.setState(IntakeState.EMPTY))),
-                new TrajCommnd(autoFactory, "Reef2Left-LCS", drivetrain),
-                getIntakeCommand(),
-                new TrajCommnd(autoFactory, "LCS-Reef2Right", drivetrain),
-                new IntakeAtPercentage(intakeSubsystem, -.5)
-                        .raceWith(new WaitCommand(0.25))
-                        .andThen(new InstantCommand(
-                                () -> intakeSubsystem.setState(IntakeState.EMPTY))),
-                new TrajCommnd(autoFactory, "Reef2Right-LCS", drivetrain),
-                getIntakeCommand(),
-                new TrajCommnd(autoFactory, "LCS-Reef2Left", drivetrain),
-                new IntakeAtPercentage(intakeSubsystem, -.5)
-                        .raceWith(new WaitCommand(0.25))
-                        .andThen(new InstantCommand(
-                                () -> intakeSubsystem.setState(IntakeState.EMPTY))));
-    }
+        public void lockAngle(Pose2d[] centers, double distance, double maxDistance) {
+                Pose2d closestCenter = Distance.isPointNearLinesSegment(getPose().getTranslation(), centers, distance,
+                                maxDistance);
+                this.wantedAngle = closestCenter.getRotation().rotateBy(Rotation2d.k180deg).getRadians();
+                this.manualOverride = true;
 
-    public Command pickupAndRizzAutoSide() {
-        return Commands.sequence(
-                autoFactory.resetOdometry("Line-to-Reef3"),
-                new TrajCommnd(autoFactory, "Line-to-Reef3", drivetrain),
-                new IntakeAtPercentage(intakeSubsystem, -1)
-                        .raceWith(new WaitCommand(0.25))
-                        .andThen(new InstantCommand(
-                                () -> intakeSubsystem.setState(IntakeState.EMPTY))),
-                new TrajCommnd(autoFactory, "Reef3Right-LCS", drivetrain),
-                getIntakeCommand(),
-                new TrajCommnd(autoFactory, "LCS-Reef2Left", drivetrain),
-                new IntakeAtPercentage(intakeSubsystem, -.5)
-                        .raceWith(new WaitCommand(0.25))
-                        .andThen(new InstantCommand(
-                                () -> intakeSubsystem.setState(IntakeState.EMPTY))),
-                new TrajCommnd(autoFactory, "Reef2Left-LCS", drivetrain),
-                getIntakeCommand(),
-                new TrajCommnd(autoFactory, "LCS-Reef2Right", drivetrain),
-                new IntakeAtPercentage(intakeSubsystem, -.5)
-                        .raceWith(new WaitCommand(0.25))
-                        .andThen(new InstantCommand(
-                                () -> intakeSubsystem.setState(IntakeState.EMPTY))),
-                new TrajCommnd(autoFactory, "Reef2Right-LCS", drivetrain),
-                getIntakeCommand(),
-                new TrajCommnd(autoFactory, "LCS-Reef2Left", drivetrain),
-                new IntakeAtPercentage(intakeSubsystem, -.5)
-                        .raceWith(new WaitCommand(0.25))
-                        .andThen(new InstantCommand(
-                                () -> intakeSubsystem.setState(IntakeState.EMPTY))));
-    }
+        }
 
-    public void lockAngle(Pose2d[] centers, double distance, double maxDistance) {
-        Pose2d closestCenter = Distance.isPointNearLinesSegment(getPose().getTranslation(), centers, distance,
-                maxDistance);
-        this.wantedAngle = closestCenter.getRotation().rotateBy(Rotation2d.k180deg).getRadians();
-        this.manualOverride = true;
+        public void angleSetter(double angle) {
+                this.wantedAngle = angle;
+        }
 
-    }
-
-    public void angleSetter(double angle) {
-        this.wantedAngle = angle;
-    }
-
-    public void manualOverrideSetter(boolean manualOverride) {
-        this.manualOverride = manualOverride;
-    }
-
-
- 
+        public void manualOverrideSetter(boolean manualOverride) {
+                this.manualOverride = manualOverride;
+        }
 }
