@@ -9,27 +9,27 @@ import frc.robot.Constants;
 import frc.robot.Constants.Subsystems.Elevator;
 import frc.robot.subsystems.Elevator.ElevatorSubsystem;
 
-public class ElevatorMoveToHeight extends Command {
+public class ElevatorStayAtHeight extends Command {
     private final ElevatorSubsystem elevatorSubsystem;
     private final double elevatorSetPointInMeters;
 
-    public ElevatorMoveToHeight(ElevatorSubsystem elevatorSubsystem, double heightInMeters) {
+    public ElevatorStayAtHeight(ElevatorSubsystem elevatorSubsystem, double heightInMeters) {
         this.elevatorSubsystem = elevatorSubsystem;
         this.elevatorSetPointInMeters = heightInMeters;
         addRequirements(elevatorSubsystem);
     }
+
     @Override
     public void initialize() {
-        this.elevatorSubsystem.setSetpoint(elevatorSetPointInMeters);
+      elevatorSubsystem.setSetpoint(elevatorSetPointInMeters);
     }
-
     @Override
     public void execute() {
     }
 
     @Override
     public boolean isFinished() {
-        return Math.abs(elevatorSubsystem.getElevatorDistanceInMeter() - this.elevatorSetPointInMeters) < Elevator.Controls.HEIGHT_THRESHOLD_IN_METERS;
+        return false;
     }
 
     @Override

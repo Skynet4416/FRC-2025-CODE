@@ -146,7 +146,7 @@ public final class Constants {
     public static class States {
 
         public static final class Climb {
-            public static double ELEVATOR_HEIGHT = 0.2;
+            public static double ELEVATOR_HEIGHT = 0.24;
             public static double ELEVATOR_DOWN = 0;
         }
 
@@ -155,7 +155,7 @@ public final class Constants {
             public static double ELEVATOR_HEIGHT = 0.3;
             public static double VELOCITY_THREASHOLD = 500;
             public static double INTAKE_THREASHOLD = 40;
-            public static double INTAKE_PERCEHNTAGE = 0.3;
+            public static double INTAKE_PERCEHNTAGE = 0.6;
 
         }
 
@@ -165,6 +165,14 @@ public final class Constants {
             public static double ELEVATOR_HEIGHT = 0;
             public static double INTAKE_PERCNETAGE = -1;
             public static double INTAKE_TIME = 1;
+        }
+
+        public static class ScoreHigh{
+            // TODO: change ELEVATOR_HEIGHT to the calibrated value
+            public static double ELEVATOR_HEIGHT = 0.04;
+            public static double INTAKE_PERCNETAGE = -0.1;
+            public static double INTAKE_TIME = 1;
+
         }
 
         public static class Balls {
