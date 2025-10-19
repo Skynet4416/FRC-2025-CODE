@@ -10,6 +10,7 @@ import com.ctre.phoenix6.swerve.SwerveRequest;
 
 import choreo.trajectory.SwerveSample;
 import edu.wpi.first.math.Matrix;
+import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.Vector;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Pose2d;
@@ -35,6 +36,7 @@ import frc.robot.Constants.Subsystems.Drive;
 import frc.robot.subsystems.Drive.TunerConstants.TunerSwerveDrivetrain;
 import frc.robot.subsystems.Vision.LimelightHelpers;
 import frc.robot.subsystems.Vision.LimelightObserver;
+import frc.robot.subsystems.Vision.LimelightHelpers.PoseEstimate;
 
 /**
  * Class that extends the Phoenix 6 SwerveDrivetrain class and implements
@@ -279,6 +281,12 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
                                 : kBlueAlliancePerspectiveRotation);
                 m_hasAppliedOperatorPerspective = true;
             });
+        }
+
+        if (LimelightHelpers.getTV("")) {
+            PoseEstimate poseEstimate = LimelightHelpers.getBotPoseEstimate_wpiBlue("");
+            Vector<N3> stdDiviation = VecBuilder.fill(.5, .5, 9999999);
+            this.addVisionMeasurement(poseEstimate.pose, poseEstimate.timestampSeconds);
         }
     }
 

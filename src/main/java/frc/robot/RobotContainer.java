@@ -279,7 +279,8 @@ public class RobotContainer {
         IO.driverController.leftBumper().and(intakeEmpty).whileTrue(
                 new AlignCommand(
                         Alliance.apply(AutopilotConstants.Targets.CoralStation.LEFT_CORAL_STATION),
-                        drivetrain
+                        drivetrain,
+                        1.5
 
                 ));
 
@@ -288,7 +289,9 @@ public class RobotContainer {
         IO.driverController.rightBumper().and(intakeEmpty).whileTrue(
                 new AlignCommand(
                         Alliance.apply(AutopilotConstants.Targets.CoralStation.RIGHT_CORAL_STATION),
-                        drivetrain));
+                        drivetrain,
+                        1.5
+                ));
 
 
         // Go to to the LEFT side of the closest Reef face
@@ -296,7 +299,7 @@ public class RobotContainer {
                 Commands.defer(() -> {
                     Pose2d targetPose = Alliance.apply(AutopilotConstants.Targets.Reef.getLeftReefTarget(getPose()));
                     if (targetPose != null) {
-                        return new AlignCommand(targetPose,drivetrain);
+                        return new AlignCommand(targetPose,drivetrain,10);
                     } else {
                         return Commands.none();
                     }
@@ -307,7 +310,7 @@ public class RobotContainer {
                 Commands.defer(() -> {
                     Pose2d targetPose = Alliance.apply(AutopilotConstants.Targets.Reef.getRightReefTarget(getPose()));
                     if (targetPose != null) {
-                        return new AlignCommand(targetPose,drivetrain);
+                        return new AlignCommand(targetPose,drivetrain,10f);
                     } else {
                         return Commands.none();
                     }
@@ -323,7 +326,7 @@ public class RobotContainer {
         ballsModeTrigger.and(ballsEmpty).whileTrue(new BallsAngleToAngle(ballsAngleSubsystem, 0.15)
                 .alongWith(new IntakeBalls(ballsRollerSubsystem))
                 .andThen(new BallsRollerPercentage(ballsRollerSubsystem, 1,
-                        (x) -> ballsRollerSubsystem.setRollerPercentage(0)).withTimeout(0.2))
+                        (x) -> ballsRollerSubsystem.setRollerPercentage(0)).withTimeout(0.3))
                 .andThen(new InstantCommand(() -> {
 
                     ballsRollerSubsystem.setBallsIn(true);
@@ -344,6 +347,7 @@ public class RobotContainer {
     }
 
     // /**
+    
     // *
 
     // *

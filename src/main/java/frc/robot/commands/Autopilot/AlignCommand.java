@@ -1,6 +1,8 @@
 package frc.robot.commands.Autopilot;
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 
+import static edu.wpi.first.units.Units.Meter;
+import static edu.wpi.first.units.Units.Meters;
 import static edu.wpi.first.units.Units.Rotation;
 
 import java.lang.annotation.Target;
@@ -29,8 +31,8 @@ public class AlignCommand extends Command {
         .withDriveRequestType(DriveRequestType.Velocity);
         
   
-    public AlignCommand(Pose2d targetPose, CommandSwerveDrivetrain drivetrain) {
-      this.target = new APTarget(Distance.moveTargetBack(targetPose)).withEntryAngle(targetPose.getRotation());
+    public AlignCommand(Pose2d targetPose, CommandSwerveDrivetrain drivetrain, double turnRad) {
+      this.target = new APTarget(Distance.moveTargetBack(targetPose)).withEntryAngle(targetPose.getRotation()).withRotationRadius(Meters.of(turnRad));
       this.drivetrain = drivetrain;
       addRequirements(drivetrain);
     }

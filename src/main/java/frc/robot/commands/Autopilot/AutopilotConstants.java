@@ -17,21 +17,22 @@ import static edu.wpi.first.units.Units.*;
 public final class AutopilotConstants{
     private static final APConstraints CONSTRAINTS = new APConstraints()
         // TODO: calibrate these values
-        .withAcceleration(10)
+        .withAcceleration(17)
+        // .withVelocity(2)
         .withJerk(5);
         
         
 
     private static final APProfile PROFILE = new APProfile(CONSTRAINTS)
         // TODO: calibrate these values
-        .withErrorXY(Centimeters.of(10))
-        .withErrorTheta(Degrees.of(5));
+        .withErrorXY(Centimeters.of(1))
+        .withErrorTheta(Degrees.of(1));
         //.withBeelineRadius(Centimeters.of(8));
 
     public static final Autopilot AUTOPILOT = new Autopilot(PROFILE);
     
     //How much back to move ALL targets - (MA constants are set for the middle of the game pieces) - currently set as about minus half of the robots length
-    public static final double BACKWARDS_OFFSET = -0.3362;
+    public static final double BACKWARDS_OFFSET = -0.3362-0.05;
 
     public static class Targets{
         public static class CoralStation{

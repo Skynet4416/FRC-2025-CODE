@@ -108,7 +108,7 @@ public final class Constants {
 
             public static class Physical {
 
-                public final static double INTAKE_PERCENTAGE = 0.5;
+                public final static double INTAKE_PERCENTAGE = 0.8;
                 public static final double DECELERATION_THRESHOLD = -80; // how many rpm declerates in one iteration
                 public static final double INTAKE_VELOCIRTY_THREASHOLD = 500;
             }
@@ -151,8 +151,8 @@ public final class Constants {
         }
 
         public static class Intake {
-            public static double RADIUS_IN_METERS = 1;
-            public static double ELEVATOR_HEIGHT = 0.3;
+            public static double RADIUS_IN_METERS = 100;
+            public static double ELEVATOR_HEIGHT = 0.32;
             public static double VELOCITY_THREASHOLD = 500;
             public static double INTAKE_THREASHOLD = 40;
             public static double INTAKE_PERCEHNTAGE = 0.6;
