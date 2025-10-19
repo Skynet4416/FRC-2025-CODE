@@ -8,23 +8,17 @@ import static edu.wpi.first.units.Units.RotationsPerSecond;
 
 import java.util.function.DoubleSupplier;
 import java.util.Set;
-import com.therekrab.autopilot.APTarget;
-
-import com.ctre.phoenix6.swerve.SimSwerveDrivetrain;
 
 import choreo.auto.AutoChooser;
 import choreo.auto.AutoFactory;
 import edu.wpi.first.math.MathUtil;
-import edu.wpi.first.math.filter.SlewRateLimiter;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.units.Units;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
-import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import edu.wpi.first.wpilibj2.command.WaitCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
@@ -121,21 +115,16 @@ public class RobotContainer {
     private final Trigger processorTrigger = new Trigger(() -> Distance.isPointNearLineSegment(
             getPose().getTranslation(), FieldConstants.Processor.centerFace,
             FieldConstants.Processor.faceLength, States.Balls.RADIUS_IN_METERS));
-    private final SlewRateLimiter slewRateLimiterx = new SlewRateLimiter(6);
-    private final SlewRateLimiter slewRateLimitery = new SlewRateLimiter(6);
-    private final SlewRateLimiter slewRateLimiterRotation = new SlewRateLimiter(10);
+    
 
-    private final DoubleSupplier xSupplier = () -> slewRateLimiterx
-            .calculate(deadband(-IO.driverController.getLeftY())
+    private final DoubleSupplier xSupplier = () -> deadband(-IO.driverController.getLeftY())
                     * MathUtil.clamp((1 - IO.driverController.getRightTriggerAxis()), 0.1, 1)
-                    * MAX_SPEED);
-    private final DoubleSupplier ySupplier = () -> slewRateLimitery
-            .calculate(deadband(-IO.driverController.getLeftX())
+                    * MAX_SPEED;
+    private final DoubleSupplier ySupplier = () -> deadband(-IO.driverController.getLeftX())
                     * MathUtil.clamp((1 - IO.driverController.getRightTriggerAxis()), 0.1, 1)
-                    * MAX_SPEED);
-    private final DoubleSupplier rotationSupplier = () -> slewRateLimiterRotation
-            .calculate(deadband(-IO.driverController.getRightX())
-                    * MathUtil.clamp((1 - IO.driverController.getLeftTriggerAxis()), 0.1, 1))
+                    * MAX_SPEED;
+    private final DoubleSupplier rotationSupplier = () -> deadband(-IO.driverController.getRightX())
+                    * MathUtil.clamp((1 - IO.driverController.getLeftTriggerAxis()), 0.1, 1)
             * MAX_ANGULAR_RATE;
 
     public RobotContainer() {

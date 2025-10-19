@@ -7,9 +7,10 @@ import com.ctre.phoenix6.swerve.SwerveModule;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 
 import edu.wpi.first.math.MathUtil;
-import edu.wpi.first.math.util.Units;
+import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
+import frc.robot.meth.Untip;
 import frc.robot.subsystems.Drive.CommandSwerveDrivetrain;
 
 public class DriveCommand extends Command {
@@ -81,13 +82,25 @@ public class DriveCommand extends Command {
         boolean x = xSuppliersLock && ySuppliersLock && rotationSupplierLock && vxLock && vyLock && vrLock;
         SmartDashboard.putBoolean("swerve lock", x);
         SmartDashboard.putNumber("vr value", Math.abs(driveSubsystem.getState().Speeds.omegaRadiansPerSecond - 0.5));
+        
+        double cos = driveSubsystem.getPose().getRotation().getCos();
+        double sin = driveSubsystem.getPose().getRotation().getSin();
+        double robotRelativeX = xSupplier.getAsDouble()* cos - ySupplier.getAsDouble() * sin;
+        double robotRelativeY = xSupplier.getAsDouble()* sin + ySupplier.getAsDouble() * cos;
+        Translation2d untipChecker = Untip.calcualteVelocity(robotRelativeX,robotRelativeY,driveSubsystem.getPigeon2());
+        
         if (x) {
             driveSubsystem.setControl(new SwerveRequest.SwerveDriveBrake());
         } else {
             driveSubsystem.setControl(
-                    new SwerveRequest.FieldCentric().withDriveRequestType(SwerveModule.DriveRequestType.Velocity)
-                            .withVelocityX(xSupplier.getAsDouble()).withVelocityY(ySupplier.getAsDouble())
-                            .withRotationalRate(
+                    // new SwerveRequest.FieldCentric().withDriveRequestType(SwerveModule.DriveRequestType.Velocity)
+                    //         .withVelocityX(xSupplier.getAsDouble()).withVelocityY(ySupplier.getAsDouble())
+                    //         .withRotationalRate(
+                    //                 MathUtil.clamp(driveSubsystem.calculateRotation(wantedAngle), -6.283 * 1.5,
+                    //                         6.283 * 1.5)));
+
+                    new SwerveRequest.RobotCentric().withDriveRequestType(SwerveModule.DriveRequestType.Velocity).withVelocityX(untipChecker.getX()).withVelocityY(untipChecker.getY())
+                    .withRotationalRate(
                                     MathUtil.clamp(driveSubsystem.calculateRotation(wantedAngle), -6.283 * 1.5,
                                             6.283 * 1.5)));
         }

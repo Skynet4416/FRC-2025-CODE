@@ -1,11 +1,7 @@
 package frc.robot.commands.Autopilot;
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 
-import static edu.wpi.first.units.Units.Meter;
 import static edu.wpi.first.units.Units.Meters;
-import static edu.wpi.first.units.Units.Rotation;
-
-import java.lang.annotation.Target;
 
 import com.ctre.phoenix6.swerve.SwerveRequest;
 import com.ctre.phoenix6.swerve.SwerveRequest.ForwardPerspectiveValue;
@@ -13,11 +9,9 @@ import com.therekrab.autopilot.APTarget;
 import com.therekrab.autopilot.Autopilot.APResult;
 
 import edu.wpi.first.math.geometry.Pose2d;
-import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
-import frc.robot.Constants;
 import frc.robot.meth.Distance;
 import frc.robot.subsystems.Drive.CommandSwerveDrivetrain;
 
