@@ -15,10 +15,12 @@ public final class Untip {
         SmartDashboard.putNumber("robotPitch" , anglePitch);
         SmartDashboard.putNumber("robotRoll" , angleRoll);
 
-        if(anglePitch <= 45.0 && anglePitch >= -45.0 ){
+        double threashold = 3;
+
+        if(anglePitch <= 45.0 && anglePitch >= -45.0 && Math.abs(anglePitch) > threashold){
             speedX += (anglePitch/45) * 0.25;
         }
-        if(angleRoll <= 45.0 && angleRoll >= -45.0 ){
+        if(angleRoll <= 45.0 && angleRoll >= -45.0  && Math.abs(angleRoll) > threashold){
             speedY += (angleRoll/45) * 0.25;
         }
         return new Translation2d(speedX,speedY);
